@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 import logging
-from typing import Optional, TypedDict, Union
+from typing import Any, Optional, TypedDict, Union
 
 from flask_appbuilder.security.sqla.models import Group, Role
 from flask_login import AnonymousUserMixin
@@ -83,6 +83,7 @@ class GuestTokenUser(TypedDict, total=False):
     username: str
     first_name: str
     last_name: str
+    attributes: Optional[dict[str, Any]]
 
 
 class GuestTokenResourceType(StrEnum):
