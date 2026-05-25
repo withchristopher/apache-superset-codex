@@ -110,6 +110,16 @@ Both default to empty (no behavior change). They apply to both the `LOCAL_EXTENS
 
 The Dynamic Group By chart customization now orders its display values according to the "Sort display control values" toggle: ascending (A–Z), descending (Z–A), or the dataset's source order when the toggle is unset. Previously the dropdown always sorted alphabetically. Existing dashboards where the toggle was never set will show options in source order instead of A–Z; open the customization and enable the toggle to restore alphabetical ordering.
 
+### Soft delete and restore for dashboards
+
+`DELETE /api/v1/dashboard/<id>` no longer hard-deletes the dashboard. The row is marked with a `deleted_at` timestamp and hidden from all list, detail, and lookup endpoints (including the embedded-dashboard iframe path, which now returns 404 for soft-deleted parents).
+
+**New endpoint** — `POST /api/v1/dashboard/<uuid>/restore` clears `deleted_at` and returns the dashboard to active state. Requires `can_write on Dashboard` and ownership of the row (or admin). Soft-deleted dashboards can also be listed via the new `dashboard_deleted_state` rison filter (`deleted` or `active`).
+
+**Migration behavior:** existing role grants of `can_write on Dashboard` cover the new restore endpoint automatically; no role migration is required.
+
+**Slug uniqueness footgun.** `dashboards.slug` is a database-level unique constraint. Because soft-delete keeps the row in place, the slug of a soft-deleted dashboard remains reserved until the dashboard is either restored or hard-deleted by an admin. Users attempting to create a new dashboard with the same slug will receive a unique-constraint error; the workaround is to restore the soft-deleted dashboard, change its slug, then create the new one (or wait until the eventual hard-delete endpoint ships).
+
 ### Granular Export Controls
 
 A new feature flag `GRANULAR_EXPORT_CONTROLS` introduces three fine-grained permissions that replace the legacy `can_csv` permission:
