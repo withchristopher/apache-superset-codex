@@ -110,6 +110,22 @@ Both default to empty (no behavior change). They apply to both the `LOCAL_EXTENS
 
 The Dynamic Group By chart customization now orders its display values according to the "Sort display control values" toggle: ascending (A–Z), descending (Z–A), or the dataset's source order when the toggle is unset. Previously the dropdown always sorted alphabetically. Existing dashboards where the toggle was never set will show options in source order instead of A–Z; open the customization and enable the toggle to restore alphabetical ordering.
 
+### Soft delete and restore for datasets
+
+`DELETE /api/v1/dataset/<id>` no longer hard-deletes the dataset. The row is marked with a `deleted_at` timestamp and hidden from all list, detail, and lookup endpoints. Datasets in this state are excluded from default queries and from relationship loads (e.g. `database.tables`).
+
+**No cascade in v1.** Soft-delete does not propagate to dependent charts or dashboards: they remain visible. Loading a chart whose dataset is soft-deleted surfaces a "datasource not found" error at chart-load time. Restore the dataset to recover.
+
+**Side-effect change for operators.** Because the row is no longer physically deleted, FAB `ab_view_menu` / permission-view rows tied to the dataset are also preserved. Downstream automation that relied on `DELETE /api/v1/dataset/<id>` cleaning up those rows must now react to the new `POST /api/v1/dataset/<uuid>/restore` lifecycle, or call the eventual hard-delete endpoint.
+
+**New endpoint** — `POST /api/v1/dataset/<uuid>/restore` clears `deleted_at` and returns the dataset to active state. Requires `can_write on Dataset` and ownership of the row (or admin). Soft-deleted datasets can also be listed via the new `dataset_deleted_state` rison filter (`deleted` or `active`).
+
+**Migration behavior:** existing role grants of `can_write on Dataset` cover the new restore endpoint automatically; no role migration is required.
+
+**Importer behavior change:** importing a dataset YAML whose UUID matches an existing **soft-deleted** dataset now:
+- With `overwrite=True`, restores the row in place (clears `deleted_at`, updates contents). The chart back-reference, `table_columns`, and `sql_metrics` are preserved.
+- With `overwrite=False`, raises `ImportFailedError` rather than silently returning the soft-deleted row. Restore the dataset explicitly or re-run the import with `overwrite=True`.
+
 ### Granular Export Controls
 
 A new feature flag `GRANULAR_EXPORT_CONTROLS` introduces three fine-grained permissions that replace the legacy `can_csv` permission:
