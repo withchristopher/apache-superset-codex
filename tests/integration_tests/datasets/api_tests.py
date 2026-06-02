@@ -33,6 +33,7 @@ from sqlalchemy.sql import func
 
 from superset.commands.dataset.exceptions import DatasetCreateFailedError
 from superset.connectors.sqla.models import SqlaTable, SqlMetric, TableColumn
+from superset.constants import SKIP_VISIBILITY_FILTER_CLASSES
 from superset.extensions import db, security_manager
 from superset.models.core import Database
 from superset.models.slice import Slice
@@ -151,8 +152,6 @@ class TestDatasetApi(SupersetTestCase):
         return db_connection
 
     def get_fixture_datasets(self) -> list[SqlaTable]:
-        from superset.constants import SKIP_VISIBILITY_FILTER_CLASSES
-
         return (
             db.session.query(SqlaTable)
             .execution_options(**{SKIP_VISIBILITY_FILTER_CLASSES: {SqlaTable}})
@@ -212,8 +211,6 @@ class TestDatasetApi(SupersetTestCase):
             yield datasets
 
             # rollback changes (including soft-deleted rows)
-            from superset.constants import SKIP_VISIBILITY_FILTER_CLASSES
-
             for dataset_id in dataset_ids:
                 row = (
                     db.session.query(SqlaTable)
@@ -1990,8 +1987,6 @@ class TestDatasetApi(SupersetTestCase):
 
         # Hard-delete the soft-deleted row to avoid unique constraint
         # collisions in subsequent tests
-        from superset.constants import SKIP_VISIBILITY_FILTER_CLASSES
-
         row = (
             db.session.query(SqlaTable)
             .execution_options(**{SKIP_VISIBILITY_FILTER_CLASSES: {SqlaTable}})
