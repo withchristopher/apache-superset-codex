@@ -2503,7 +2503,7 @@ class DashboardRestApi(CustomTagsOptimizationMixin, BaseSupersetModelRestApi):
         from superset.versioning.schemas import ActivityResponseSchema
 
         try:
-            entity = activity_module.resolve_endpoint_path_entity(
+            entity, _ = activity_module.resolve_endpoint_path_entity(
                 self, Dashboard, uuid_str
             )
         except activity_module.PathEntityResponseError as exc:
