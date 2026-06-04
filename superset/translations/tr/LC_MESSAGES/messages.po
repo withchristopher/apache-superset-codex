@@ -4154,6 +4154,9 @@ msgstr "Dashboard güncellenemedi."
 msgid "Dashboard could not be deleted."
 msgstr "Dashboard silinemedi."
 
+msgid "Dashboard could not be restored."
+msgstr ""
+
 msgid "Dashboard could not be updated."
 msgstr "Dashboard güncellenemedi."
 
