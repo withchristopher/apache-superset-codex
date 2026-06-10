@@ -159,6 +159,7 @@ export interface SupersetClientInterface extends Pick<
   | 'isAuthenticated'
   | 'reAuthenticate'
   | 'getGuestToken'
+  | 'getUrl'
 > {
   configure: (config?: ClientConfig) => SupersetClientInterface;
   reset: () => void;

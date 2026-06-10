@@ -17,7 +17,7 @@
  * under the License.
  */
 import { useEffect, useState } from 'react';
-import { t } from '@apache-superset/core';
+import { t } from '@apache-superset/core/translation';
 import { SupersetClient, getClientErrorObject } from '@superset-ui/core';
 import ControlHeader from 'src/explore/components/ControlHeader';
 import {
@@ -48,8 +48,13 @@ interface SelectAsyncControlProps extends SelectAsyncProps {
   label?: string;
 }
 
-function isLabeledValue(arg: any): arg is LabeledValue {
-  return arg.value !== undefined;
+function isLabeledValue(arg: unknown): arg is LabeledValue {
+  return (
+    typeof arg === 'object' &&
+    arg !== null &&
+    'value' in arg &&
+    arg.value !== undefined
+  );
 }
 
 const SelectAsyncControl = ({
@@ -66,6 +71,7 @@ const SelectAsyncControl = ({
 }: SelectAsyncControlProps) => {
   const [options, setOptions] = useState<SelectOptionsType>([]);
   const [loaded, setLoaded] = useState<boolean>(false);
+  const [rawData, setRawData] = useState<Record<string, unknown> | null>(null);
 
   const handleOnChange = (val: SelectValue) => {
     let onChangeVal = val;
@@ -84,7 +90,7 @@ const SelectAsyncControl = ({
       value || (props.default !== undefined ? props.default : undefined);
 
     // safety check - the value is intended to be undefined but null was used
-    if (currentValue === null && !options.find(o => o.value === null)) {
+    if (currentValue === null && !options.some(o => o.value === null)) {
       return undefined;
     }
     return currentValue;
@@ -101,6 +107,7 @@ const SelectAsyncControl = ({
         endpoint: dataEndpoint,
       })
         .then(response => {
+          setRawData(response.json);
           const data = mutator
             ? mutator(response.json, value)
             : response.json.result;
@@ -115,6 +122,13 @@ const SelectAsyncControl = ({
       loadOptions();
     }
   }, [addDangerToast, dataEndpoint, mutator, value, loaded]);
+
+  useEffect(() => {
+    if (rawData && mutator) {
+      const data = mutator(rawData, value);
+      setOptions(data);
+    }
+  }, [value, mutator, rawData]);
 
   return (
     <Select

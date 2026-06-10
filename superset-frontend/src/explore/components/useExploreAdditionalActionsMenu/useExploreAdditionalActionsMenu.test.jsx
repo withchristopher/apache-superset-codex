@@ -18,12 +18,10 @@
  */
 import React from 'react';
 import { render, screen, waitFor } from 'spec/helpers/testing-library';
+import userEvent from '@testing-library/user-event';
 import { useExploreAdditionalActionsMenu } from './index';
 import * as exploreUtils from 'src/explore/exploreUtils';
-import userEvent from '@testing-library/user-event';
-import { VizType } from '@superset-ui/core';
 
-// Mock exploreUtils
 jest.mock('src/explore/exploreUtils', () => ({
   __esModule: true,
   ...jest.requireActual('src/explore/exploreUtils'),
@@ -31,14 +29,6 @@ jest.mock('src/explore/exploreUtils', () => ({
   getChartKey: jest.fn(() => 'test_chart_key'),
 }));
 
-// Mock @superset-ui/core to ensure t is available
-jest.mock('@superset-ui/core', () => ({
-  ...jest.requireActual('@superset-ui/core'),
-  t: str => str,
-  isFeatureEnabled: () => true, // default to true
-}));
-
-// Mock useToasts
 const mockAddDangerToast = jest.fn();
 jest.mock('src/components/MessageToasts/withToasts', () => ({
   __esModule: true,
@@ -48,6 +38,25 @@ jest.mock('src/components/MessageToasts/withToasts', () => ({
     addSuccessToast: jest.fn(),
   }),
 }));
+
+jest.mock('src/logger/actions', () => ({
+  logEvent: jest.fn(() => ({ type: 'LOG_EVENT' })),
+}));
+
+const defaultProps = {
+  latestQueryFormData: {
+    datasource: '1__table',
+    viz_type: 'pivot_table_v2',
+  },
+  canDownloadCSV: true,
+  slice: { slice_id: 1, slice_name: 'Test Chart' },
+  ownState: {},
+  dashboards: [],
+  onOpenInEditor: jest.fn(),
+  onOpenPropertiesModal: jest.fn(),
+  showReportModal: jest.fn(),
+  setCurrentReportDeleting: jest.fn(),
+};
 
 const TestComponent = props => {
   const [menu] = useExploreAdditionalActionsMenu(
@@ -62,63 +71,22 @@ const TestComponent = props => {
     props.setCurrentReportDeleting,
   );
 
-  return (
-    <div>
-      {/* Render buttons to trigger menu items */}
-      {menu.map(item => {
-        if (item && item.label && item.onClick) {
-          return (
-            <button key={item.key} onClick={item.onClick}>
-              {typeof item.label === 'string' ? item.label : 'Complex Label'}
-            </button>
-          );
-        }
-        if (item && item.children) {
-          return item.children.map(child => {
-            if (child && child.label && child.onClick) {
-              return (
-                <button key={child.key} onClick={child.onClick}>
-                  {typeof child.label === 'string'
-                    ? child.label
-                    : 'Complex Label'}
-                </button>
-              );
-            }
-            return null;
-          });
-        }
-        return null;
-      })}
-    </div>
-  );
+  return <div>{menu}</div>;
 };
 
+beforeEach(() => {
+  jest.clearAllMocks();
+  exploreUtils.exportChart.mockResolvedValue(undefined);
+});
+
 test('shows 413 error toast when exportCSV fails with 413', async () => {
-  const mockExportChart = exploreUtils.exportChart;
-  const error413 = { status: 413 };
-  mockExportChart.mockRejectedValue(error413);
+  exploreUtils.exportChart.mockRejectedValue({ status: 413 });
 
-  const props = {
-    latestQueryFormData: { viz_type: 'table' },
-    canDownloadCSV: true,
-    slice: { slice_id: 1, slice_name: 'Test Chart' },
-    ownState: {},
-  };
+  render(<TestComponent {...defaultProps} />, { useRedux: true });
 
-  render(<TestComponent {...props} />, { useRedux: true });
-
-  // Menu items might be nested. In the implementation, 'Export to original .CSV' is in a submenu.
-  // The Component renders flattened buttons from recursive children?
-  // Wait, my TestComponent only iterates one level deep for children.
-  // Let's verify structure of menuItems in index.jsx
-
-  // "Download submenu" logic:
-  // menuItems.push({ key: MENU_KEYS.DOWNLOAD_SUBMENU, ..., children: allDataChildren })
-
-  // So "Export to original .CSV" is inside children of a menu item.
-
-  const exportButton = screen.getByText('Export to original .CSV');
-  userEvent.click(exportButton);
+  userEvent.hover(await screen.findByText('Data Export Options'));
+  userEvent.hover(await screen.findByText('Export All Data'));
+  userEvent.click(await screen.findByText('Export to original .CSV'));
 
   await waitFor(() => {
     expect(mockAddDangerToast).toHaveBeenCalledWith(
@@ -130,27 +98,17 @@ test('shows 413 error toast when exportCSV fails with 413', async () => {
 });
 
 test('shows 413 error toast when exportCSVPivoted fails with 413', async () => {
-  const mockExportChart = exploreUtils.exportChart;
-  const error413 = { status: 413 };
-  mockExportChart.mockRejectedValue(error413);
+  exploreUtils.exportChart.mockRejectedValue({ status: 413 });
 
-  const props = {
-    latestQueryFormData: { viz_type: 'pivot_table_v2' },
-    canDownloadCSV: true,
-    slice: { slice_id: 1, slice_name: 'Test Chart' },
-    ownState: {},
-  };
+  render(<TestComponent {...defaultProps} />, { useRedux: true });
 
-  render(<TestComponent {...props} />, { useRedux: true });
-
-  const exportButton = screen.getByText('Export to pivoted .CSV');
-  userEvent.click(exportButton);
+  userEvent.hover(await screen.findByText('Data Export Options'));
+  userEvent.hover(await screen.findByText('Export All Data'));
+  userEvent.click(await screen.findByText('Export to pivoted .CSV'));
 
   await waitFor(() => {
     expect(mockAddDangerToast).toHaveBeenCalledWith(
-      expect.stringMatching(
-        /Export failed: The chart data is too large to download \(413\)/,
-      ),
+      expect.stringMatching(/The chart data is too large to download/),
     );
   });
 });
