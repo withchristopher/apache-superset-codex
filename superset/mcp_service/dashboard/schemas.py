@@ -708,6 +708,146 @@ class GenerateDashboardResponse(BaseModel):
     )
 
 
+class UpdateDashboardRequest(BaseModel):
+    """Request schema for partially updating dashboard metadata.
+
+    All fields except ``dashboard_id`` are optional — only the fields that
+    are provided are changed. ``None`` means "leave unchanged"; to clear a
+    text field (e.g. ``certified_by``) pass an empty string.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    dashboard_id: int = Field(..., description="ID of the dashboard to update")
+
+    # Direct dashboard fields (match DashboardPutSchema)
+    dashboard_title: str | None = Field(
+        None,
+        description="New dashboard title.",
+        validation_alias=AliasChoices("dashboard_title", "title", "name"),
+    )
+    slug: str | None = Field(
+        None, description="New URL slug for the dashboard (must be unique)."
+    )
+    published: bool | None = Field(
+        None,
+        description=(
+            "Set to true to publish the dashboard (visible to other users), "
+            "false to unpublish it (draft)."
+        ),
+    )
+    css: str | None = Field(None, description="Custom CSS applied to the dashboard.")
+    theme_id: int | None = Field(None, description="Theme ID for the dashboard.")
+    certified_by: str | None = Field(
+        None,
+        description=(
+            "Person or group that certified this dashboard. "
+            "Pass an empty string to clear."
+        ),
+    )
+    certification_details: str | None = Field(
+        None,
+        description=("Details of the certification. Pass an empty string to clear."),
+    )
+    owners: list[int] | None = Field(
+        None,
+        description=(
+            "FULL REPLACEMENT list of owner user IDs. The provided list "
+            "replaces the existing owners — include existing owner IDs to "
+            "keep them."
+        ),
+    )
+    roles: list[int] | None = Field(
+        None,
+        description=(
+            "FULL REPLACEMENT list of role IDs with dashboard access "
+            "(DASHBOARD_RBAC). The provided list replaces existing roles."
+        ),
+    )
+    tags: list[int] | None = Field(
+        None,
+        description=(
+            "FULL REPLACEMENT list of tag IDs. The provided list replaces "
+            "existing tags — include existing tag IDs to keep them."
+        ),
+    )
+
+    # Convenience fields merged into the dashboard's json_metadata
+    color_scheme: str | None = Field(
+        None,
+        description=(
+            "Color scheme name for the dashboard (e.g. 'supersetColors'). "
+            "Merged into json_metadata."
+        ),
+    )
+    cross_filters_enabled: bool | None = Field(
+        None,
+        description=(
+            "Whether cross-filtering between charts is enabled. "
+            "Merged into json_metadata."
+        ),
+    )
+    refresh_frequency: int | None = Field(
+        None,
+        ge=0,
+        description=(
+            "Auto-refresh interval in seconds (0 disables auto-refresh). "
+            "Merged into json_metadata."
+        ),
+    )
+    filter_bar_orientation: Literal["VERTICAL", "HORIZONTAL"] | None = Field(
+        None,
+        description=(
+            "Orientation of the dashboard filter bar. Merged into json_metadata."
+        ),
+    )
+
+    @field_validator("dashboard_title")
+    @classmethod
+    def sanitize_dashboard_title(cls, v: str | None) -> str | None:
+        """Sanitize dashboard title to prevent XSS."""
+        if v is None or v == "":
+            return v
+        return sanitize_user_input(
+            v, "Dashboard title", max_length=500, allow_empty=True
+        )
+
+
+class UpdateDashboardResponse(BaseModel):
+    """Response schema for updating dashboard metadata."""
+
+    dashboard: DashboardInfo | None = Field(
+        None, description="The updated dashboard info, if successful"
+    )
+    dashboard_url: str | None = Field(
+        None, description="URL to view the updated dashboard"
+    )
+    updated_fields: list[str] = Field(
+        default_factory=list,
+        description="Names of the fields that were updated.",
+    )
+    error: str | None = Field(None, description="Error message, if operation failed")
+    permission_denied: bool = Field(
+        default=False,
+        description=(
+            "True when the operation failed because the current user does "
+            "not have edit rights on the dashboard."
+        ),
+    )
+
+    @field_validator("error")
+    @classmethod
+    def sanitize_error_for_llm_context(cls, value: str | None) -> str | None:
+        """Wrap error text before it is exposed to LLM context.
+
+        The error may echo user-supplied values (title, slug) — wrap them
+        so the LLM treats them as data, not instructions.
+        """
+        if value is None:
+            return value
+        return sanitize_for_llm_context(value, field_path=("error",))
+
+
 class ChartPosition(BaseModel):
     """Position and identity of a chart within a dashboard layout."""
 
