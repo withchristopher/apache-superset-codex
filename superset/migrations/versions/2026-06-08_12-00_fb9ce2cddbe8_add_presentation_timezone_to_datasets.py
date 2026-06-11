@@ -14,10 +14,12 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-"""Add presentation time zone to datasets
+"""Add presentation/source time zone to datasets
 
-Adds the nullable ``tables.presentation_timezone`` column (the dataset's display
-zone). Defaults NULL, so the change is additive, inert, and reversible.
+Adds two nullable columns on ``tables``: ``presentation_timezone`` (the
+dataset's display zone) and ``source_timezone`` (the IANA zone the dataset's
+naive temporal columns are stored in; treated as UTC when NULL). Both default
+NULL, so the change is additive, inert, and reversible.
 
 Revision ID: fb9ce2cddbe8
 Revises: 31dae2559c05
@@ -38,8 +40,9 @@ def upgrade():
     add_columns(
         "tables",
         sa.Column("presentation_timezone", sa.String(length=64), nullable=True),
+        sa.Column("source_timezone", sa.String(length=64), nullable=True),
     )
 
 
 def downgrade():
-    drop_columns("tables", "presentation_timezone")
+    drop_columns("tables", "source_timezone", "presentation_timezone")
