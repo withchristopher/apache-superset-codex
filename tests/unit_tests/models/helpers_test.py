@@ -3266,3 +3266,56 @@ def test_comparison_filter_string_date_on_epoch_column_e2e(
         }
     )
     assert "1718424000" in sql  # NY-midnight epoch bound from the string date
+
+
+@with_feature_flags(DATASET_PRESENTATION_TIMEZONE=True)
+def test_zoned_comparison_relative_word_is_anchored(session: Session) -> None:
+    """'yesterday' in a comparison filter resolves at the zone's now, not the
+    server's — same anchoring as the time-range control (FR-003/FR-016)."""
+    import freezegun
+
+    table = _make_pg_dataset(session, "Pacific/Auckland")
+    # 2024-06-14 13:00 UTC == 2024-06-15 01:00 in Auckland, so Auckland's
+    # "yesterday" is Jun 14 — while the server's (UTC) yesterday is Jun 13.
+    with freezegun.freeze_time("2024-06-14 13:00:00"):
+        clause = table._zoned_comparison_value(table.columns[0], "yesterday")
+    # Auckland 2024-06-14 00:00 (NZST, UTC+12) == epoch 1718280000.
+    assert str(clause) == "1718280000"
+
+
+@with_feature_flags(DATASET_PRESENTATION_TIMEZONE=True)
+def test_zoned_not_equals_keeps_null_semantics(session: Session) -> None:
+    """A zoned != filter excludes NULLs (standard SQL three-valued logic),
+    exactly like the unzoned path — the zoning changes only the literal."""
+    from datetime import datetime
+
+    table = _make_pg_dataset(session, "America/New_York")
+    sql = table.get_query_str(
+        {
+            "granularity": "ts",
+            "metrics": [
+                {
+                    "label": "cnt",
+                    "expressionType": "SQL",
+                    "sqlExpression": "COUNT(*)",
+                }
+            ],
+            "columns": [],
+            "from_dttm": datetime(2024, 6, 13),
+            "to_dttm": datetime(2024, 6, 18),
+            "is_timeseries": False,
+            "extras": {},
+            "filter": [{"col": "ts", "op": "!=", "val": "2024-06-15"}],
+            "row_limit": 100,
+        }
+    )
+    assert "ts != 1718424000" in sql  # plain binary !=, no IS NULL branch
+
+
+@with_feature_flags(DATASET_PRESENTATION_TIMEZONE=True)
+def test_zoned_comparison_multi_value_untouched(session: Session) -> None:
+    """A multi-element list value is left entirely unzoned (not partially)."""
+    table = _make_pg_dataset(session, "America/New_York")
+    col = table.columns[0]
+    assert table._zoned_comparison_value(col, ["2024-06-15", "2024-06-16"]) is None
+    assert str(table._zoned_comparison_value(col, ["2024-06-15"])) == "1718424000"

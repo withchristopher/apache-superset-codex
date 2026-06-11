@@ -231,3 +231,29 @@ def test_presentation_timezone_bound_requires_source() -> None:
         spec.presentation_timezone_bound(
             datetime(2024, 1, 1), "America/New_York", None, False
         )
+
+
+def test_epoch_ms_uses_integer_division() -> None:
+    """epoch_ms must integer-divide (DIV): Impala's `/` always yields DOUBLE
+    and from_unixtime() requires BIGINT, so the base-class `/1000` template
+    fails analysis (verified on Impala 4.5.0)."""
+    actual = str(
+        spec.get_timestamp_expr(col=column("col"), pdf="epoch_ms", time_grain="P1D")
+    )
+    assert actual == "TRUNC(from_unixtime(CAST(col DIV 1000 AS BIGINT)), 'DD')"
+
+
+def test_presentation_timezone_epoch_millis() -> None:
+    """The zone wrap composes with the corrected epoch_ms decode."""
+    actual = str(
+        spec.get_timestamp_expr(
+            col=column("col"),
+            pdf="epoch_ms",
+            time_grain="P1D",
+            presentation_timezone="America/New_York",
+        )
+    )
+    assert actual == (
+        "TRUNC(FROM_UTC_TIMESTAMP(from_unixtime(CAST(col DIV 1000 AS BIGINT)), "
+        "'America/New_York'), 'DD')"
+    )

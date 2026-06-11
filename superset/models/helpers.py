@@ -27,7 +27,7 @@ import re
 import uuid
 from collections.abc import Hashable, Iterator
 from contextlib import contextmanager
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import (
     Any,
     Callable,
@@ -2889,17 +2889,32 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
         if not presentation_timezone:
             return None
         if isinstance(value, (list, tuple)):
-            value = value[0] if value else None
+            if len(value) != 1:
+                # A multi-element value would be only partially zoned —
+                # leave it entirely untouched instead.
+                return None
+            value = value[0]
         if isinstance(value, (int, float)) and not isinstance(value, bool):
             # The frontend datetime picker sends the picked wall-clock as
             # UTC-epoch millis; recover the wall-clock and interpret it in
-            # the presentation zone (same convention as the range control).
-            dttm = datetime.utcfromtimestamp(value / 1000)
+            # the presentation zone (same convention as the pre-existing
+            # TEMPORAL value handling in filter_values_handler).
+            try:
+                dttm = datetime.fromtimestamp(value / 1000, tz=timezone.utc).replace(
+                    tzinfo=None
+                )
+            except (OverflowError, OSError, ValueError):
+                # Out-of-range number — not a plausible epoch-millis picker
+                # value; keep the existing as-stored comparison.
+                return None
         elif isinstance(value, str):
             try:
                 # The same parser the time-range control uses, so typing the
-                # same value in either control selects the same rows.
-                dttm = parse_human_datetime(value)
+                # same value in either control selects the same rows — which
+                # also means anchoring relative words ("today", "yesterday")
+                # at the presentation zone's now, like the range control.
+                with anchored_now(get_presentation_relative_now(self)):
+                    dttm = parse_human_datetime(value)
             except (TimeRangeAmbiguousError, TimeRangeParseFailError):
                 # Not a recognizable temporal literal — keep the existing
                 # as-stored comparison rather than guessing.

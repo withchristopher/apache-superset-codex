@@ -84,6 +84,13 @@ class ImpalaEngineSpec(BaseEngineSpec):
         return "from_unixtime({col})"
 
     @classmethod
+    def epoch_ms_to_dttm(cls) -> str:
+        # The base-class template divides with `/`, which always yields DOUBLE
+        # on Impala, and from_unixtime() requires BIGINT — analysis fails
+        # (verified on Impala 4.5.0). Integer-divide and cast instead.
+        return "from_unixtime(CAST({col} DIV 1000 AS BIGINT))"
+
+    @classmethod
     def convert_dttm(
         cls, target_type: str, dttm: datetime, db_extra: dict[str, Any] | None = None
     ) -> str | None:

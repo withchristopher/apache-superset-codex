@@ -38,12 +38,20 @@ def get_presentation_relative_now(datasource: Any) -> datetime | None:
     datasources share the call sites but deliberately lack the concept.
     """
     from superset import is_feature_enabled  # noqa: PLC0415 (circular import)
+    from superset.utils.timezones import (  # noqa: PLC0415 (circular import)
+        is_valid_timezone,
+    )
 
     zone = getattr(datasource, "presentation_timezone", None)
     if not zone or not is_feature_enabled("DATASET_PRESENTATION_TIMEZONE"):
         return None
     spec = getattr(datasource, "db_engine_spec", None)
     if spec is None or not spec.supports_presentation_timezone:
+        return None
+    if not is_valid_timezone(zone):
+        # A zone persisted through a path that skipped validation (e.g. the
+        # legacy datasource-save view) must not 500 the query here; SQL
+        # generation's own allowlist will reject it loudly downstream.
         return None
     return datetime.now(ZoneInfo(zone)).replace(tzinfo=None)
 
