@@ -45,6 +45,12 @@ service requires visible `© OpenStreetMap contributors` attribution and should
 be used through normal browser map tile requests and caching; it is not intended
 for bulk prefetch or offline tile downloads.
 
+### Per-dataset presentation time zone (dark feature)
+
+A new off-by-default feature flag `DATASET_PRESENTATION_TIMEZONE` introduces an optional per-dataset presentation time zone. When enabled and a dataset opts in, the dataset's temporal columns are bucketed (grouped by time grain) and filtered in the configured IANA zone (DST-correct) rather than as stored. This includes epoch-stored timestamps (`epoch_s`/`epoch_ms`), which are decoded to their UTC instant and then expressed in the configured zone. Time-range filters shift the boundary rather than wrapping the column (for epoch columns the boundary is the corresponding epoch integer), so index/partition pruning is preserved. The feature is inert until a dataset sets a zone, and the control is only available on engines that support it (PostgreSQL and Apache Impala in the first increment). Because Impala `TIMESTAMP` is zone-less, the dataset's source time zone (configured per dataset, defaulting to UTC) is used to localize naive columns before conversion. Datasets with no zone configured behave exactly as before, so there is no change for existing deployments. Enabling the flag by default is gated on a future SIP, not on this change.
+
+Known limitations of this first increment: explicit comparison filters (`=`, `<`, `>`, etc.) on a temporal column are not zone-shifted, and a time-range filter that carries an explicit time grain is not zone-shifted either (only the grainless time-range control is); relative-time functions ("last hour", "today") are not yet anchored to "now" in the configured zone; sub-day grains across a DST transition inherit the database's wall-clock resolution of the missing/duplicated hour; and virtual/calculated (expression) columns are not converted. A `source_timezone` set without a `presentation_timezone` is inert.
+
 ### Duration formatter precision
 
 The `DURATION` number formatter now uses `Intl.DurationFormat` for locale-aware output. By default, sub-second fields are omitted, so values that previously displayed fractional seconds with `pretty-ms`, such as `10500` milliseconds rendering as `10.5s`, now render as `10s`.

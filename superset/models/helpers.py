@@ -39,6 +39,7 @@ from typing import (
     TypedDict,
     Union,
 )
+from zoneinfo import ZoneInfo
 
 import dateutil.parser
 import humanize
@@ -2711,6 +2712,22 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
 
         return modified_select_exprs, modified_groupby_all_columns
 
+    def _effective_python_date_format(self, col: "TableColumn") -> Optional[str]:
+        """Resolve a column's effective stored date/epoch format.
+
+        The column's own ``python_date_format`` wins, falling back to the
+        dataset-level ``db_extra['python_date_format_by_column_name']`` mapping.
+        Boundary epoch-detection and literal rendering must read the *same*
+        effective value, or they disagree on whether a column is epoch (which
+        would compare a timestamp expression against a raw epoch integer).
+        """
+        tf = getattr(col, "python_date_format", None)
+        if not tf and self.db_extra:
+            tf = self.db_extra.get("python_date_format_by_column_name", {}).get(
+                col.column_name
+            )
+        return tf
+
     def dttm_sql_literal(self, dttm: datetime, col: "TableColumn") -> str:
         """Convert datetime object to a SQL expression string"""
 
@@ -2723,15 +2740,7 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
         if sql:
             return sql
 
-        tf = col.python_date_format
-
-        # Fallback to the default format (if defined).
-        if not tf and self.db_extra:
-            tf = self.db_extra.get("python_date_format_by_column_name", {}).get(
-                col.column_name
-            )
-
-        if tf:
+        if tf := self._effective_python_date_format(col):
             if tf in {"epoch_ms", "epoch_s"}:
                 seconds_since_epoch = int(dttm.timestamp())
                 if tf == "epoch_s":
@@ -2762,21 +2771,66 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
             )
         )
 
+        # When the dataset has a presentation zone and the column is left raw
+        # (the sargable range-filter branch), shift the boundaries into storage
+        # terms instead of wrapping the column, so the comparison stays correct
+        # without defeating index/partition pruning. The grain branch already
+        # buckets the column in the zone, so it is left to the existing literal.
+        presentation_timezone: Optional[str] = None
+        source_timezone: Optional[str] = None
+        # `_presentation_timezone` only exists on `TableColumn`; SQL Lab `Query`
+        # columns (which share this mixin) deliberately lack the concept, so the
+        # hasattr is the context-seam guard, not a defensive bug check.
+        if not time_grain and hasattr(time_col, "_presentation_timezone"):
+            presentation_timezone, source_timezone = time_col._presentation_timezone()
+        # Read the *effective* format (honouring the db_extra fallback that
+        # dttm_sql_literal also uses) so a column declared epoch only via
+        # db_extra still takes the epoch boundary branch below.
+        is_epoch = self._effective_python_date_format(time_col) in (
+            "epoch_s",
+            "epoch_ms",
+        )
+
+        def _boundary(dttm: datetime) -> Any:
+            if presentation_timezone:
+                # The boundary is interpreted as wall-clock in the presentation
+                # zone. An already-aware bound is an absolute instant, so express
+                # it as that zone's wall-clock before rendering (otherwise the
+                # offset would leak into the literal / epoch math).
+                if dttm.tzinfo is not None:
+                    dttm = dttm.astimezone(ZoneInfo(presentation_timezone)).replace(
+                        tzinfo=None
+                    )
+                if is_epoch:
+                    # An epoch column stays a raw integer (sargable / prunable);
+                    # the boundary is the epoch of the wall-clock value
+                    # interpreted in the presentation zone. The dttm must be made
+                    # tz-aware first, or `dttm_sql_literal`'s `.timestamp()` would
+                    # resolve the epoch in the server's local zone. Note this
+                    # assumes the stored epoch is UTC (the universal epoch
+                    # convention); source_timezone does not apply to epoch
+                    # columns, only to naive wall-clock timestamp columns.
+                    zoned = dttm.replace(tzinfo=ZoneInfo(presentation_timezone))
+                    return self.db_engine_spec.get_text_clause(
+                        self.dttm_sql_literal(zoned, time_col)
+                    )
+                return self.db_engine_spec.get_text_clause(
+                    self.db_engine_spec.presentation_timezone_bound(
+                        dttm,
+                        presentation_timezone,
+                        source_timezone,
+                        time_col.is_tz_aware(),
+                    )
+                )
+            return self.db_engine_spec.get_text_clause(
+                self.dttm_sql_literal(dttm, time_col)
+            )
+
         l = []  # noqa: E741
         if start_dttm:
-            l.append(
-                col
-                >= self.db_engine_spec.get_text_clause(
-                    self.dttm_sql_literal(start_dttm, time_col)
-                )
-            )
+            l.append(col >= _boundary(start_dttm))
         if end_dttm:
-            l.append(
-                col
-                < self.db_engine_spec.get_text_clause(
-                    self.dttm_sql_literal(end_dttm, time_col)
-                )
-            )
+            l.append(col < _boundary(end_dttm))
         if not l:
             return None
         return and_(True, *l)
@@ -2971,6 +3025,11 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
             expression = template_processor.process_template(column["column_name"])
             col = sa.literal_column(expression, type_=type_)
 
+        # Note: the per-dataset presentation time zone is deliberately not
+        # threaded here. This datasource-level helper serves the SQL Lab `Query`
+        # datasource, which is out of scope for the feature; `SqlaTable` charts
+        # convert via `TableColumn.get_timestamp_expression` and the BASE_AXIS
+        # path in `adhoc_column_to_sqla` instead.
         time_expr = self.db_engine_spec.get_timestamp_expr(col, None, time_grain)
         return self.make_sqla_column_compatible(time_expr, label)
 
