@@ -3669,6 +3669,31 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
                         db_engine_spec.handle_boolean_filter(sqla_col, op, False)
                     )
                 else:
+                    comparison_ops = {
+                        utils.FilterOperator.EQUALS,
+                        utils.FilterOperator.NOT_EQUALS,
+                        utils.FilterOperator.GREATER_THAN,
+                        utils.FilterOperator.LESS_THAN,
+                        utils.FilterOperator.GREATER_THAN_OR_EQUALS,
+                        utils.FilterOperator.LESS_THAN_OR_EQUALS,
+                    }
+                    # FR-016: a temporal literal compared against a zoned
+                    # physical temporal column is interpreted as
+                    # presentation-zone wall-clock and shifted into storage
+                    # terms (the raw column stays sargable), matching the
+                    # time-range control. Resolved from the *raw* value before
+                    # the eq-None guard: on an epoch (numeric) column a string
+                    # date is cast_to_num'd to None by filter_values_handler,
+                    # which would otherwise reject it. A grain-carrying filter
+                    # compares against the zone-bucketed expression — already
+                    # presentation wall-clock — so its literal is untouched.
+                    zoned_value = (
+                        self._zoned_comparison_value(col_obj, val)
+                        if op in comparison_ops and not filter_grain
+                        else None
+                    )
+                    if zoned_value is not None:
+                        eq = zoned_value
                     if (
                         op
                         not in {
@@ -3683,32 +3708,7 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
                                 "with comparison operators"
                             )
                         )
-                    if op in {
-                        utils.FilterOperator.EQUALS,
-                        utils.FilterOperator.NOT_EQUALS,
-                        utils.FilterOperator.GREATER_THAN,
-                        utils.FilterOperator.LESS_THAN,
-                        utils.FilterOperator.GREATER_THAN_OR_EQUALS,
-                        utils.FilterOperator.LESS_THAN_OR_EQUALS,
-                    }:
-                        # FR-016: a temporal literal compared against a zoned
-                        # physical temporal column is interpreted as
-                        # presentation-zone wall-clock and shifted into storage
-                        # terms (the raw column stays sargable), matching the
-                        # time-range control. A grain-carrying filter compares
-                        # against the zone-bucketed expression — already
-                        # presentation wall-clock — so its literal is left
-                        # untouched.
-                        if (
-                            not filter_grain
-                            and (
-                                zoned_value := self._zoned_comparison_value(
-                                    col_obj, val
-                                )
-                            )
-                            is not None
-                        ):
-                            eq = zoned_value
+                    if op in comparison_ops:
                         target_clause_list.append(
                             db_engine_spec.handle_comparison_filter(sqla_col, op, eq)
                         )

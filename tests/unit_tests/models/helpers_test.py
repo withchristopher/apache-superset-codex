@@ -3230,3 +3230,39 @@ def test_zoned_comparison_value_inert_without_flag(session: Session) -> None:
     """Flag off ⇒ comparison filters are untouched even with a zone set."""
     table = _make_pg_dataset(session, "America/New_York")
     assert table._zoned_comparison_value(table.columns[0], "2024-06-15") is None
+
+
+@with_feature_flags(DATASET_PRESENTATION_TIMEZONE=True)
+def test_comparison_filter_string_date_on_epoch_column_e2e(
+    session: Session, utc_process_tz
+) -> None:
+    """A string date in a >= filter on an epoch column survives end-to-end.
+
+    Regression (found in live-Impala E2E): the epoch column's NUMERIC generic
+    type made filter_values_handler cast the string date to None, and the
+    "must specify a value" guard rejected the filter before the zoned
+    resolution ran. The zoned value must resolve from the raw value first.
+    """
+    from datetime import datetime
+
+    table = _make_pg_dataset(session, "America/New_York")
+    sql = table.get_query_str(
+        {
+            "granularity": "ts",
+            "metrics": [
+                {
+                    "label": "cnt",
+                    "expressionType": "SQL",
+                    "sqlExpression": "COUNT(*)",
+                }
+            ],
+            "columns": [],
+            "from_dttm": datetime(2024, 6, 13),
+            "to_dttm": datetime(2024, 6, 18),
+            "is_timeseries": False,
+            "extras": {},
+            "filter": [{"col": "ts", "op": ">=", "val": "2024-06-15"}],
+            "row_limit": 100,
+        }
+    )
+    assert "1718424000" in sql  # NY-midnight epoch bound from the string date
