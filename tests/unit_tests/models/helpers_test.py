@@ -3171,3 +3171,62 @@ def test_string_format_column_excluded_from_zoning(
     assert "'2024-06-15'" in filter_sql  # strftime literal, as stored
     assert "AT TIME ZONE" not in filter_sql
     assert "TIMESTAMP" not in filter_sql  # no timestamp-vs-varchar comparison
+
+
+@with_feature_flags(DATASET_PRESENTATION_TIMEZONE=True)
+def test_zoned_comparison_value_epoch_string(session: Session) -> None:
+    """FR-016: a comparison literal on a zoned epoch column becomes the
+    zone's epoch integer — same value as the time-range control's boundary,
+    and a raw integer so the column stays sargable."""
+    table = _make_pg_dataset(session, "America/New_York")
+    clause = table._zoned_comparison_value(table.columns[0], "2024-06-15")
+    # 2024-06-15 00:00 America/New_York (EDT, UTC-4) == epoch 1718424000.
+    assert str(clause) == "1718424000"
+
+
+@with_feature_flags(DATASET_PRESENTATION_TIMEZONE=True)
+def test_zoned_comparison_value_epoch_millis_input(session: Session) -> None:
+    """A numeric (epoch-millis) picker value is read as the picked wall-clock
+    and interpreted in the presentation zone."""
+    table = _make_pg_dataset(session, "America/New_York")
+    # 1718409600000 ms == 2024-06-15 00:00 UTC wall-clock == the picked
+    # wall-clock, reinterpreted as NY midnight == epoch 1718424000.
+    clause = table._zoned_comparison_value(table.columns[0], 1718409600000)
+    assert str(clause) == "1718424000"
+
+
+@with_feature_flags(DATASET_PRESENTATION_TIMEZONE=True)
+def test_zoned_comparison_value_timestamp_column(session: Session) -> None:
+    """A naive timestamp column gets a zone-shifted constant, not a wrapped
+    column (FR-004 parity)."""
+    from superset.connectors.sqla.models import TableColumn
+
+    col = TableColumn(
+        column_name="ts", is_dttm=True, type="TIMESTAMP WITHOUT TIME ZONE"
+    )
+    table = _make_pg_dataset(session, "America/New_York", column=col)
+    clause = table._zoned_comparison_value(col, "2024-06-15")
+    sql = str(clause)
+    assert "AT TIME ZONE 'America/New_York'" in sql
+    assert "AT TIME ZONE 'UTC'" in sql  # source defaulted to UTC
+    assert "ts" not in sql  # the constant is shifted; the column is untouched
+
+
+@with_feature_flags(DATASET_PRESENTATION_TIMEZONE=True)
+def test_zoned_comparison_value_excluded_cases(session: Session) -> None:
+    """No zone shift for non-temporal values, unzoned datasets, or columns
+    the zoning already excludes — the filter keeps today's behaviour."""
+    table = _make_pg_dataset(session, "America/New_York")
+    col = table.columns[0]
+    assert table._zoned_comparison_value(col, "not a date") is None
+    assert table._zoned_comparison_value(col, None) is None
+    assert table._zoned_comparison_value(None, "2024-06-15") is None
+
+    table.presentation_timezone = None  # unzoned dataset => untouched
+    assert table._zoned_comparison_value(col, "2024-06-15") is None
+
+
+def test_zoned_comparison_value_inert_without_flag(session: Session) -> None:
+    """Flag off ⇒ comparison filters are untouched even with a zone set."""
+    table = _make_pg_dataset(session, "America/New_York")
+    assert table._zoned_comparison_value(table.columns[0], "2024-06-15") is None

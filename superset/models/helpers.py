@@ -70,9 +70,14 @@ from sqlalchemy_utils import UUIDType
 
 from superset import db, is_feature_enabled
 from superset.advanced_data_type.types import AdvancedDataTypeResponse
+from superset.commands.chart.exceptions import (
+    TimeRangeAmbiguousError,
+    TimeRangeParseFailError,
+)
 from superset.common.db_query_status import QueryStatus
 from superset.common.utils import dataframe_utils
 from superset.common.utils.time_range_utils import (
+    get_presentation_relative_now,
     get_since_until_from_query_object,
     get_since_until_from_time_range,
 )
@@ -130,7 +135,12 @@ from superset.utils.core import (
     SqlExpressionType,
     TIME_COMPARISON,
 )
-from superset.utils.date_parser import get_past_or_future, normalize_time_delta
+from superset.utils.date_parser import (
+    anchored_now,
+    get_past_or_future,
+    normalize_time_delta,
+    parse_human_datetime,
+)
 from superset.utils.dates import datetime_to_epoch
 from superset.utils.rls import apply_rls
 
@@ -2793,34 +2803,8 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
 
         def _boundary(dttm: datetime) -> TextClause:
             if presentation_timezone:
-                # The boundary is interpreted as wall-clock in the presentation
-                # zone. An already-aware bound is an absolute instant, so express
-                # it as that zone's wall-clock before rendering (otherwise the
-                # offset would leak into the literal / epoch math).
-                if dttm.tzinfo is not None:
-                    dttm = dttm.astimezone(ZoneInfo(presentation_timezone)).replace(
-                        tzinfo=None
-                    )
-                if is_epoch:
-                    # An epoch column stays a raw integer (sargable / prunable);
-                    # the boundary is the epoch of the wall-clock value
-                    # interpreted in the presentation zone. The dttm must be made
-                    # tz-aware first, or `dttm_sql_literal`'s `.timestamp()` would
-                    # resolve the epoch in the server's local zone. Note this
-                    # assumes the stored epoch is UTC (the universal epoch
-                    # convention); source_timezone does not apply to epoch
-                    # columns, only to naive wall-clock timestamp columns.
-                    zoned = dttm.replace(tzinfo=ZoneInfo(presentation_timezone))
-                    return self.db_engine_spec.get_text_clause(
-                        self.dttm_sql_literal(zoned, time_col)
-                    )
-                return self.db_engine_spec.get_text_clause(
-                    self.db_engine_spec.presentation_timezone_bound(
-                        dttm,
-                        presentation_timezone,
-                        source_timezone,
-                        time_col.is_tz_aware(),
-                    )
+                return self._zoned_temporal_literal(
+                    time_col, dttm, presentation_timezone, source_timezone, is_epoch
                 )
             return self.db_engine_spec.get_text_clause(
                 self.dttm_sql_literal(dttm, time_col)
@@ -2834,6 +2818,101 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
         if not l:
             return None
         return and_(True, *l)
+
+    def _zoned_temporal_literal(  # pylint: disable=too-many-arguments
+        self,
+        time_col: "TableColumn",
+        dttm: datetime,
+        presentation_timezone: str,
+        source_timezone: Optional[str],
+        is_epoch: bool,
+    ) -> TextClause:
+        """Render a temporal constant in storage terms for a zoned column.
+
+        ``dttm`` is interpreted as wall-clock in the presentation zone (an
+        already-aware value is an absolute instant, so it is first expressed
+        as that zone's wall-clock — otherwise the offset would leak into the
+        literal / epoch math). The returned literal compares correctly
+        against the *raw* stored column — an epoch integer for epoch columns,
+        an engine zone-shift expression otherwise — so the constant is
+        shifted instead of the column being wrapped and filters stay
+        index-/partition-friendly. Shared by the time-range boundaries
+        (FR-003/FR-004) and explicit comparison filters (FR-016).
+        """
+        if dttm.tzinfo is not None:
+            dttm = dttm.astimezone(ZoneInfo(presentation_timezone)).replace(tzinfo=None)
+        if is_epoch:
+            # An epoch column stays a raw integer (sargable / prunable); the
+            # constant is the epoch of the wall-clock value interpreted in the
+            # presentation zone. The dttm must be made tz-aware first, or
+            # `dttm_sql_literal`'s `.timestamp()` would resolve the epoch in
+            # the server's local zone. Note this assumes the stored epoch is
+            # UTC (the universal epoch convention); source_timezone does not
+            # apply to epoch columns, only to naive wall-clock timestamps.
+            zoned = dttm.replace(tzinfo=ZoneInfo(presentation_timezone))
+            return self.db_engine_spec.get_text_clause(
+                self.dttm_sql_literal(zoned, time_col)
+            )
+        return self.db_engine_spec.get_text_clause(
+            self.db_engine_spec.presentation_timezone_bound(
+                dttm,
+                presentation_timezone,
+                source_timezone,
+                time_col.is_tz_aware(),
+            )
+        )
+
+    def _zoned_comparison_value(
+        self,
+        time_col: Optional["TableColumn"],
+        value: Any,
+    ) -> Optional[TextClause]:
+        """Resolve a comparison filter's temporal value for a zoned column.
+
+        FR-016: an explicit comparison (`=`, `<`, `>`, …) whose target is a
+        physical temporal column of a zoned dataset interprets its value as
+        wall-clock in the presentation zone, matching the time-range control.
+        Returns ``None`` — leaving the filter's existing as-stored comparison
+        untouched — when zoning does not apply (the `_presentation_timezone`
+        gate also excludes expression and string-format columns) or the value
+        cannot be read as a temporal literal.
+        """
+        if (
+            time_col is None
+            or not getattr(time_col, "is_dttm", False)
+            # SQL Lab `Query` columns share this mixin but deliberately lack
+            # the zone concept — the hasattr is the context-seam guard.
+            or not hasattr(time_col, "_presentation_timezone")
+        ):
+            return None
+        presentation_timezone, source_timezone = time_col._presentation_timezone()
+        if not presentation_timezone:
+            return None
+        if isinstance(value, (list, tuple)):
+            value = value[0] if value else None
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            # The frontend datetime picker sends the picked wall-clock as
+            # UTC-epoch millis; recover the wall-clock and interpret it in
+            # the presentation zone (same convention as the range control).
+            dttm = datetime.utcfromtimestamp(value / 1000)
+        elif isinstance(value, str):
+            try:
+                # The same parser the time-range control uses, so typing the
+                # same value in either control selects the same rows.
+                dttm = parse_human_datetime(value)
+            except (TimeRangeAmbiguousError, TimeRangeParseFailError):
+                # Not a recognizable temporal literal — keep the existing
+                # as-stored comparison rather than guessing.
+                return None
+        else:
+            return None
+        is_epoch = self._effective_python_date_format(time_col) in (
+            "epoch_s",
+            "epoch_ms",
+        )
+        return self._zoned_temporal_literal(
+            time_col, dttm, presentation_timezone, source_timezone, is_epoch
+        )
 
     def values_for_column(  # pylint: disable=too-many-locals
         self,
@@ -3612,6 +3691,24 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
                         utils.FilterOperator.GREATER_THAN_OR_EQUALS,
                         utils.FilterOperator.LESS_THAN_OR_EQUALS,
                     }:
+                        # FR-016: a temporal literal compared against a zoned
+                        # physical temporal column is interpreted as
+                        # presentation-zone wall-clock and shifted into storage
+                        # terms (the raw column stays sargable), matching the
+                        # time-range control. A grain-carrying filter compares
+                        # against the zone-bucketed expression — already
+                        # presentation wall-clock — so its literal is left
+                        # untouched.
+                        if (
+                            not filter_grain
+                            and (
+                                zoned_value := self._zoned_comparison_value(
+                                    col_obj, val
+                                )
+                            )
+                            is not None
+                        ):
+                            eq = zoned_value
                         target_clause_list.append(
                             db_engine_spec.handle_comparison_filter(sqla_col, op, eq)
                         )
@@ -3642,11 +3739,16 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
                         and isinstance(eq, str)
                         and col_obj is not None
                     ):
-                        _since, _until = get_since_until_from_time_range(
-                            time_range=eq,
-                            time_shift=time_shift,
-                            extras=extras,
-                        )
+                        # Adhoc temporal-range values are parsed at SQL-gen
+                        # time (not by the QueryObject factory), so relative
+                        # expressions here need the same presentation-zone
+                        # anchor (FR-003); a None anchor is a no-op.
+                        with anchored_now(get_presentation_relative_now(self)):
+                            _since, _until = get_since_until_from_time_range(
+                                time_range=eq,
+                                time_shift=time_shift,
+                                extras=extras,
+                            )
                         _temporal_filter = self.get_time_filter(
                             time_col=col_obj,
                             start_dttm=_since,
