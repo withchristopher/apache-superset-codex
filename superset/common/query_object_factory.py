@@ -20,7 +20,10 @@ from typing import Any, cast, TYPE_CHECKING
 
 from superset.common.chart_data import ChartDataResultType
 from superset.common.query_object import QueryObject
-from superset.common.utils.time_range_utils import get_since_until_from_time_range
+from superset.common.utils.time_range_utils import (
+    get_presentation_relative_now,
+    get_since_until_from_time_range,
+)
 from superset.constants import NO_TIME_RANGE
 from superset.superset_typing import Column
 from superset.utils.core import (
@@ -31,6 +34,7 @@ from superset.utils.core import (
     get_x_axis_label,
     QueryObjectFilterClause,
 )
+from superset.utils.date_parser import anchored_now
 
 if TYPE_CHECKING:
     from superset.connectors.sqla.models import BaseDatasource
@@ -74,9 +78,14 @@ class QueryObjectFactory:  # pylint: disable=too-few-public-methods
         processed_time_range = self._process_time_range(
             time_range, kwargs.get("filters"), kwargs.get("columns")
         )
-        from_dttm, to_dttm = get_since_until_from_time_range(
-            processed_time_range, time_shift, processed_extras
-        )
+        # Anchor relative expressions ("today", "Last week") in the dataset's
+        # presentation zone when one applies (no-op anchor otherwise), so the
+        # resolved bounds are that zone's wall-clock — the same convention the
+        # zoned filter path interprets them in.
+        with anchored_now(get_presentation_relative_now(datasource_model_instance)):
+            from_dttm, to_dttm = get_since_until_from_time_range(
+                processed_time_range, time_shift, processed_extras
+            )
         kwargs["from_dttm"] = from_dttm
         kwargs["to_dttm"] = to_dttm
         return QueryObject(

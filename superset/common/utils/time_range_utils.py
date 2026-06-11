@@ -18,12 +18,34 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any, cast
+from zoneinfo import ZoneInfo
 
 from flask import current_app
 
 from superset.common.query_object import QueryObject
 from superset.utils.core import FilterOperator
-from superset.utils.date_parser import get_since_until
+from superset.utils.date_parser import anchored_now, get_since_until
+
+
+def get_presentation_relative_now(datasource: Any) -> datetime | None:
+    """The dataset's presentation-zone current wall-clock, when zoning applies.
+
+    Returns ``None`` — leaving relative parsing anchored at the server's local
+    clock, the historical behaviour — unless the feature flag is on and the
+    datasource is a dataset with a presentation zone on a supporting engine
+    (the same gate as SQL generation, so relative ranges and the SQL they feed
+    resolve in the same zone). Duck-typed because SQL Lab ``Query``
+    datasources share the call sites but deliberately lack the concept.
+    """
+    from superset import is_feature_enabled  # noqa: PLC0415 (circular import)
+
+    zone = getattr(datasource, "presentation_timezone", None)
+    if not zone or not is_feature_enabled("DATASET_PRESENTATION_TIMEZONE"):
+        return None
+    spec = getattr(datasource, "db_engine_spec", None)
+    if spec is None or not spec.supports_presentation_timezone:
+        return None
+    return datetime.now(ZoneInfo(zone)).replace(tzinfo=None)
 
 
 def get_since_until_from_time_range(
@@ -58,22 +80,25 @@ def get_since_until_from_query_object(
     :param query_object: a valid query object
     :return: since and until by tuple
     """
-    if query_object.time_range:
+    # Anchor relative expressions in the dataset's presentation zone (no-op
+    # when the anchor is None), so "today"/"Last week" mean the zone's today.
+    with anchored_now(get_presentation_relative_now(query_object.datasource)):
+        if query_object.time_range:
+            return get_since_until_from_time_range(
+                time_range=query_object.time_range,
+                time_shift=query_object.time_shift,
+                extras=query_object.extras,
+            )
+
+        time_range = None
+        for flt in query_object.filter:
+            if flt.get("op") == FilterOperator.TEMPORAL_RANGE and isinstance(
+                flt.get("val"), str
+            ):
+                time_range = cast(str, flt.get("val"))
+
         return get_since_until_from_time_range(
-            time_range=query_object.time_range,
+            time_range=time_range,
             time_shift=query_object.time_shift,
             extras=query_object.extras,
         )
-
-    time_range = None
-    for flt in query_object.filter:
-        if flt.get("op") == FilterOperator.TEMPORAL_RANGE and isinstance(
-            flt.get("val"), str
-        ):
-            time_range = cast(str, flt.get("val"))
-
-    return get_since_until_from_time_range(
-        time_range=time_range,
-        time_shift=query_object.time_shift,
-        extras=query_object.extras,
-    )
