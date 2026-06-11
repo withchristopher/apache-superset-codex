@@ -3319,3 +3319,19 @@ def test_zoned_comparison_multi_value_untouched(session: Session) -> None:
     col = table.columns[0]
     assert table._zoned_comparison_value(col, ["2024-06-15", "2024-06-16"]) is None
     assert str(table._zoned_comparison_value(col, ["2024-06-15"])) == "1718424000"
+
+
+@with_feature_flags(DATASET_PRESENTATION_TIMEZONE=True)
+def test_zoned_comparison_accepts_datetime_instances(session: Session) -> None:
+    """Programmatic (non-JSON) filters carrying datetime objects are zoned too."""
+    from datetime import datetime, timezone as tz
+
+    table = _make_pg_dataset(session, "America/New_York")
+    col = table.columns[0]
+    # naive -> presentation wall-clock
+    assert str(table._zoned_comparison_value(col, datetime(2024, 6, 15))) == (
+        "1718424000"
+    )
+    # aware -> normalized to the zone's wall-clock first (same instant)
+    aware = datetime(2024, 6, 15, 4, 0, tzinfo=tz.utc)  # == NY midnight
+    assert str(table._zoned_comparison_value(col, aware)) == "1718424000"

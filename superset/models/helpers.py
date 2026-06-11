@@ -77,9 +77,9 @@ from superset.commands.chart.exceptions import (
 from superset.common.db_query_status import QueryStatus
 from superset.common.utils import dataframe_utils
 from superset.common.utils.time_range_utils import (
-    get_presentation_relative_now,
     get_since_until_from_query_object,
     get_since_until_from_time_range,
+    presentation_zone_anchor,
 )
 from superset.constants import (
     CacheRegion,
@@ -136,13 +136,13 @@ from superset.utils.core import (
     TIME_COMPARISON,
 )
 from superset.utils.date_parser import (
-    anchored_now,
     get_past_or_future,
     normalize_time_delta,
     parse_human_datetime,
 )
 from superset.utils.dates import datetime_to_epoch
 from superset.utils.rls import apply_rls
+from superset.utils.timezones import validate_timezones
 
 
 class ValidationResultDict(TypedDict):
@@ -159,6 +159,19 @@ if TYPE_CHECKING:
     from superset.models.core import Database
 
 logger = logging.getLogger(__name__)
+
+# The binary comparison operators (FR-016 zone-shifts a temporal literal
+# compared with one of these; multi-value and pattern operators are excluded).
+COMPARISON_OPERATORS = frozenset(
+    {
+        utils.FilterOperator.EQUALS,
+        utils.FilterOperator.NOT_EQUALS,
+        utils.FilterOperator.GREATER_THAN,
+        utils.FilterOperator.LESS_THAN,
+        utils.FilterOperator.GREATER_THAN_OR_EQUALS,
+        utils.FilterOperator.LESS_THAN_OR_EQUALS,
+    }
+)
 
 VIRTUAL_TABLE_ALIAS = "virtual_table"
 SERIES_LIMIT_SUBQ_ALIAS = "series_limit"
@@ -2751,7 +2764,7 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
             return sql
 
         if tf := self._effective_python_date_format(col):
-            if tf in {"epoch_ms", "epoch_s"}:
+            if utils.is_epoch_dttm_format(tf):
                 seconds_since_epoch = int(dttm.timestamp())
                 if tf == "epoch_s":
                     return str(seconds_since_epoch)
@@ -2796,9 +2809,8 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
         # Read the *effective* format (honouring the db_extra fallback that
         # dttm_sql_literal also uses) so a column declared epoch only via
         # db_extra still takes the epoch boundary branch below.
-        is_epoch = self._effective_python_date_format(time_col) in (
-            "epoch_s",
-            "epoch_ms",
+        is_epoch = utils.is_epoch_dttm_format(
+            self._effective_python_date_format(time_col)
         )
 
         def _boundary(dttm: datetime) -> TextClause:
@@ -2839,6 +2851,11 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
         index-/partition-friendly. Shared by the time-range boundaries
         (FR-003/FR-004) and explicit comparison filters (FR-016).
         """
+        # Validate up front so every exit fails with the controlled allowlist
+        # ValueError — without this, the ZoneInfo constructions below would
+        # raise ZoneInfoNotFoundError (a KeyError) for a zone persisted through
+        # a path that skipped validation.
+        validate_timezones(presentation_timezone, source_timezone)
         if dttm.tzinfo is not None:
             dttm = dttm.astimezone(ZoneInfo(presentation_timezone)).replace(tzinfo=None)
         if is_epoch:
@@ -2894,7 +2911,12 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
                 # leave it entirely untouched instead.
                 return None
             value = value[0]
-        if isinstance(value, (int, float)) and not isinstance(value, bool):
+        if isinstance(value, datetime):
+            # Programmatic/Jinja-built filters can carry datetime instances;
+            # they slot straight into the renderer (aware values are
+            # normalized to the presentation zone's wall-clock there).
+            dttm = value
+        elif isinstance(value, (int, float)) and not isinstance(value, bool):
             # The frontend datetime picker sends the picked wall-clock as
             # UTC-epoch millis; recover the wall-clock and interpret it in
             # the presentation zone (same convention as the pre-existing
@@ -2913,7 +2935,7 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
                 # same value in either control selects the same rows — which
                 # also means anchoring relative words ("today", "yesterday")
                 # at the presentation zone's now, like the range control.
-                with anchored_now(get_presentation_relative_now(self)):
+                with presentation_zone_anchor(self):
                     dttm = parse_human_datetime(value)
             except (TimeRangeAmbiguousError, TimeRangeParseFailError):
                 # Not a recognizable temporal literal — keep the existing
@@ -2921,9 +2943,8 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
                 return None
         else:
             return None
-        is_epoch = self._effective_python_date_format(time_col) in (
-            "epoch_s",
-            "epoch_ms",
+        is_epoch = utils.is_epoch_dttm_format(
+            self._effective_python_date_format(time_col)
         )
         return self._zoned_temporal_literal(
             time_col, dttm, presentation_timezone, source_timezone, is_epoch
@@ -3684,14 +3705,6 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
                         db_engine_spec.handle_boolean_filter(sqla_col, op, False)
                     )
                 else:
-                    comparison_ops = {
-                        utils.FilterOperator.EQUALS,
-                        utils.FilterOperator.NOT_EQUALS,
-                        utils.FilterOperator.GREATER_THAN,
-                        utils.FilterOperator.LESS_THAN,
-                        utils.FilterOperator.GREATER_THAN_OR_EQUALS,
-                        utils.FilterOperator.LESS_THAN_OR_EQUALS,
-                    }
                     # FR-016: a temporal literal compared against a zoned
                     # physical temporal column is interpreted as
                     # presentation-zone wall-clock and shifted into storage
@@ -3704,7 +3717,7 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
                     # presentation wall-clock — so its literal is untouched.
                     zoned_value = (
                         self._zoned_comparison_value(col_obj, val)
-                        if op in comparison_ops and not filter_grain
+                        if op in COMPARISON_OPERATORS and not filter_grain
                         else None
                     )
                     if zoned_value is not None:
@@ -3723,7 +3736,7 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
                                 "with comparison operators"
                             )
                         )
-                    if op in comparison_ops:
+                    if op in COMPARISON_OPERATORS:
                         target_clause_list.append(
                             db_engine_spec.handle_comparison_filter(sqla_col, op, eq)
                         )
@@ -3758,7 +3771,7 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
                         # time (not by the QueryObject factory), so relative
                         # expressions here need the same presentation-zone
                         # anchor (FR-003); a None anchor is a no-op.
-                        with anchored_now(get_presentation_relative_now(self)):
+                        with presentation_zone_anchor(self):
                             _since, _until = get_since_until_from_time_range(
                                 time_range=eq,
                                 time_shift=time_shift,

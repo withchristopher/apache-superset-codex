@@ -1109,7 +1109,7 @@ class BaseEngineSpec:  # pylint: disable=too-many-public-methods
             time_expr = "{col}"
 
         # if epoch, translate to a datetime using the db-specific conf
-        if pdf in ("epoch_s", "epoch_ms"):
+        if utils.is_epoch_dttm_format(pdf):
             epoch_expr = (
                 cls.epoch_to_dttm() if pdf == "epoch_s" else cls.epoch_ms_to_dttm()
             )

@@ -1141,7 +1141,7 @@ class TableColumn(AuditMixinNullable, ImportExportMixin, CertificationMixin, Mod
             # epoch only via db_extra takes the epoch presentation branch
             # instead of an invalid zone wrap around a raw integer.
             pdf = table._effective_python_date_format(self)
-        is_epoch = pdf in ("epoch_s", "epoch_ms")
+        is_epoch = utils.is_epoch_dttm_format(pdf)
         column_spec = self.db_engine_spec.get_column_spec(
             self.type, db_extra=self.db_extra
         )
@@ -1225,7 +1225,7 @@ class TableColumn(AuditMixinNullable, ImportExportMixin, CertificationMixin, Mod
         # treated as epoch here too. Non-epoch custom formats mean string
         # storage — excluded from zoning.
         fmt = table._effective_python_date_format(self)
-        if fmt and fmt not in ("epoch_s", "epoch_ms"):
+        if fmt and not utils.is_epoch_dttm_format(fmt):
             return None, None
         # When a presentation zone applies but no source zone is configured,
         # default to UTC (matching the editor's seed) so a naive column produces

@@ -21,8 +21,8 @@ from typing import Any, cast, TYPE_CHECKING
 from superset.common.chart_data import ChartDataResultType
 from superset.common.query_object import QueryObject
 from superset.common.utils.time_range_utils import (
-    get_presentation_relative_now,
     get_since_until_from_time_range,
+    presentation_zone_anchor,
 )
 from superset.constants import NO_TIME_RANGE
 from superset.superset_typing import Column
@@ -34,7 +34,6 @@ from superset.utils.core import (
     get_x_axis_label,
     QueryObjectFilterClause,
 )
-from superset.utils.date_parser import anchored_now
 
 if TYPE_CHECKING:
     from superset.connectors.sqla.models import BaseDatasource
@@ -82,7 +81,7 @@ class QueryObjectFactory:  # pylint: disable=too-few-public-methods
         # presentation zone when one applies (no-op anchor otherwise), so the
         # resolved bounds are that zone's wall-clock — the same convention the
         # zoned filter path interprets them in.
-        with anchored_now(get_presentation_relative_now(datasource_model_instance)):
+        with presentation_zone_anchor(datasource_model_instance):
             from_dttm, to_dttm = get_since_until_from_time_range(
                 processed_time_range, time_shift, processed_extras
             )

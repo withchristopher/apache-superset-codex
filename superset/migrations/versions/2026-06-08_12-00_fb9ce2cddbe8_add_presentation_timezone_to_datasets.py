@@ -17,7 +17,7 @@
 """Add presentation/source time zone to datasets
 
 Adds two nullable columns on ``tables``: ``presentation_timezone`` (the
-dataset's display zone) and ``source_timezone`` (the IANA zone the dataset's
+dataset's presentation zone) and ``source_timezone`` (the IANA zone the dataset's
 naive temporal columns are stored in; treated as UTC when NULL). Both default
 NULL, so the change is additive, inert, and reversible.
 

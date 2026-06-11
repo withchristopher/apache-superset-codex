@@ -34,6 +34,7 @@ from superset.connectors.sqla.models import SqlaTable
 from superset.exceptions import SupersetMarshmallowValidationError
 from superset.models.sql_types import parse_currency_string
 from superset.utils import json
+from superset.utils.core import is_epoch_dttm_format
 from superset.utils.timezones import is_valid_timezone
 
 get_delete_ids_schema = {"type": "array", "items": {"type": "integer"}}
@@ -66,7 +67,7 @@ def validate_timezone(name: str) -> bool:
 
 
 def validate_python_date_format(dt_format: str) -> bool:
-    if dt_format in ("epoch_s", "epoch_ms"):
+    if is_epoch_dttm_format(dt_format):
         return True
     try:
         dt_str = datetime.now().strftime(dt_format)
