@@ -105,8 +105,8 @@ class VersionListItemSchema(Schema):
             "description": (
                 "One of 'baseline', 'update', or 'delete', derived from the "
                 "Continuum integer constant. Restore is not a distinct "
-                "operation_type: a restore surfaces as an ordinary 'update' "
-                "transaction."
+                "operation_type: a restore surfaces as 'update' carrying "
+                "``action_kind='restore'`` (see ACTIVITY_ACTION_KINDS)."
             )
         },
     )
