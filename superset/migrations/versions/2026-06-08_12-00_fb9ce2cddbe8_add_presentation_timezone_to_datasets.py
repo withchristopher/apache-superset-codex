@@ -20,7 +20,7 @@ Adds the nullable ``tables.presentation_timezone`` column (the dataset's display
 zone). Defaults NULL, so the change is additive, inert, and reversible.
 
 Revision ID: fb9ce2cddbe8
-Revises: 33d7e0e21daa
+Revises: 31dae2559c05
 Create Date: 2026-06-08 12:00:00.000000
 
 """
@@ -31,7 +31,7 @@ from superset.migrations.shared.utils import add_columns, drop_columns
 
 # revision identifiers, used by Alembic.
 revision = "fb9ce2cddbe8"
-down_revision = "33d7e0e21daa"
+down_revision = "31dae2559c05"
 
 
 def upgrade():

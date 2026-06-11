@@ -1136,6 +1136,12 @@ class BaseEngineSpec:  # pylint: disable=too-many-public-methods
         ``epoch_expr`` is the engine's epoch→timestamp template (still containing
         ``{col}``) which yields a naive UTC instant; it is converted as a
         zone-less UTC value to the presentation zone.
+
+        This trusts the engine's epoch decode to produce a *UTC* wall-clock. On
+        Impala that holds for default deployments but not for clusters started
+        with ``-use_local_tz_for_unix_timestamp_conversions`` (where
+        ``from_unixtime`` returns local time and this wrap would double-shift);
+        such deployments should not enable the feature (documented limitation).
         """
         validate_timezones(presentation_timezone)
         return cls.presentation_timezone_column(

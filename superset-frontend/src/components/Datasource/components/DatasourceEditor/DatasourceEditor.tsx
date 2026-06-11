@@ -1779,7 +1779,7 @@ class DatasourceEditor extends PureComponent<
               fieldKey="source_timezone"
               label={t('Source time zone')}
               description={t(
-                'The time zone the data is stored in. Used to interpret zone-less (naive) timestamp columns before converting to the presentation zone. A per-column override can be set via the API.',
+                'The time zone the data is stored in. Used to interpret zone-less (naive) timestamp columns before converting to the presentation zone. Defaults to UTC when unset.',
               )}
               control={<SourceTimezoneControl />}
             />

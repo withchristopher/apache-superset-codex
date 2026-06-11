@@ -2849,6 +2849,30 @@ def test_process_sql_expression_no_gate_when_denylists_empty(
     assert result is not None
 
 
+@pytest.fixture
+def utc_process_tz():
+    """Pin the process TZ to UTC for assertions on epoch literals.
+
+    ``dttm_sql_literal`` resolves a naive datetime's epoch in the process's
+    local zone, so without pinning, the expected/forbidden integer literals
+    in these tests would depend on the machine running them (e.g. the
+    flag-off test's "not zone-shifted" literal equals the zone-shifted one
+    exactly when the machine itself runs America/New_York).
+    """
+    import os
+    import time
+
+    old = os.environ.get("TZ")
+    os.environ["TZ"] = "UTC"
+    time.tzset()
+    yield
+    if old is None:
+        os.environ.pop("TZ", None)
+    else:
+        os.environ["TZ"] = old
+    time.tzset()
+
+
 def _make_pg_dataset(
     session: Session,
     zone: str | None,
@@ -2924,7 +2948,9 @@ def test_adhoc_base_axis_unzoned_when_flag_off(session: Session) -> None:
 
 
 @with_feature_flags(DATASET_PRESENTATION_TIMEZONE=True)
-def test_get_time_filter_epoch_bound_shifted_to_zone(session: Session) -> None:
+def test_get_time_filter_epoch_bound_shifted_to_zone(
+    session: Session, utc_process_tz
+) -> None:
     """Epoch column: column stays a raw integer; bound is the zone's epoch.
 
     2024-06-15 00:00 in America/New_York (EDT, UTC-4) == 2024-06-15 04:00 UTC
@@ -2960,7 +2986,7 @@ def test_get_time_filter_aware_column_shifts_bound(session: Session) -> None:
     assert "ts AT TIME ZONE" not in sql  # the column itself is not wrapped
 
 
-def test_get_time_filter_unzoned_without_flag(session: Session) -> None:
+def test_get_time_filter_unzoned_without_flag(session: Session, utc_process_tz) -> None:
     """Flag off ⇒ the boundary is the unchanged literal (no zone shift)."""
     from datetime import datetime
 
@@ -2976,7 +3002,9 @@ def test_get_time_filter_unzoned_without_flag(session: Session) -> None:
 
 
 @with_feature_flags(DATASET_PRESENTATION_TIMEZONE=True)
-def test_get_time_filter_aware_bound_normalized_to_zone(session: Session) -> None:
+def test_get_time_filter_aware_bound_normalized_to_zone(
+    session: Session, utc_process_tz
+) -> None:
     """An already-aware bound is expressed as the presentation zone's wall-clock.
 
     2024-06-15 04:00 UTC == 2024-06-15 00:00 America/New_York, so an aware UTC
@@ -3027,6 +3055,7 @@ def test_raw_timestamp_display_unchanged_when_flag_off(session: Session) -> None
 @with_feature_flags(DATASET_PRESENTATION_TIMEZONE=True)
 def test_get_time_filter_epoch_via_db_extra_takes_epoch_branch(
     session: Session,
+    utc_process_tz,
 ) -> None:
     """A column declared epoch only via db_extra still takes the epoch boundary.
 
@@ -3075,3 +3104,70 @@ def test_naive_column_defaults_missing_source_to_utc(session: Session) -> None:
     )
     assert "AT TIME ZONE 'UTC'" in sql  # source defaulted to UTC
     assert "AT TIME ZONE 'America/New_York'" in sql
+
+
+@with_feature_flags(DATASET_PRESENTATION_TIMEZONE=True)
+def test_epoch_via_db_extra_takes_epoch_branch_in_bucketing(
+    session: Session,
+) -> None:
+    """A db_extra-declared epoch column decodes as epoch on the column side too.
+
+    Regression: without resolving the effective format,
+    ``get_timestamp_expression`` saw ``is_epoch=False`` and emitted
+    ``(bigint AT TIME ZONE 'UTC') AT TIME ZONE ...`` — invalid SQL — while the
+    filter bound (which already used the effective format) stayed an integer.
+    """
+    from superset.connectors.sqla.models import TableColumn
+
+    col = TableColumn(column_name="ts", is_dttm=True, type="BIGINT")
+    _make_pg_dataset(
+        session,
+        "America/New_York",
+        column=col,
+        extra='{"python_date_format_by_column_name": {"ts": "epoch_s"}}',
+    )
+    sql = str(
+        col.get_timestamp_expression(time_grain=None).compile(
+            compile_kwargs={"literal_binds": True}
+        )
+    )
+    # The epoch decode (timestamp 'epoch' + ...) must be present, and the zone
+    # wrap applies to the decoded timestamp, not the raw integer column.
+    assert "'epoch'" in sql
+    assert "AT TIME ZONE 'America/New_York'" in sql
+    assert "ts AT TIME ZONE" not in sql
+
+
+@with_feature_flags(DATASET_PRESENTATION_TIMEZONE=True)
+def test_string_format_column_excluded_from_zoning(
+    session: Session, utc_process_tz
+) -> None:
+    """A string-stored temporal column (custom strftime format) stays as stored.
+
+    A varchar column cannot be wrapped in zone SQL; both the display expression
+    and the filter boundary must remain unconverted (and mutually consistent)
+    rather than comparing a varchar against a TIMESTAMP expression.
+    """
+    from datetime import datetime
+
+    from superset.connectors.sqla.models import TableColumn
+
+    col = TableColumn(
+        column_name="ts", is_dttm=True, type="VARCHAR", python_date_format="%Y-%m-%d"
+    )
+    table = _make_pg_dataset(session, "America/New_York", column=col)
+
+    display_sql = str(
+        col.get_timestamp_expression(time_grain=None).compile(
+            compile_kwargs={"literal_binds": True}
+        )
+    )
+    assert "AT TIME ZONE" not in display_sql  # column not wrapped
+
+    clause = table.get_time_filter(
+        time_col=col, start_dttm=datetime(2024, 6, 15), end_dttm=None
+    )
+    filter_sql = str(clause.compile(compile_kwargs={"literal_binds": True}))
+    assert "'2024-06-15'" in filter_sql  # strftime literal, as stored
+    assert "AT TIME ZONE" not in filter_sql
+    assert "TIMESTAMP" not in filter_sql  # no timestamp-vs-varchar comparison

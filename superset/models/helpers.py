@@ -2791,7 +2791,7 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
             "epoch_ms",
         )
 
-        def _boundary(dttm: datetime) -> Any:
+        def _boundary(dttm: datetime) -> TextClause:
             if presentation_timezone:
                 # The boundary is interpreted as wall-clock in the presentation
                 # zone. An already-aware bound is an absolute instant, so express
