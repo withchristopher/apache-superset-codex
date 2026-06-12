@@ -339,6 +339,33 @@ export const useExploreAdditionalActionsMenu = (
     }
   }, [addDangerToast, latestQueryFormData, permalinkChartState]);
 
+  const handleExportError = useCallback(
+    (error: unknown) => {
+      const exportError = error as Error & {
+        status?: number;
+        statusText?: string;
+        response?: { status?: number };
+      };
+      const status = exportError.status || exportError.response?.status;
+      if (status === 413) {
+        addDangerToast(
+          t(
+            'The chart data is too large to download. Please try reducing the date range, limiting rows, or using fewer columns.',
+          ),
+        );
+      } else {
+        const errorMessage =
+          exportError.message ||
+          exportError.statusText ||
+          t(
+            'Failed to export chart data. Please try again or contact your administrator.',
+          );
+        addDangerToast(errorMessage);
+      }
+    },
+    [addDangerToast],
+  );
+
   const exportCSV = useCallback(async () => {
     if (!canDownloadCSV) return null;
 
@@ -400,27 +427,7 @@ export const useExploreAdditionalActionsMenu = (
           : null,
       });
     } catch (error) {
-      const exportError = error as Error & {
-        status?: number;
-        statusText?: string;
-        response?: { status?: number };
-      };
-      const status = exportError.status || exportError.response?.status;
-      if (status === 413) {
-        addDangerToast(
-          t(
-            'Export failed: The chart data is too large to download (413). Please try reducing the date range, limiting rows, or using fewer columns.',
-          ),
-        );
-      } else {
-        const errorMessage =
-          exportError.message ||
-          exportError.statusText ||
-          t(
-            'Failed to export chart data. Please try again or contact your administrator.',
-          );
-        addDangerToast(errorMessage);
-      }
+      handleExportError(error);
     }
     return null;
   }, [
@@ -431,35 +438,8 @@ export const useExploreAdditionalActionsMenu = (
     streamingThreshold,
     slice,
     startExport,
-    addDangerToast,
+    handleExportError,
   ]);
-
-  const handleExportError = useCallback(
-    (error: unknown) => {
-      const exportError = error as Error & {
-        status?: number;
-        statusText?: string;
-        response?: { status?: number };
-      };
-      const status = exportError.status || exportError.response?.status;
-      if (status === 413) {
-        addDangerToast(
-          t(
-            'The chart data is too large to download. Please try reducing the date range, limiting rows, or using fewer columns.',
-          ),
-        );
-      } else {
-        const errorMessage =
-          exportError.message ||
-          exportError.statusText ||
-          t(
-            'Failed to export chart data. Please try again or contact your administrator.',
-          );
-        addDangerToast(errorMessage);
-      }
-    },
-    [addDangerToast],
-  );
 
   const exportCSVPivoted = useCallback(async () => {
     if (!canDownloadCSV) {

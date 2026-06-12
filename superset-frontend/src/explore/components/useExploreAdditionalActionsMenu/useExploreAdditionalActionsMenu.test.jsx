@@ -90,9 +90,7 @@ test('shows 413 error toast when exportCSV fails with 413', async () => {
 
   await waitFor(() => {
     expect(mockAddDangerToast).toHaveBeenCalledWith(
-      expect.stringMatching(
-        /Export failed: The chart data is too large to download \(413\)/,
-      ),
+      expect.stringMatching(/The chart data is too large to download/),
     );
   });
 });
