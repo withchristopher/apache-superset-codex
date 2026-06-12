@@ -383,7 +383,9 @@ def mark_first_tracked_saves(records: list[dict[str, Any]]) -> None:
     Shadow rows are matched on ``(id, uuid)`` against the live row — a
     bare ``id`` match would inherit a previously hard-deleted entity's
     history under id reuse (SQLite/MySQL reuse ``max(id)+1``) and mark
-    the wrong transaction. Mutates *records* in place — same contract as
+    the wrong transaction. Consequence: hard-deleted entities (no live
+    row) and NULL-uuid shadow rows never get a ``True`` marker — their
+    records always carry ``first_tracked_save=False``. Mutates *records* in place — same contract as
     the other decoration passes in
     :mod:`superset.versioning.activity.render`.
     """

@@ -625,17 +625,17 @@ class TestDashboardActivityView(SupersetTestCase):
                 r
                 for r in body["result"]
                 if r["kind"] == "__meta__"
-                and r["path"] == ["__meta__", "restore"]
+                and r["path"] == ["__meta__"]
                 and r["entity_kind"] == "dashboard"
             ]
             assert restore_records, (
                 "Expected a __meta__ restore headline record; "
                 f"got kinds: {[r['kind'] for r in body['result'][:10]]}"
             )
-            assert (
-                restore_records[0]["to_value"]["version_uuid"]
-                == target_version_uuid
-            )
+            assert restore_records[0]["to_value"]["version_uuid"] == target_version_uuid
+            # The headline is the one self record whose summary renders:
+            # "restored to version N" must be visible on include=self.
+            assert "restored to version" in restore_records[0]["summary"]
         finally:
             db.session.rollback()
             dashboard = (
@@ -728,9 +728,9 @@ class TestDashboardActivityView(SupersetTestCase):
             assert rv.status_code == 200
             body = _json.loads(rv.data.decode("utf-8"))
             assert body["count"] >= 1
-            assert all(
-                needle in _json.dumps(r).lower() for r in body["result"]
-            ), f"non-matching record returned for q={needle!r}"
+            assert all(needle in _json.dumps(r).lower() for r in body["result"]), (
+                f"non-matching record returned for q={needle!r}"
+            )
 
             # A needle that matches nothing returns an empty, zero-count
             # envelope — not an error.

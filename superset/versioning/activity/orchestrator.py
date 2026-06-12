@@ -51,6 +51,7 @@ from uuid import UUID
 from flask import Response
 from flask_appbuilder import Model
 
+from superset.utils import json
 from superset.versioning.activity.kinds import EntityWindows
 from superset.versioning.activity.queries import (
     apply_entity_name_denormalization,
@@ -171,16 +172,29 @@ def _record_matches(record: dict[str, Any], q: str) -> bool:
     """Case-insensitive substring match for the ``q`` search filter,
     over the human-meaningful surfaces of a decorated activity record:
     ``summary``, ``entity_name``, ``kind``, the joined ``path`` segments,
-    and the stringified ``from_value`` / ``to_value``.
+    and the JSON form of ``from_value`` / ``to_value`` (JSON, not Python
+    ``str()``: the client searches the serialized text it renders, so
+    ``false`` / ``null`` / double-quoted keys must match — and falsy
+    values like ``False`` / ``0`` must not collapse to unsearchable
+    empty strings).
     """
+
+    def _value_text(value: Any) -> str:
+        if value is None:
+            return ""
+        try:
+            return json.dumps(value)
+        except (TypeError, ValueError):
+            return str(value)
+
     needle = q.lower()
     haystacks = (
         record.get("summary") or "",
         record.get("entity_name") or "",
         record.get("kind") or "",
         " ".join(str(seg) for seg in (record.get("path") or [])),
-        str(record.get("from_value") or ""),
-        str(record.get("to_value") or ""),
+        _value_text(record.get("from_value")),
+        _value_text(record.get("to_value")),
     )
     return any(needle in h.lower() for h in haystacks)
 
@@ -204,8 +218,10 @@ def get_activity(
     pointed at, etc.) per data-model.md §"Query phases".
 
     Returns ``(records, total_count)``. The count is post-visibility
-    (AV-008) and post-include-filter, not just the size of the returned
-    slice — clients paginate by passing ``page`` forward until
+    (AV-008), post-include-filter, and — when ``q`` is supplied — post-
+    search-filter (``count`` reflects the matches, the contract the
+    server-side search exists to provide), not just the size of the
+    returned slice — clients paginate by passing ``page`` forward until
     ``page * page_size >= count``.
 
     Raises ``DashboardNotFoundError`` / ``ChartNotFoundError`` /

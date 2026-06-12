@@ -197,6 +197,11 @@ ACTIVITY_CHANGE_OPERATIONS: tuple[str, ...] = (
     "remove",
     "move",
     "edit",
+    # Synthetic ``__meta__`` headline records announce an action (e.g. a
+    # restore) rather than mutating a field — the field-verb vocabulary
+    # would be dishonest for them. Source of the value:
+    # superset.versioning.changes.OPERATION_ANNOUNCE.
+    "announce",
 )
 
 #: Allowed values for ``ActivityRecordSchema.action_kind`` — the
@@ -419,7 +424,10 @@ class ActivityRecordSchema(Schema):
                 "baseline). Such transactions can carry dozens of "
                 "params-normalization records for entities that predate "
                 "versioning; clients use the marker to collapse them "
-                "rather than render each delta as a user edit."
+                "rather than render each delta as a user edit. Matched "
+                "against the LIVE row's (id, uuid), so it is always "
+                "false for hard-deleted entities (no live row) and for "
+                "shadow rows predating the entity's current uuid."
             )
         },
     )

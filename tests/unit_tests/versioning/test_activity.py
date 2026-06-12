@@ -623,7 +623,56 @@ def test_record_matches_searches_decorated_surfaces() -> None:
         "from_value": None,
         "to_value": {"label": "Revenue (EUR)"},
     }
-    assert _record_matches(record, "sales")          # entity_name/summary
-    assert _record_matches(record, "COUNTRY")        # path segment
+    assert _record_matches(record, "sales")  # entity_name/summary
+    assert _record_matches(record, "COUNTRY")  # path segment
     assert _record_matches(record, "revenue (eur)")  # to_value
     assert not _record_matches(record, "nonexistent")
+
+
+def test_record_matches_falsy_values_and_json_form() -> None:
+    """Falsy values must stay searchable (False/0 must not collapse to
+    ''), and values match in their JSON form — the text the client
+    renders — not Python repr."""
+    from superset.versioning.activity.orchestrator import _record_matches
+
+    record = {
+        "summary": "",
+        "entity_name": "",
+        "kind": "field",
+        "path": ["params", "show_legend"],
+        "from_value": True,
+        "to_value": False,
+    }
+    assert _record_matches(record, "false")  # JSON 'false', not Python 'False'
+    assert _record_matches(record, "true")
+    zero = {**record, "path": ["params", "row_limit"], "from_value": 10, "to_value": 0}
+    assert _record_matches(zero, "0")
+    nested = {**record, "to_value": {"label": "Revenue"}}
+    assert _record_matches(nested, '"label"')  # JSON double-quoted key
+
+
+def test_build_summary_meta_headline_branches() -> None:
+    """The __meta__ headline dispatches on the transaction's action_kind
+    (path is pure navigation): restore renders 'restored to version N'
+    (with entity_name when present); unknown meta actions fall back to
+    'updated'."""
+    restore = {
+        "kind": "__meta__",
+        "action_kind": "restore",
+        "path": ["__meta__"],
+        "to_value": {"version_uuid": "u", "version_number": 3},
+        "entity_name": "Top 10 Girls",
+    }
+    assert _build_summary("Slice", restore) == (
+        "Chart restored to version 3: Top 10 Girls"
+    )
+    nameless = {**restore, "entity_name": ""}
+    assert _build_summary("Slice", nameless) == "Chart restored to version 3"
+    unknown = {
+        "kind": "__meta__",
+        "action_kind": "import",
+        "path": ["__meta__"],
+        "to_value": {},
+        "entity_name": "",
+    }
+    assert _build_summary("Dashboard", unknown) == "Dashboard updated"

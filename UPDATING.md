@@ -276,6 +276,7 @@ A read-only companion to the version-history endpoints (above). Each entity type
 | `since` | ISO 8601 datetime | — | Lower bound on `issued_at` |
 | `until` | ISO 8601 datetime | — | Upper bound on `issued_at` |
 | `include` | `self` \| `related` \| `all` | `all` | Filter to only the entity's own edits, only related edits, or both |
+| `q` | string | — | Case-insensitive search over the FULL history (summary, entity name, kind, path, values), applied before pagination — `count` reflects the matches. The filter re-evaluates the full record set per request; debounce client-side |
 | `page` | integer ≥ 0 | `0` | 0-based page index |
 | `page_size` | integer in `[1, 200]` | `25` | Records per page (clamped silently to 200) |
 
@@ -300,14 +301,19 @@ A read-only companion to the version-history endpoints (above). Each entity type
       "from_value": null,
       "to_value": "US",
       "summary": "Chart filter changed: Top 10 Girls",
-      "impact": null
+      "impact": null,
+      "first_tracked_save": false
     }
   ],
   "count": 47
 }
 ```
 
-`count` is the total record count *after* the silent permission filter (see below), not the raw query size.
+`count` is the total record count *after* the silent permission filter (see below) and, when `q` is supplied, after the search filter — not the raw query size.
+
+**Synthetic headline records (`kind: "__meta__"`):** some transactions carry one machine-generated headline record alongside (or instead of) field diffs — `operation: "announce"`, `path: ["__meta__"]`, with the action identified by the record's transaction-level `action_kind`. The shipped case is restore: `to_value` carries `{"version_uuid", "version_number"}` of the restored-to version and `summary` renders as "<Kind> restored to version N". Clients that branch on `operation` should treat `announce` records as annotations, not edits.
+
+**`first_tracked_save`:** `true` when the record's transaction is the entity's first tracked save (the first update after its retroactive baseline). A legacy entity's first save can replay dozens of params-normalization deltas in one transaction; collapse on this marker rather than rendering each delta as a user edit. Always `false` for hard-deleted entities (the marker matches the live row's `(id, uuid)`).
 
 **Authorisation:** reuses the resource's existing `can_read` permission. The endpoint runs `security_manager.raise_for_access(<resource>=path_entity)` — users without read access to the path entity get `403`. Workspace admins can read any entity's activity stream.
 
