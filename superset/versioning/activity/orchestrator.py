@@ -55,6 +55,7 @@ from superset.versioning.activity.kinds import EntityWindows
 from superset.versioning.activity.queries import (
     apply_entity_name_denormalization,
     fetch_change_records,
+    mark_first_tracked_saves,
     resolve_path_entity,
 )
 from superset.versioning.activity.render import apply_record_decoration
@@ -94,6 +95,8 @@ def parse_activity_query_params(args: Any) -> dict[str, Any]:
         params["since"] = since
     if (until := _parse_optional_iso(args.get("until"), name="until")) is not None:
         params["until"] = until
+    if q := (args.get("q") or "").strip():
+        params["q"] = q
     return params
 
 
@@ -164,6 +167,24 @@ def _parse_iso_datetime(value: str) -> datetime | None:
     return parsed
 
 
+def _record_matches(record: dict[str, Any], q: str) -> bool:
+    """Case-insensitive substring match for the ``q`` search filter,
+    over the human-meaningful surfaces of a decorated activity record:
+    ``summary``, ``entity_name``, ``kind``, the joined ``path`` segments,
+    and the stringified ``from_value`` / ``to_value``.
+    """
+    needle = q.lower()
+    haystacks = (
+        record.get("summary") or "",
+        record.get("entity_name") or "",
+        record.get("kind") or "",
+        " ".join(str(seg) for seg in (record.get("path") or [])),
+        str(record.get("from_value") or ""),
+        str(record.get("to_value") or ""),
+    )
+    return any(needle in h.lower() for h in haystacks)
+
+
 def get_activity(
     model_cls: type[Model],
     entity_uuid: UUID,
@@ -171,6 +192,7 @@ def get_activity(
     since: datetime | None = None,
     until: datetime | None = None,
     include: str = "all",
+    q: str | None = None,
     page: int = 0,
     page_size: int = _DEFAULT_PAGE_SIZE,
 ) -> tuple[list[dict[str, Any]], int]:
@@ -219,8 +241,21 @@ def get_activity(
         records = filter_records_by_visibility(records)
     with _phase_timer(kind_key, "denormalize_ms"):
         apply_entity_name_denormalization(records)
+        # Runs post-visibility (fewer entities to probe) and pre-
+        # decoration (needs the raw table-form entity_kind/entity_id
+        # that decoration rewrites).
+        mark_first_tracked_saves(records)
     with _phase_timer(kind_key, "decorate_ms"):
         apply_record_decoration(records, path_kind, path_id)
+
+    # Server-side search (PR #40988 feedback: the panel's client-side
+    # search only covers loaded pages). Applied post-decoration so the
+    # synthesized ``summary`` / ``entity_name`` participate, and pre-
+    # count so pagination paginates the MATCHES — the full record set
+    # is already materialized in Python (the documented AV-008 design),
+    # so the filter adds no extra query.
+    if q:
+        records = [r for r in records if _record_matches(r, q)]
 
     total = len(records)
     bounded_size = max(1, min(page_size, _MAX_PAGE_SIZE))

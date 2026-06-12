@@ -600,3 +600,30 @@ def test_related_entity_count_counts_genuine_related_of_same_kind(mock_mgr) -> N
     )
 
     assert _gauge_value(sl, "related_entity_count.charts") == 2.0
+
+
+def test_parser_passes_q_through_and_drops_blank() -> None:
+    """``q`` reaches get_activity stripped; blank/missing stays absent."""
+    assert parse_activity_query_params({"q": "  revenue  "})["q"] == "revenue"
+    assert "q" not in parse_activity_query_params({})
+    assert "q" not in parse_activity_query_params({"q": "   "})
+
+
+def test_record_matches_searches_decorated_surfaces() -> None:
+    """The q filter covers summary, entity_name, kind, path, and values —
+    case-insensitively (PR #40988: client search only covered loaded
+    pages; the server filter must cover the same surfaces)."""
+    from superset.versioning.activity.orchestrator import _record_matches
+
+    record = {
+        "summary": "Dataset updated: Sales Transactions",
+        "entity_name": "Sales Transactions",
+        "kind": "field",
+        "path": ["params", "adhoc_filters", "country"],
+        "from_value": None,
+        "to_value": {"label": "Revenue (EUR)"},
+    }
+    assert _record_matches(record, "sales")          # entity_name/summary
+    assert _record_matches(record, "COUNTRY")        # path segment
+    assert _record_matches(record, "revenue (eur)")  # to_value
+    assert not _record_matches(record, "nonexistent")

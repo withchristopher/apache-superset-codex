@@ -199,6 +199,17 @@ def _build_summary(api_kind: str, record: dict[str, Any]) -> str:
     """Build the AV-012 headline for a related record:
     ``"<Kind label> <verb>: <entity_name>"``."""
     label = API_KIND_LABEL.get(api_kind, api_kind)
+    # Synthetic ``__meta__`` headlines carry their payload in to_value;
+    # the restore variant names the version it restored to (PR #40988:
+    # "Restored to X from [date]" is not renderable from field diffs).
+    if record.get("kind") == "__meta__":
+        path = record.get("path") or []
+        if len(path) > 1 and path[1] == "restore":
+            to_value = record.get("to_value") or {}
+            version_number = to_value.get("version_number")
+            if version_number is not None:
+                return f"{label} restored to version {version_number}"
+        return f"{label} updated"
     verb = _SUMMARY_VERBS.get(record.get("kind", ""), "updated")
     name = record.get("entity_name") or ""
     return f"{label} {verb}: {name}" if name else f"{label} {verb}"

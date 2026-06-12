@@ -31,6 +31,7 @@ downstream tests via the shadow tables.
 from __future__ import annotations
 
 from typing import Any
+from uuid import uuid4
 
 import pytest
 
@@ -565,30 +566,26 @@ class TestDashboardActivityView(SupersetTestCase):
         overlap = page0_keys & page1_keys
         assert not overlap, f"page=0 and page=1 returned overlapping records: {overlap}"
 
-    @pytest.mark.xfail(
-        reason=(
-            "AV-015 requires sc-103156's restore code to emit a synthetic "
-            "change record with kind='restore', path=['__meta__', "
-            "'restored_from'], and to_value carrying the source version_uuid "
-            "+ label. sc-103156's restore_version() currently does not emit "
-            "this — it relies on the diff capture for the field changes the "
-            "revert produces, which surface as kind='field' records. The "
-            "activity-view layer correctly passes through whatever kind "
-            "sc-103156 emits; this test will pass once the upstream "
-            "emission lands. Tracking via the AV-015 contract in the spec; "
-            "no code change required on the sc-107283 side."
-        ),
-        strict=True,
-    )
     def test_activity_surfaces_dashboard_restore_event(self) -> None:
         """T044 / AV-015: restoring a dashboard to a prior version surfaces
-        a ``kind='restore'`` record in the dashboard's own activity stream
-        (``source='self'``). The restore is emitted by sc-103156's restore
-        path and the activity layer passes it through without special-
-        casing."""
+        a synthetic ``kind='__meta__'`` headline record (path
+        ``['__meta__', 'restore']``, ``to_value`` carrying the restored-to
+        version_uuid) in the dashboard's own activity stream
+        (``source='self'``). The headline is emitted by the restore
+        command via the listener's ACTION_META_KEY (PR #40988 feedback);
+        the activity layer passes it through without special-casing.
+
+        Uses a fresh dashboard: the shared fixture dashboard accumulates
+        membership history on a persistent DB, so its restore transaction
+        can carry more records than one page — burying the headline
+        (sequence 0 sorts last under the stream's sequence-DESC order).
+        """
         _persist_fixture_state()
-        dashboard = _get_birth_names_dashboard()
-        assert dashboard is not None
+        dashboard = Dashboard(
+            dashboard_title=f"restore probe {uuid4().hex[:8]}", published=False
+        )
+        db.session.add(dashboard)
+        db.session.commit()
         dashboard_uuid = str(dashboard.uuid)
         dashboard_id = dashboard.id
         original_title = dashboard.dashboard_title
@@ -619,7 +616,7 @@ class TestDashboardActivityView(SupersetTestCase):
             )
             assert restore_rv.status_code == 200, restore_rv.data
 
-            # Activity stream should now show a restore record on the
+            # Activity stream should now show the restore headline on the
             # dashboard itself.
             rv = self._activity(dashboard_uuid, include="self")
             assert rv.status_code == 200
@@ -627,12 +624,119 @@ class TestDashboardActivityView(SupersetTestCase):
             restore_records = [
                 r
                 for r in body["result"]
-                if r["kind"] == "restore" and r["entity_kind"] == "dashboard"
+                if r["kind"] == "__meta__"
+                and r["path"] == ["__meta__", "restore"]
+                and r["entity_kind"] == "dashboard"
             ]
             assert restore_records, (
-                "Expected at least one kind='restore' Dashboard record; "
+                "Expected a __meta__ restore headline record; "
                 f"got kinds: {[r['kind'] for r in body['result'][:10]]}"
             )
+            assert (
+                restore_records[0]["to_value"]["version_uuid"]
+                == target_version_uuid
+            )
+        finally:
+            db.session.rollback()
+            dashboard = (
+                db.session.query(Dashboard)
+                .filter(Dashboard.id == dashboard_id)
+                .one_or_none()
+            )
+            if dashboard is not None:
+                db.session.delete(dashboard)
+                db.session.commit()
+
+    def test_activity_marks_first_tracked_save(self) -> None:
+        """Every record carries ``first_tracked_save``: True only on the
+        entity's FIRST tracked save. Clients collapse such transactions —
+        a legacy chart's first Explore save can replay ~74 params-
+        normalization deltas against the retroactive baseline
+        (PR #40988 feedback).
+
+        Uses a fresh dashboard so the entity's history is fully
+        controlled by this test (the shared fixture dashboard's first
+        save belongs to whichever suite ran first on a persistent DB).
+        """
+        _persist_fixture_state()
+        dashboard = Dashboard(
+            dashboard_title=f"fts probe {uuid4().hex[:8]}", published=False
+        )
+        db.session.add(dashboard)
+        db.session.commit()  # op=0 INSERT baseline — no change records
+        dashboard_uuid = str(dashboard.uuid)
+        dashboard_id = dashboard.id
+
+        try:
+            dashboard.dashboard_title = f"{dashboard.dashboard_title} v1"
+            db.session.commit()  # first tracked save
+            dashboard.dashboard_title = f"{dashboard.dashboard_title} v2"
+            db.session.commit()  # second save
+
+            self.login(ADMIN_USERNAME)
+            rv = self._activity(dashboard_uuid, include="self")
+            assert rv.status_code == 200
+            records = _json.loads(rv.data.decode("utf-8"))["result"]
+            assert len(records) >= 2
+            assert all("first_tracked_save" in r for r in records), (
+                "every record must carry the first_tracked_save marker"
+            )
+            # Newest-first ordering: the latest save (v2) is never the
+            # entity's first tracked save.
+            assert records[0]["first_tracked_save"] is False
+            # The v1 save's transaction IS flagged. Assert by transaction
+            # rather than stream position: under id reuse on a persistent
+            # test DB the stream can also carry a previously-deleted
+            # entity's records for the same integer id (the marker itself
+            # is uuid-aware and immune; the stream's positional tail is
+            # not).
+            flagged_txs = {
+                r["transaction_id"] for r in records if r["first_tracked_save"]
+            }
+            assert flagged_txs, "no record flagged as the first tracked save"
+            newest_tx = records[0]["transaction_id"]
+            assert newest_tx not in flagged_txs
+        finally:
+            db.session.rollback()
+            dashboard = (
+                db.session.query(Dashboard)
+                .filter(Dashboard.id == dashboard_id)
+                .one_or_none()
+            )
+            if dashboard is not None:
+                db.session.delete(dashboard)
+                db.session.commit()
+
+    def test_activity_q_filters_server_side(self) -> None:
+        """``?q=`` searches the FULL history server-side, pre-pagination
+        (PR #40988: the panel's client-side search only covered loaded
+        pages); ``count`` reflects the matches."""
+        _persist_fixture_state()
+        dashboard = _get_birth_names_dashboard()
+        assert dashboard is not None
+        dashboard_uuid = str(dashboard.uuid)
+        dashboard_id = dashboard.id
+        original_title = dashboard.dashboard_title
+        needle = f"qprobe{uuid4().hex[:6]}"
+
+        try:
+            dashboard.dashboard_title = f"{original_title} {needle}"
+            db.session.commit()
+
+            self.login(ADMIN_USERNAME)
+            rv = self._activity(dashboard_uuid, q=needle)
+            assert rv.status_code == 200
+            body = _json.loads(rv.data.decode("utf-8"))
+            assert body["count"] >= 1
+            assert all(
+                needle in _json.dumps(r).lower() for r in body["result"]
+            ), f"non-matching record returned for q={needle!r}"
+
+            # A needle that matches nothing returns an empty, zero-count
+            # envelope — not an error.
+            rv_none = self._activity(dashboard_uuid, q="zz-no-such-needle-zz")
+            body_none = _json.loads(rv_none.data.decode("utf-8"))
+            assert body_none == {"result": [], "count": 0}
         finally:
             db.session.rollback()
             dashboard = (

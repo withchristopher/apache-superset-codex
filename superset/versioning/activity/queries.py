@@ -366,6 +366,75 @@ def _chunked_ids(ids: set[int], size: int) -> Iterator[list[int]]:
         yield items[i : i + size]
 
 
+def mark_first_tracked_saves(records: list[dict[str, Any]]) -> None:
+    """Set ``first_tracked_save`` on each record in place: ``True`` when
+    the record's transaction is the entity's FIRST UPDATE (op=1) in its
+    shadow table.
+
+    The first save of an entity that predates versioning replays every
+    params-normalization delta against the retroactive baseline — a
+    legacy chart's first Explore save produced ~74 records in one
+    transaction (version-history UI feedback, PR #40988). The server
+    can't distinguish "normalization" from "the user changed 74 things",
+    but it CAN say "this was the entity's first tracked save"; clients
+    use the marker to collapse such transactions.
+
+    One ``GROUP BY`` query per kind (≤3), chunked like the record fetch.
+    Shadow rows are matched on ``(id, uuid)`` against the live row — a
+    bare ``id`` match would inherit a previously hard-deleted entity's
+    history under id reuse (SQLite/MySQL reuse ``max(id)+1``) and mark
+    the wrong transaction. Mutates *records* in place — same contract as
+    the other decoration passes in
+    :mod:`superset.versioning.activity.render`.
+    """
+    if not records:
+        return
+    # pylint: disable=import-outside-toplevel
+    from sqlalchemy_continuum import version_class
+
+    ids_by_kind: dict[str, set[int]] = {}
+    for r in records:
+        ids_by_kind.setdefault(r["entity_kind"], set()).add(r["entity_id"])
+
+    first_tx_by_entity: dict[tuple[str, int], int] = {}
+    for table_kind, entity_ids in ids_by_kind.items():
+        model_name = TABLE_KIND_TO_API.get(table_kind)
+        if model_name is None:
+            continue
+        live_model = load_shadow_model(model_name)
+        live_tbl = live_model.__table__
+        shadow_tbl = version_class(live_model).__table__
+        for chunk in _chunked_ids(entity_ids, _ENTITY_ID_CHUNK_SIZE):
+            stmt = (
+                sa.select(
+                    shadow_tbl.c.id,
+                    sa.func.min(shadow_tbl.c.transaction_id),
+                )
+                .select_from(
+                    shadow_tbl.join(
+                        live_tbl,
+                        sa.and_(
+                            shadow_tbl.c.id == live_tbl.c.id,
+                            shadow_tbl.c.uuid == live_tbl.c.uuid,
+                        ),
+                    )
+                )
+                .where(
+                    shadow_tbl.c.operation_type == 1,
+                    shadow_tbl.c.id.in_(chunk),
+                )
+                .group_by(shadow_tbl.c.id)
+            )
+            for entity_id, min_tx in db.session.connection().execute(stmt):
+                first_tx_by_entity[(table_kind, entity_id)] = min_tx
+
+    for r in records:
+        r["first_tracked_save"] = (
+            first_tx_by_entity.get((r["entity_kind"], r["entity_id"]))
+            == r["transaction_id"]
+        )
+
+
 # ---- Name denormalization -------------------------------------------------
 
 

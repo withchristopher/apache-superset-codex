@@ -1454,6 +1454,14 @@ class ChartRestApi(BaseSupersetModelRestApi):
             name: include
           - in: query
             schema:
+              type: string
+            name: q
+            description: >-
+              Case-insensitive search over the full history (summary,
+              entity name, kind, path, values) — applied before
+              pagination, so `count` reflects the matches.
+          - in: query
+            schema:
               type: integer
               minimum: 0
               default: 0

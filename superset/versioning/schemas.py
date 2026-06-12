@@ -181,6 +181,12 @@ ACTIVITY_CHANGE_KINDS: tuple[str, ...] = (
     "time_range",
     "color_palette",
     "field",
+    # Synthetic headline records emitted by commands via the listener's
+    # ACTION_META_KEY (the ``__meta__`` path convention): machine
+    # namespace, clearly non-content. The canonical case is restore,
+    # whose record's ``to_value`` carries the restored-to
+    # ``version_uuid`` / ``version_number`` (PR #40988 feedback).
+    "__meta__",
 )
 
 #: Allowed values for ``ActivityRecordSchema.operation`` — the per-record
@@ -402,6 +408,18 @@ class ActivityRecordSchema(Schema):
                 "that affected 4 charts on the path dashboard at the "
                 'change\'s transaction. Absent for ``source: "self"`` '
                 "records and for related records without dependents."
+            )
+        },
+    )
+    first_tracked_save = fields.Boolean(
+        metadata={
+            "description": (
+                "True when this record's transaction is the entity's "
+                "FIRST tracked save (first UPDATE after the retroactive "
+                "baseline). Such transactions can carry dozens of "
+                "params-normalization records for entities that predate "
+                "versioning; clients use the marker to collapse them "
+                "rather than render each delta as a user edit."
             )
         },
     )
