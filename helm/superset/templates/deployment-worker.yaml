@@ -74,6 +74,10 @@ spec:
           {{- toYaml .Values.supersetWorker.podLabels | nindent 8 }}
         {{- end }}
     spec:
+      {{- if .Values.supersetWorker.deploymentAdditionalPodSpec }}
+      {{- /* Render this deployment's own additional pod spec, not supersetNode's. */}}
+      {{- tpl (toYaml .Values.supersetWorker.deploymentAdditionalPodSpec) . | nindent 6 }}
+      {{- end }}
       {{- if or (.Values.serviceAccount.create) (.Values.serviceAccountName) }}
       serviceAccountName: {{ template "superset.serviceAccountName" . }}
       {{- end }}
