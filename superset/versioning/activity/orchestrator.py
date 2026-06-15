@@ -209,7 +209,7 @@ def get_activity(
     q: str | None = None,
     page: int = 0,
     page_size: int = _DEFAULT_PAGE_SIZE,
-) -> tuple[list[dict[str, Any]], int]:
+) -> tuple[list[dict[str, Any]], int, bool]:
     """Cross-entity activity stream for one path entity.
 
     Single polymorphic entry point. Dispatches on *model_cls* to
@@ -217,7 +217,11 @@ def get_activity(
     entity records (charts attached to a dashboard, datasets a chart
     pointed at, etc.) per data-model.md §"Query phases".
 
-    Returns ``(records, total_count)``. The count is post-visibility
+    Returns ``(records, total_count, truncated)``. ``truncated`` is
+    ``True`` when the per-request fetch ceiling
+    (``queries._MAX_FETCHED_RECORDS``) bit — older records exist beyond
+    what was materialized, so ``count`` is a floor, not the absolute
+    total. The count is post-visibility
     (AV-008), post-include-filter, and — when ``q`` is supplied — post-
     search-filter (``count`` reflects the matches, the contract the
     server-side search exists to provide), not just the size of the
@@ -244,7 +248,7 @@ def get_activity(
             path_kind=path_kind,
             path_id=path_id,
         )
-        return [], 0
+        return [], 0, False
 
     # Visibility filter runs before decoration: it needs the raw
     # ``entity_id`` column (which decoration strips), and dropping
@@ -252,7 +256,7 @@ def get_activity(
     # tombstone probes + impact counts on records the requester
     # can't see (AV-008's silent-filter contract).
     with _phase_timer(kind_key, "fetch_ms"):
-        records = fetch_change_records(entity_windows, since, until)
+        records, truncated = fetch_change_records(entity_windows, since, until)
     with _phase_timer(kind_key, "visibility_filter_ms"):
         records = filter_records_by_visibility(records)
     with _phase_timer(kind_key, "denormalize_ms"):
@@ -288,7 +292,7 @@ def get_activity(
         path_id=path_id,
     )
 
-    return records[offset : offset + bounded_size], total
+    return records[offset : offset + bounded_size], total, truncated
 
 
 def activity_endpoint(
@@ -319,8 +323,10 @@ def activity_endpoint(
     except ActivityParamsError as exc:
         return api.response_400(message=str(exc))
 
-    records, count = get_activity(model_cls, entity.uuid, **params)
-    payload = ActivityResponseSchema().dump({"result": records, "count": count})
+    records, count, truncated = get_activity(model_cls, entity.uuid, **params)
+    payload = ActivityResponseSchema().dump(
+        {"result": records, "count": count, "truncated": truncated}
+    )
     return api.response(200, **payload)
 
 

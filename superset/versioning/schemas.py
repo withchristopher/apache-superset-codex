@@ -441,7 +441,18 @@ class ActivityResponseSchema(Schema):
         metadata={
             "description": (
                 "Total record count across all pages (the filtered + "
-                "denormalized stream), not just the current page."
+                "denormalized stream), not just the current page. When "
+                "``truncated`` is true this is a floor (the count within "
+                "the fetched window), not the absolute total."
+            )
+        },
+    )
+    truncated = fields.Boolean(
+        metadata={
+            "description": (
+                "True when the request hit the per-request fetch ceiling "
+                "and older records exist beyond the returned window. "
+                "Narrow the time range (``since``/``until``) to see them."
             )
         },
     )

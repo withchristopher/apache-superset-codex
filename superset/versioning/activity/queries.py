@@ -197,7 +197,7 @@ def fetch_change_records(
     entity_window_tuples: list[EntityWindows],
     since: datetime | None,
     until: datetime | None,
-) -> list[dict[str, Any]]:
+) -> tuple[list[dict[str, Any]], bool]:
     """Fetch all ``version_changes`` rows matching any of the supplied
     entity-window tuples, joined with ``version_transaction`` for
     ``issued_at`` and ``user_id``.
@@ -221,14 +221,18 @@ def fetch_change_records(
     Per AV-008 the visibility filter runs after this function (records
     the requester can't read are silently dropped and must not
     contribute to ``count``), so the orchestrator paginates in Python
-    over the filtered list — no DB-level ``LIMIT``/``OFFSET`` here.
+    over the filtered list — there is no DB-level page ``OFFSET`` here.
+    There IS a per-statement safety ``LIMIT`` (``_MAX_FETCHED_RECORDS``)
+    that bounds how much history a single request materializes; when it
+    bites, the second return value is ``True`` and the caller surfaces
+    ``truncated`` on the response.
 
-    Returned rows are ordered by ``(issued_at DESC, transaction_id DESC,
-    sequence DESC)`` — the secondary keys break ties for AV-006's
-    stable-ordering contract.
+    Returns ``(records, truncated)``. Records are ordered by
+    ``(issued_at DESC, transaction_id DESC, sequence DESC)`` — the
+    secondary keys break ties for AV-006's stable-ordering contract.
     """
     if not entity_window_tuples:
-        return []
+        return [], False
 
     # Group windows by (table_kind, entity_id) and by table_kind for SQL
     # narrowing. The fetch is per-kind; the post-filter is per-entity.
@@ -242,9 +246,11 @@ def fetch_change_records(
         windows_by_entity.setdefault((table_kind, entity_id), []).extend(windows)
 
     if not ids_by_kind:
-        return []
+        return [], False
 
-    rows = _select_change_rows_for_kinds(ids_by_kind, since, until)
+    rows, truncated = _select_change_rows_for_kinds(
+        ids_by_kind, since, until, _MAX_FETCHED_RECORDS
+    )
     filtered = [
         row
         for row in rows
@@ -256,14 +262,15 @@ def fetch_change_records(
         key=lambda r: (r["issued_at"], r["transaction_id"], r["sequence"]),
         reverse=True,
     )
-    return filtered
+    return filtered, truncated
 
 
 def _select_change_rows_for_kinds(
     ids_by_kind: dict[str, set[int]],
     since: datetime | None,
     until: datetime | None,
-) -> list[dict[str, Any]]:
+    limit: int,
+) -> tuple[list[dict[str, Any]], bool]:
     """Fire one SELECT per entity_kind with ``entity_id IN (...)``;
     concatenate the results. Each SELECT joins ``version_transaction``
     + ``ab_user`` so the orchestrator has the columns it needs for
@@ -325,6 +332,7 @@ def _select_change_rows_for_kinds(
     )
 
     out: list[dict[str, Any]] = []
+    truncated = False
     for table_kind, entity_ids in ids_by_kind.items():
         # Chunk ``entity_ids`` to stay inside SQLite's
         # ``SQLITE_MAX_VARIABLE_NUMBER`` floor (default 999, raised to
@@ -346,17 +354,40 @@ def _select_change_rows_for_kinds(
                 stmt = stmt.where(tx_tbl.c.issued_at >= since)
             if until is not None:
                 stmt = stmt.where(tx_tbl.c.issued_at < until)
-            out.extend(
+            # Bounded fetch: cap each statement at the most-recent
+            # ``limit`` rows so a path entity with very long history (or a
+            # dashboard with many related charts/datasets) can't
+            # materialize an unbounded result set in Python. The same
+            # ordering keys as ``fetch_change_records``' final sort make
+            # the cap take the newest records; if a statement returns a
+            # full ``limit``, older records exist beyond it and the caller
+            # surfaces ``truncated`` on the response.
+            stmt = stmt.order_by(
+                tx_tbl.c.issued_at.desc(),
+                vc.c.transaction_id.desc(),
+                vc.c.sequence.desc(),
+            ).limit(limit)
+            rows = [
                 dict(row)
                 for row in db.session.connection().execute(stmt).mappings().all()
-            )
-    return out
+            ]
+            if len(rows) >= limit:
+                truncated = True
+            out.extend(rows)
+    return out, truncated
 
 
 # Bind-parameter floor: see ``_select_change_rows_for_kinds`` docstring.
 # 500 leaves room for the two literal-string filters and the optional
 # since/until datetime params.
 _ENTITY_ID_CHUNK_SIZE = 500
+
+# Per-statement safety ceiling on how many change rows a single activity
+# request will materialize (per kind-chunk). Bounds memory/CPU for a path
+# entity with very long history or many related entities; when a statement
+# returns a full ``_MAX_FETCHED_RECORDS`` the response is flagged
+# ``truncated`` so clients know older records exist beyond the window.
+_MAX_FETCHED_RECORDS = 5000
 
 
 def _chunked_ids(ids: set[int], size: int) -> Iterator[list[int]]:
@@ -385,8 +416,8 @@ def mark_first_tracked_saves(records: list[dict[str, Any]]) -> None:
     history under id reuse (SQLite/MySQL reuse ``max(id)+1``) and mark
     the wrong transaction. Consequence: hard-deleted entities (no live
     row) and NULL-uuid shadow rows never get a ``True`` marker — their
-    records always carry ``first_tracked_save=False``. Mutates *records* in place — same contract as
-    the other decoration passes in
+    records always carry ``first_tracked_save=False``. Mutates *records*
+    in place — same contract as the other decoration passes in
     :mod:`superset.versioning.activity.render`.
     """
     if not records:

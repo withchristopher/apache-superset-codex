@@ -36,7 +36,9 @@ class ActivityDebugView(BaseSupersetView):
     No auth decorator on the shell itself — the shell page exposes no
     data of its own. The React component renders inside it and fires
     calls to ``/api/v1/{resource}/{uuid}/activity/`` which gate access
-    via ``raise_for_ownership`` on the path entity. Anonymous users
+    via ``security_manager.raise_for_access`` (read access) on the path
+    entity — ``raise_for_ownership`` is the write/restore path. Anonymous
+    users
     who somehow land here will see the React UI and the API errors
     surface inline as "error: 401 ...". That's a fine UX for a debug
     tool — and avoids the FAB ``@has_access`` redirect-to-home
