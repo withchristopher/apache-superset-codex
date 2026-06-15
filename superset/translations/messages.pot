@@ -4237,6 +4237,9 @@ msgstr ""
 msgid "Dataset could not be duplicated."
 msgstr ""
 
+msgid "Dataset could not be restored."
+msgstr ""
+
 msgid "Dataset could not be updated."
 msgstr ""
 
