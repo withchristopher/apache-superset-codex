@@ -41,7 +41,7 @@ import {
 import { QueryEditor, SqlLabRootState } from 'src/SqlLab/types';
 import { Icons, type IconType } from '@superset-ui/core/components/Icons';
 import { StandardModal } from 'src/components/Modal';
-import { Input } from 'antd';
+import { Input } from '@superset-ui/core/components';
 
 const TabTitleWrapper = styled.div`
   display: flex;
@@ -124,9 +124,10 @@ const SqlEditorTabHeader: FC<Props> = ({ queryEditor }) => {
 
   function handleRenameConfirm() {
     const trimmed = newTitle.trim();
-    if (trimmed) {
-      actions.queryEditorSetTitle(qe, trimmed, qe.id);
+    if (!trimmed) {
+      return;
     }
+    actions.queryEditorSetTitle(qe, trimmed, qe.id);
     setIsRenameModalOpen(false);
   }
 
@@ -254,6 +255,7 @@ const SqlEditorTabHeader: FC<Props> = ({ queryEditor }) => {
             value={newTitle}
             onChange={e => setNewTitle(e.target.value)}
             onPressEnter={handleRenameConfirm}
+            aria-label={t('New tab name')}
             data-test="rename-tab-input"
             autoFocus
           />
