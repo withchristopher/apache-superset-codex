@@ -212,6 +212,7 @@ MCP_CACHE_CONFIG: Dict[str, Any] = {
     "excluded_tools": [  # Tools that should never be cached (side effects, dynamic)
         "execute_sql",
         "generate_dashboard",
+        "duplicate_dashboard",
         "generate_chart",
         "update_chart",
     ],
