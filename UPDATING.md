@@ -140,6 +140,20 @@ Both default to empty (no behavior change). They apply to both the `LOCAL_EXTENS
 
 The Dynamic Group By chart customization now orders its display values according to the "Sort display control values" toggle: ascending (A–Z), descending (Z–A), or the dataset's source order when the toggle is unset. Previously the dropdown always sorted alphabetically. Existing dashboards where the toggle was never set will show options in source order instead of A–Z; open the customization and enable the toggle to restore alphabetical ordering.
 
+### Soft delete and restore for charts
+
+`DELETE /api/v1/chart/<id>` no longer hard-deletes the chart (the bulk-delete endpoint behaves the same way). The row is marked with a `deleted_at` timestamp and hidden from all list, detail, and lookup endpoints. Charts in this state are excluded from default queries and from relationship loads (e.g. `dashboard.slices`).
+
+**New endpoint** — `POST /api/v1/chart/<uuid>/restore` clears `deleted_at` and returns the chart to active state. Requires `can_write on Chart` and ownership of the row (or admin). Soft-deleted charts can also be surfaced in the list endpoint via the new `chart_deleted_state` rison filter: `include` returns both live and soft-deleted rows, `only` returns just the soft-deleted ones. Any other value is ignored. For non-admin users, soft-deleted rows are limited to charts they own — the same audience that can restore them.
+
+**Permissions migration:** existing role grants of `can_write on Chart` cover the new restore endpoint automatically; no role migration is required.
+
+**Schema migration:** the migration adds a nullable `deleted_at` column and an index on it (`ix_slices_deleted_at`) to the `slices` table. The column add is instant; the index build runs inline (no `CONCURRENTLY`) and may briefly block writes on the `slices` table (INSERT/UPDATE/DELETE are queued while the index builds; reads are unaffected) on large Postgres deployments. MySQL InnoDB builds the index online (no blocking).
+
+**Rollback note:** if the application code is rolled back after charts have been soft-deleted, the older code path's visibility filter no longer applies and previously hidden rows become visible to the older code. Pair the rollback with a data decision (restore the rows, hard-delete them, or also downgrade the migration) rather than assuming the old hard-delete semantics still hold.
+
+**Importer behavior:** importing a chart YAML whose UUID matches an existing **soft-deleted** chart is treated as an implicit restore-with-update. The owner (or an admin) gets the chart back in place — `deleted_at` is cleared and the contents from the upload are applied — preserving the original PK and all out-of-archive references (`dashboard_slices` junctions, `report.chart_id`, tag rows). Non-owners get `ImportFailedError`. Callers without `can_write` get `ImportFailedError` instead of silently receiving the soft-deleted row.
+
 ### Granular Export Controls
 
 A new feature flag `GRANULAR_EXPORT_CONTROLS` introduces three fine-grained permissions that replace the legacy `can_csv` permission:
