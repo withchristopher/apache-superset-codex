@@ -426,6 +426,12 @@ class TestDashboardActivityView(SupersetTestCase):
             f"got {result[('SqlaTable', dataset.id)]}"
         )
 
+    @pytest.mark.skip(
+        reason="Depends on the retention prune (_prune_old_versions_impl), which "
+        "was extracted to sc-111099-version-history-retention. This test "
+        "exercises activity-view + retention together and runs once both PRs "
+        "merge; un-skip then."
+    )
     def test_activity_excludes_records_after_retention_prune(self) -> None:
         """T051 / AV-010: retention bounds the activity feed. After
         ``_prune_old_versions_impl`` drops shadow / change-record rows
@@ -736,7 +742,7 @@ class TestDashboardActivityView(SupersetTestCase):
             # envelope — not an error.
             rv_none = self._activity(dashboard_uuid, q="zz-no-such-needle-zz")
             body_none = _json.loads(rv_none.data.decode("utf-8"))
-            assert body_none == {"result": [], "count": 0}
+            assert body_none == {"result": [], "count": 0, "truncated": False}
         finally:
             db.session.rollback()
             dashboard = (

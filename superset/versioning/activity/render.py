@@ -148,29 +148,24 @@ def apply_record_decoration(
                 else ""
             )
             record["impact"] = None
-        elif record["entity_deleted"]:
-            # Security (AV-008): a related entity with no live row cannot
-            # be access-checked — the visibility filter passes tombstones
-            # through (there is no live row to apply the FAB access filter
-            # to). Without redaction, a requester entitled only to the
-            # path entity could read the name, changed fields, diff values,
-            # and editor of a deleted related entity they were never
-            # granted. Strip the content-bearing fields, keeping only the
-            # deletion-state marker + temporal/identity skeleton so the
-            # timeline can still show that *a* related entity was removed.
-            # Self-path tombstones are exempt: the endpoint already gated
-            # them via ``raise_for_access`` on the path entity.
-            label = API_KIND_LABEL.get(api_kind, api_kind)
-            record["entity_name"] = None
-            record["path"] = None
-            record["from_value"] = None
-            record["to_value"] = None
-            record["changed_by"] = None
-            record["summary"] = f"{label} removed"
-            record["impact"] = None
         else:
             record["summary"] = _build_summary(api_kind, record)
             record["impact"] = impact_for_record(record, path_kind, impact_counts)
+            if record["entity_deleted"]:
+                # Security: a tombstoned related entity has no live row, so
+                # the visibility filter cannot access-gate it (there is
+                # nothing to apply the FAB access filter to). Redact the raw
+                # diff CONTENT — filter values, column names, SQL/adhoc
+                # expressions — so a requester entitled only to the path
+                # entity can't read the internal change values of a deleted
+                # related entity. The entity_name and the AV-012 headline
+                # are kept deliberately (D-15: the panel shows "(deleted)
+                # <name>"); only the value payload is stripped. Self-path
+                # tombstones are untouched — the endpoint already gated them
+                # via ``raise_for_access`` on the path entity.
+                record["from_value"] = None
+                record["to_value"] = None
+                record["path"] = None
 
         # Strip the internal-only columns the API contract doesn't expose.
         for key in (
