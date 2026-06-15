@@ -133,15 +133,21 @@ describe('SqlEditorTabHeader', () => {
       );
     });
 
-    test('should dispatch queryEditorSetTitle action', async () => {
+    test('should open rename modal and dispatch queryEditorSetTitle on save', async () => {
       await waitFor(() =>
-        expect(screen.getByTestId('close-tab-menu-option')).toBeInTheDocument(),
+        expect(screen.getByTestId('rename-tab-menu-option')).toBeInTheDocument(),
       );
-      const expectedTitle = 'typed text';
-      const mockPrompt = jest
-        .spyOn(window, 'prompt')
-        .mockImplementation(() => expectedTitle);
+
       fireEvent.click(screen.getByTestId('rename-tab-menu-option'));
+
+      const input = await screen.findByTestId('rename-tab-input');
+      expect(input).toBeInTheDocument();
+
+      const expectedTitle = 'typed text';
+      fireEvent.change(input, { target: { value: expectedTitle } });
+
+      const saveButton = screen.getByRole('button', { name: /save/i });
+      fireEvent.click(saveButton);
 
       const actions = store.getActions();
       await waitFor(() =>
@@ -153,7 +159,26 @@ describe('SqlEditorTabHeader', () => {
           }),
         }),
       );
-      mockPrompt.mockClear();
+    });
+
+    test('should close rename modal on cancel without dispatching action', async () => {
+      await waitFor(() =>
+        expect(screen.getByTestId('rename-tab-menu-option')).toBeInTheDocument(),
+      );
+
+      fireEvent.click(screen.getByTestId('rename-tab-menu-option'));
+
+      await screen.findByTestId('rename-tab-input');
+
+      const cancelButton = screen.getByRole('button', { name: /cancel/i });
+      fireEvent.click(cancelButton);
+
+      await waitFor(() =>
+        expect(
+          screen.queryByTestId('rename-tab-input'),
+        ).not.toBeInTheDocument(),
+      );
+      expect(store.getActions()).toHaveLength(0);
     });
 
     test('should dispatch removeAllOtherQueryEditors action', async () => {
