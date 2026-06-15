@@ -20,6 +20,7 @@ from .generate_dashboard import generate_dashboard
 from .get_dashboard_info import get_dashboard_info
 from .get_dashboard_layout import get_dashboard_layout
 from .list_dashboards import list_dashboards
+from .manage_native_filters import manage_native_filters
 
 __all__ = [
     "list_dashboards",
@@ -27,4 +28,5 @@ __all__ = [
     "get_dashboard_layout",
     "generate_dashboard",
     "add_chart_to_existing_dashboard",
+    "manage_native_filters",
 ]
