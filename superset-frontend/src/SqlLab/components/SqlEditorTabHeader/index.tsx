@@ -169,7 +169,7 @@ const SqlEditorTabHeader: FC<Props> = ({ queryEditor }) => {
                         <Icons.CloseOutlined
                           iconSize="l"
                           css={css`
-                            verticalalign: middle;
+                            vertical-align: middle;
                           `}
                         />
                       </IconContainer>
@@ -186,7 +186,7 @@ const SqlEditorTabHeader: FC<Props> = ({ queryEditor }) => {
                       <IconContainer>
                         <Icons.EditOutlined
                           css={css`
-                            verticalalign: middle;
+                            vertical-align: middle;
                           `}
                           iconSize="l"
                         />
@@ -248,6 +248,7 @@ const SqlEditorTabHeader: FC<Props> = ({ queryEditor }) => {
         onHide={handleRenameCancel}
         onSave={handleRenameConfirm}
         saveDisabled={!newTitle.trim()}
+        saveText={t('Save')}
         destroyOnClose
       >
         <ModalInputWrapper>
