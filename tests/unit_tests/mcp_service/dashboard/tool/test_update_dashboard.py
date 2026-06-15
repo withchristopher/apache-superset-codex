@@ -34,6 +34,7 @@ Covers:
 """
 
 import logging
+from collections.abc import Iterator
 from typing import Any
 from unittest.mock import Mock, patch
 
@@ -59,7 +60,7 @@ def mcp_server() -> object:
 
 
 @pytest.fixture(autouse=True)
-def mock_auth():
+def mock_auth() -> Iterator[Mock]:
     """Mock authentication for all tests."""
     with patch("superset.mcp_service.auth.get_user_from_request") as mock_get_user:
         mock_user = Mock()
@@ -104,6 +105,7 @@ def _mock_dashboard(
 
 
 async def _call_update(mcp_server: object, request: dict[str, Any]) -> dict[str, Any]:
+    """Invoke the update_dashboard tool and return its structured response."""
     async with Client(mcp_server) as client:
         result = await client.call_tool("update_dashboard", {"request": request})
     return result.structured_content
@@ -259,6 +261,33 @@ async def test_update_publish_and_certification(
         "certified_by": "Data Team",
         "certification_details": "Verified Q1 numbers",
     }
+
+
+@patch("superset.commands.dashboard.update.UpdateDashboardCommand")
+@patch("superset.security_manager.raise_for_ownership")
+@patch("superset.daos.dashboard.DashboardDAO.find_by_id")
+@pytest.mark.asyncio
+async def test_update_rejects_dangerous_css(
+    mock_find_by_id: Mock,
+    mock_raise_for_ownership: Mock,
+    mock_update_cmd_cls: Mock,
+    mcp_server: object,
+) -> None:
+    """Dangerous CSS is rejected (parity with the REST validate_css) and the
+    update command never runs."""
+    dashboard = _mock_dashboard(id=4)
+    mock_find_by_id.return_value = dashboard
+    mock_raise_for_ownership.return_value = None
+
+    content = await _call_update(
+        mcp_server,
+        {"dashboard_id": 4, "css": "@import url('http://evil.example/x.css');"},
+    )
+
+    assert content["dashboard"] is None
+    assert "CSS is invalid" in (content["error"] or "")
+    assert content["updated_fields"] == []
+    mock_update_cmd_cls.assert_not_called()
 
 
 @patch("superset.commands.dashboard.update.UpdateDashboardCommand")

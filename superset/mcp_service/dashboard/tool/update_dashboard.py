@@ -221,9 +221,9 @@ def _serialize_updated_dashboard(
         url=dashboard_url,
         chart_count=len(updated_dashboard.slices),
         tags=[
-            serialize_tag_object(tag)
+            obj
             for tag in getattr(updated_dashboard, "tags", [])
-            if serialize_tag_object(tag) is not None
+            if (obj := serialize_tag_object(tag)) is not None
         ],
         charts=[
             obj
@@ -304,6 +304,27 @@ def update_dashboard(
                         "field (e.g. dashboard_title, published, tags)."
                     ),
                 )
+
+            # The REST update path hardens user-supplied CSS via the marshmallow
+            # DashboardPutSchema (validate_css); this tool bypasses that schema,
+            # so apply the same check before persisting to avoid storing CSS the
+            # API would reject (e.g. @import, script-scheme URLs).
+            if "css" in properties:
+                from marshmallow import ValidationError
+
+                from superset.dashboards.schemas import validate_css
+
+                try:
+                    validate_css(properties["css"])
+                except ValidationError as ex:
+                    detail = (
+                        "; ".join(str(m) for m in ex.messages)
+                        if isinstance(ex.messages, list)
+                        else str(ex.messages)
+                    )
+                    return UpdateDashboardResponse(
+                        error=f"Dashboard CSS is invalid: {detail}",
+                    )
 
         with event_logger.log_context(action="mcp.update_dashboard.db_write"):
             try:
