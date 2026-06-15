@@ -749,14 +749,6 @@ class UpdateDashboardRequest(BaseModel):
         None,
         description=("Details of the certification. Pass an empty string to clear."),
     )
-    owners: list[int] | None = Field(
-        None,
-        description=(
-            "FULL REPLACEMENT list of owner user IDs. The provided list "
-            "replaces the existing owners — include existing owner IDs to "
-            "keep them."
-        ),
-    )
     roles: list[int] | None = Field(
         None,
         description=(

@@ -27,7 +27,7 @@ Covers:
 - Dashboard not found
 - Permission denied (user does not own the dashboard) -> permission_denied=True
 - No fields provided -> error
-- Successful direct-field updates (title, publish/certification, owners/roles/tags)
+- Successful direct-field updates (title, publish/certification, roles/tags)
 - json_metadata merge preserves existing keys (the set_dash_metadata gotcha)
 - Command failure -> error response
 - Schema-level validation (title sanitization, filter_bar_orientation literal)
@@ -265,13 +265,13 @@ async def test_update_publish_and_certification(
 @patch("superset.security_manager.raise_for_ownership")
 @patch("superset.daos.dashboard.DashboardDAO.find_by_id")
 @pytest.mark.asyncio
-async def test_update_owners_roles_tags(
+async def test_update_roles_tags(
     mock_find_by_id: Mock,
     mock_raise_for_ownership: Mock,
     mock_update_cmd_cls: Mock,
     mcp_server: object,
 ) -> None:
-    """owners/roles/tags ID lists are passed through as full replacements."""
+    """roles/tags ID lists are passed through as full replacements."""
     dashboard = _mock_dashboard(id=3)
     mock_find_by_id.side_effect = [dashboard, dashboard]
     mock_raise_for_ownership.return_value = None
@@ -282,14 +282,14 @@ async def test_update_owners_roles_tags(
 
     content = await _call_update(
         mcp_server,
-        {"dashboard_id": 3, "owners": [1, 2], "roles": [5], "tags": [7, 8]},
+        {"dashboard_id": 3, "roles": [5], "tags": [7, 8]},
     )
 
     assert content["error"] is None
-    assert sorted(content["updated_fields"]) == ["owners", "roles", "tags"]
+    assert sorted(content["updated_fields"]) == ["roles", "tags"]
 
     _, cmd_properties = mock_update_cmd_cls.call_args.args
-    assert cmd_properties == {"owners": [1, 2], "roles": [5], "tags": [7, 8]}
+    assert cmd_properties == {"roles": [5], "tags": [7, 8]}
 
 
 @patch("superset.commands.dashboard.update.UpdateDashboardCommand")
