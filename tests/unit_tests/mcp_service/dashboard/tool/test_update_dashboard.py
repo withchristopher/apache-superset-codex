@@ -27,7 +27,7 @@ Covers:
 - Dashboard not found
 - Permission denied (user does not own the dashboard) -> permission_denied=True
 - No fields provided -> error
-- Successful direct-field updates (title, publish/certification, roles/tags)
+- Successful direct-field updates (title, publish, slug, CSS)
 - json_metadata merge preserves existing keys (the set_dash_metadata gotcha)
 - Command failure -> error response
 - Schema-level validation (title sanitization, filter_bar_orientation literal)
@@ -223,13 +223,13 @@ async def test_update_title_success(
 @patch("superset.security_manager.raise_for_ownership")
 @patch("superset.daos.dashboard.DashboardDAO.find_by_id")
 @pytest.mark.asyncio
-async def test_update_publish_and_certification(
+async def test_update_publish_and_slug(
     mock_find_by_id: Mock,
     mock_raise_for_ownership: Mock,
     mock_update_cmd_cls: Mock,
     mcp_server: object,
 ) -> None:
-    """Publish + certification fields are passed through to the command."""
+    """Publish + slug fields are passed through to the command."""
     dashboard = _mock_dashboard(id=2)
     mock_find_by_id.side_effect = [dashboard, dashboard]
     mock_raise_for_ownership.return_value = None
@@ -243,23 +243,20 @@ async def test_update_publish_and_certification(
         {
             "dashboard_id": 2,
             "published": True,
-            "certified_by": "Data Team",
-            "certification_details": "Verified Q1 numbers",
+            "slug": "q1-sales",
         },
     )
 
     assert content["error"] is None
     assert sorted(content["updated_fields"]) == [
-        "certification_details",
-        "certified_by",
         "published",
+        "slug",
     ]
 
     _, cmd_properties = mock_update_cmd_cls.call_args.args
     assert cmd_properties == {
         "published": True,
-        "certified_by": "Data Team",
-        "certification_details": "Verified Q1 numbers",
+        "slug": "q1-sales",
     }
 
 
@@ -294,44 +291,13 @@ async def test_update_rejects_dangerous_css(
 @patch("superset.security_manager.raise_for_ownership")
 @patch("superset.daos.dashboard.DashboardDAO.find_by_id")
 @pytest.mark.asyncio
-async def test_update_roles_tags(
+async def test_update_css_and_slug(
     mock_find_by_id: Mock,
     mock_raise_for_ownership: Mock,
     mock_update_cmd_cls: Mock,
     mcp_server: object,
 ) -> None:
-    """roles/tags ID lists are passed through as full replacements."""
-    dashboard = _mock_dashboard(id=3)
-    mock_find_by_id.side_effect = [dashboard, dashboard]
-    mock_raise_for_ownership.return_value = None
-
-    mock_update_cmd = Mock()
-    mock_update_cmd.run.return_value = dashboard
-    mock_update_cmd_cls.return_value = mock_update_cmd
-
-    content = await _call_update(
-        mcp_server,
-        {"dashboard_id": 3, "roles": [5], "tags": [7, 8]},
-    )
-
-    assert content["error"] is None
-    assert sorted(content["updated_fields"]) == ["roles", "tags"]
-
-    _, cmd_properties = mock_update_cmd_cls.call_args.args
-    assert cmd_properties == {"roles": [5], "tags": [7, 8]}
-
-
-@patch("superset.commands.dashboard.update.UpdateDashboardCommand")
-@patch("superset.security_manager.raise_for_ownership")
-@patch("superset.daos.dashboard.DashboardDAO.find_by_id")
-@pytest.mark.asyncio
-async def test_update_css_and_theme(
-    mock_find_by_id: Mock,
-    mock_raise_for_ownership: Mock,
-    mock_update_cmd_cls: Mock,
-    mcp_server: object,
-) -> None:
-    """CSS and theme_id are passed through to the command."""
+    """Valid CSS and slug are passed through to the command."""
     dashboard = _mock_dashboard(id=4)
     mock_find_by_id.side_effect = [dashboard, dashboard]
     mock_raise_for_ownership.return_value = None
@@ -342,14 +308,14 @@ async def test_update_css_and_theme(
 
     content = await _call_update(
         mcp_server,
-        {"dashboard_id": 4, "css": ".dashboard { color: red; }", "theme_id": 2},
+        {"dashboard_id": 4, "css": ".dashboard { color: red; }", "slug": "styled"},
     )
 
     assert content["error"] is None
-    assert sorted(content["updated_fields"]) == ["css", "theme_id"]
+    assert sorted(content["updated_fields"]) == ["css", "slug"]
 
     _, cmd_properties = mock_update_cmd_cls.call_args.args
-    assert cmd_properties == {"css": ".dashboard { color: red; }", "theme_id": 2}
+    assert cmd_properties == {"css": ".dashboard { color: red; }", "slug": "styled"}
 
 
 # ---------------------------------------------------------------------------
@@ -393,7 +359,6 @@ async def test_json_metadata_merge_preserves_existing_keys(
         mcp_server,
         {
             "dashboard_id": 5,
-            "color_scheme": "supersetColors",
             "cross_filters_enabled": True,
             "filter_bar_orientation": "HORIZONTAL",
         },
@@ -401,7 +366,6 @@ async def test_json_metadata_merge_preserves_existing_keys(
 
     assert content["error"] is None
     assert sorted(content["updated_fields"]) == [
-        "color_scheme",
         "cross_filters_enabled",
         "filter_bar_orientation",
     ]
@@ -410,10 +374,10 @@ async def test_json_metadata_merge_preserves_existing_keys(
     assert set(cmd_properties.keys()) == {"json_metadata"}
     merged = json.loads(cmd_properties["json_metadata"])
     # Changed keys
-    assert merged["color_scheme"] == "supersetColors"
     assert merged["cross_filters_enabled"] is True
     assert merged["filter_bar_orientation"] == "HORIZONTAL"
     # Untouched keys are preserved (NOT reset to defaults)
+    assert merged["color_scheme"] == "oldScheme"
     assert merged["expanded_slices"] == {"42": True}
     assert merged["label_colors"] == {"COVID": "#ff0000"}
     assert merged["refresh_frequency"] == 600
@@ -503,16 +467,23 @@ async def test_mixed_direct_and_metadata_update(
 
     content = await _call_update(
         mcp_server,
-        {"dashboard_id": 8, "published": False, "color_scheme": "supersetColors"},
+        {
+            "dashboard_id": 8,
+            "published": False,
+            "filter_bar_orientation": "HORIZONTAL",
+        },
     )
 
     assert content["error"] is None
-    assert sorted(content["updated_fields"]) == ["color_scheme", "published"]
+    assert sorted(content["updated_fields"]) == [
+        "filter_bar_orientation",
+        "published",
+    ]
 
     _, cmd_properties = mock_update_cmd_cls.call_args.args
     assert cmd_properties["published"] is False
     merged = json.loads(cmd_properties["json_metadata"])
-    assert merged["color_scheme"] == "supersetColors"
+    assert merged["filter_bar_orientation"] == "HORIZONTAL"
     assert merged["expanded_slices"] == {"1": True}
 
 

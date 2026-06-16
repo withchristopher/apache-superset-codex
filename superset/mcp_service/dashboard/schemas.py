@@ -737,41 +737,8 @@ class UpdateDashboardRequest(BaseModel):
         ),
     )
     css: str | None = Field(None, description="Custom CSS applied to the dashboard.")
-    theme_id: int | None = Field(None, description="Theme ID for the dashboard.")
-    certified_by: str | None = Field(
-        None,
-        description=(
-            "Person or group that certified this dashboard. "
-            "Pass an empty string to clear."
-        ),
-    )
-    certification_details: str | None = Field(
-        None,
-        description=("Details of the certification. Pass an empty string to clear."),
-    )
-    roles: list[int] | None = Field(
-        None,
-        description=(
-            "FULL REPLACEMENT list of role IDs with dashboard access "
-            "(DASHBOARD_RBAC). The provided list replaces existing roles."
-        ),
-    )
-    tags: list[int] | None = Field(
-        None,
-        description=(
-            "FULL REPLACEMENT list of tag IDs. The provided list replaces "
-            "existing tags — include existing tag IDs to keep them."
-        ),
-    )
 
     # Convenience fields merged into the dashboard's json_metadata
-    color_scheme: str | None = Field(
-        None,
-        description=(
-            "Color scheme name for the dashboard (e.g. 'supersetColors'). "
-            "Merged into json_metadata."
-        ),
-    )
     cross_filters_enabled: bool | None = Field(
         None,
         description=(

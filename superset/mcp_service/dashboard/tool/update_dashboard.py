@@ -19,8 +19,7 @@
 MCP tool: update_dashboard
 
 This tool performs a partial update of dashboard metadata (title, slug,
-published state, certification, roles, tags, CSS, theme, and selected
-json_metadata settings).
+published state, CSS, and selected json_metadata settings).
 """
 
 import logging
@@ -51,16 +50,10 @@ _DIRECT_FIELDS = (
     "slug",
     "published",
     "css",
-    "theme_id",
-    "certified_by",
-    "certification_details",
-    "roles",
-    "tags",
 )
 
 # Convenience fields stored inside the dashboard's json_metadata blob.
 _METADATA_FIELDS = (
-    "color_scheme",
     "cross_filters_enabled",
     "refresh_frequency",
     "filter_bar_orientation",
@@ -265,16 +258,13 @@ def update_dashboard(
     (including layout, charts, and the rest of json_metadata).
 
     Updatable fields:
-    - dashboard_title, slug, published, css, theme_id
-    - certified_by, certification_details
-    - roles, tags (each is a FULL REPLACEMENT list of IDs)
-    - color_scheme, cross_filters_enabled, refresh_frequency (seconds,
-      0 = off), filter_bar_orientation ("VERTICAL" | "HORIZONTAL")
+    - dashboard_title, slug, published, css
+    - cross_filters_enabled, refresh_frequency (seconds, 0 = off),
+      filter_bar_orientation ("VERTICAL" | "HORIZONTAL")
 
     Use when:
     - Renaming, publishing, or unpublishing a dashboard
-    - Certifying a dashboard or changing its roles/tags
-    - Adjusting styling (CSS, theme, color scheme) or refresh behavior
+    - Adjusting styling (CSS) or refresh behavior
 
     Do NOT use for:
     - Adding charts (use add_chart_to_existing_dashboard)
