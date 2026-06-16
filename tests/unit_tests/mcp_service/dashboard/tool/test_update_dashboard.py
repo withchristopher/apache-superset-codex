@@ -354,6 +354,42 @@ async def test_update_tags(
     assert cmd_properties == {"tags": [7, 8]}
 
 
+@patch("superset.commands.dashboard.update.UpdateDashboardCommand")
+@patch("superset.security_manager.raise_for_ownership")
+@patch("superset.daos.dashboard.DashboardDAO.find_by_id")
+@pytest.mark.asyncio
+async def test_update_tags_empty_list_clears(
+    mock_find_by_id: Mock,
+    mock_raise_for_ownership: Mock,
+    mock_update_cmd_cls: Mock,
+    mcp_server: object,
+) -> None:
+    """An empty tags list is a valid full replacement that clears all tags.
+
+    The field is included when it is ``not None`` (not by truthiness), so an
+    empty list must reach the command as ``{"tags": []}`` rather than being
+    silently dropped as a no-op.
+    """
+    dashboard = _mock_dashboard(id=3)
+    mock_find_by_id.side_effect = [dashboard, dashboard]
+    mock_raise_for_ownership.return_value = None
+
+    mock_update_cmd = Mock()
+    mock_update_cmd.run.return_value = dashboard
+    mock_update_cmd_cls.return_value = mock_update_cmd
+
+    content = await _call_update(
+        mcp_server,
+        {"dashboard_id": 3, "tags": []},
+    )
+
+    assert content["error"] is None
+    assert content["updated_fields"] == ["tags"]
+
+    _, cmd_properties = mock_update_cmd_cls.call_args.args
+    assert cmd_properties == {"tags": []}
+
+
 # ---------------------------------------------------------------------------
 # json_metadata merge behavior (the set_dash_metadata gotcha)
 # ---------------------------------------------------------------------------
