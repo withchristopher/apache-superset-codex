@@ -33,11 +33,9 @@ from superset.commands.exceptions import CommandException
 from superset.extensions import event_logger
 from superset.mcp_service.dashboard.schemas import (
     DashboardInfo,
-    serialize_chart_summary,
     UpdateDashboardRequest,
     UpdateDashboardResponse,
 )
-from superset.mcp_service.privacy import user_can_view_data_model_metadata
 from superset.mcp_service.utils.url_utils import get_superset_base_url
 from superset.utils import json
 
@@ -145,37 +143,46 @@ def _serialize_updated_dashboard(
 ) -> UpdateDashboardResponse:
     """Build the success response, re-fetching with eager-loaded relationships.
 
+    The descriptive payload is produced by ``dashboard_serializer``, the same
+    serializer the read path (``get_dashboard_info``) uses, so user-controlled
+    strings are wrapped in untrusted-content delimiters before reaching the LLM.
+
     The preceding command commit may invalidate the session in multi-tenant
-    environments; on re-fetch failure, return a minimal response using only
-    scalar attributes that are already loaded — relationship fields (tags,
-    slices) would trigger lazy-loading on the same dead session.
+    environments; on re-fetch (or serialization) failure, return a minimal
+    response built from scalar attributes captured BEFORE the risky re-fetch —
+    re-reading them afterward could trigger lazy-loading on a dead session.
     """
     from sqlalchemy.orm import subqueryload
 
     from superset import db
     from superset.daos.dashboard import DashboardDAO
+    from superset.mcp_service.dashboard.schemas import dashboard_serializer
+    from superset.mcp_service.utils.sanitization import sanitize_for_llm_context
     from superset.models.dashboard import Dashboard
     from superset.models.slice import Slice
 
-    dashboard_url = (
-        f"{get_superset_base_url()}/superset/dashboard/{updated_dashboard.id}/"
-    )
+    # Capture scalars now, while the session is known-good. The re-fetch below
+    # may expire these attributes; reading them after a failed re-fetch +
+    # rollback would re-raise on the dead session.
+    dashboard_id = updated_dashboard.id
+    fallback_title = updated_dashboard.dashboard_title
+    fallback_published = updated_dashboard.published
+
+    dashboard_url = f"{get_superset_base_url()}/superset/dashboard/{dashboard_id}/"
 
     try:
-        updated_dashboard = (
-            DashboardDAO.find_by_id(
-                updated_dashboard.id,
-                query_options=[
-                    subqueryload(Dashboard.slices).subqueryload(Slice.tags),
-                    subqueryload(Dashboard.tags),
-                ],
-            )
-            or updated_dashboard
+        refetched = DashboardDAO.find_by_id(
+            dashboard_id,
+            query_options=[
+                subqueryload(Dashboard.slices).subqueryload(Slice.tags),
+                subqueryload(Dashboard.tags),
+            ],
         )
+        dashboard_info = dashboard_serializer(refetched or updated_dashboard)
     except SQLAlchemyError:
         logger.warning(
             "Re-fetch of dashboard %s failed; returning minimal response",
-            updated_dashboard.id,
+            dashboard_id,
             exc_info=True,
         )
         try:
@@ -187,50 +194,17 @@ def _serialize_updated_dashboard(
             )
         return UpdateDashboardResponse(
             dashboard=DashboardInfo(
-                id=updated_dashboard.id,
-                dashboard_title=updated_dashboard.dashboard_title,
-                published=updated_dashboard.published,
+                id=dashboard_id,
+                dashboard_title=sanitize_for_llm_context(
+                    fallback_title, field_path=("dashboard_title",)
+                ),
+                published=fallback_published,
                 url=dashboard_url,
             ),
             dashboard_url=dashboard_url,
             updated_fields=updated_fields,
             error=None,
         )
-
-    from superset.mcp_service.dashboard.schemas import serialize_tag_object
-
-    include_data_model_metadata = user_can_view_data_model_metadata()
-    dashboard_info = DashboardInfo(
-        id=updated_dashboard.id,
-        dashboard_title=updated_dashboard.dashboard_title,
-        slug=updated_dashboard.slug,
-        description=updated_dashboard.description,
-        css=updated_dashboard.css,
-        certified_by=updated_dashboard.certified_by,
-        certification_details=updated_dashboard.certification_details,
-        published=updated_dashboard.published,
-        created_on=updated_dashboard.created_on,
-        changed_on=updated_dashboard.changed_on,
-        uuid=str(updated_dashboard.uuid) if updated_dashboard.uuid else None,
-        url=dashboard_url,
-        chart_count=len(updated_dashboard.slices),
-        tags=[
-            obj
-            for tag in getattr(updated_dashboard, "tags", [])
-            if (obj := serialize_tag_object(tag)) is not None
-        ],
-        charts=[
-            obj
-            for chart in getattr(updated_dashboard, "slices", [])
-            if (
-                obj := serialize_chart_summary(
-                    chart,
-                    include_data_model_metadata=include_data_model_metadata,
-                )
-            )
-            is not None
-        ],
-    )
 
     return UpdateDashboardResponse(
         dashboard=dashboard_info,

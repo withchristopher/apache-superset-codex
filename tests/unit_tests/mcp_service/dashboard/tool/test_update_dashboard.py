@@ -85,10 +85,13 @@ def _mock_dashboard(
     dashboard.id = id
     dashboard.dashboard_title = title
     dashboard.slug = f"test-dashboard-{id}"
+    dashboard.url = f"/superset/dashboard/{id}/"
     dashboard.description = None
     dashboard.published = True
     dashboard.created_on = None
     dashboard.changed_on = None
+    dashboard.created_on_humanized = None
+    dashboard.changed_on_humanized = None
     dashboard.uuid = f"dashboard-uuid-{id}"
     dashboard.slices = []
     dashboard.owners = []
@@ -211,7 +214,9 @@ async def test_update_title_success(
     assert content["error"] is None
     assert content["permission_denied"] is False
     assert content["updated_fields"] == ["dashboard_title"]
-    assert content["dashboard"]["dashboard_title"] == "New Title"
+    # The response is serialized through the same LLM-context sanitizer as the
+    # read path, so descriptive fields are wrapped in untrusted-content markers.
+    assert "New Title" in content["dashboard"]["dashboard_title"]
     assert "/superset/dashboard/1/" in content["dashboard_url"]
 
     cmd_id, cmd_properties = mock_update_cmd_cls.call_args.args
