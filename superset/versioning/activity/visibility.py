@@ -176,8 +176,8 @@ def _resolve_visibility(
         # access-filtered set is denied (False).
         live_ids = {
             row[0]
-            for row in db.session.query(model_cls.id)  # type: ignore[attr-defined]
-            .filter(model_cls.id.in_(entity_ids))  # type: ignore[attr-defined]
+            for row in db.session.query(model_cls.id)
+            .filter(model_cls.id.in_(entity_ids))
             .all()
         }
 
@@ -188,8 +188,8 @@ def _resolve_visibility(
         visible_ids = {
             row[0]
             for row in access_filter.apply(
-                db.session.query(model_cls.id).filter(  # type: ignore[attr-defined]
-                    model_cls.id.in_(entity_ids)  # type: ignore[attr-defined]
+                db.session.query(model_cls.id).filter(
+                    model_cls.id.in_(entity_ids)
                 ),
                 value=None,
             ).all()

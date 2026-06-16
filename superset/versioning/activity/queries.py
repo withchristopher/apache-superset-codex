@@ -590,7 +590,7 @@ def check_entity_tombstones(
 
             model_name, _ = NAME_COLUMN[api_kind]
             model_cls = load_shadow_model(model_name)
-            live_tbl = model_cls.__table__  # type: ignore[attr-defined]
+            live_tbl = model_cls.__table__
             has_deleted_at = "deleted_at" in live_tbl.c
 
             cols = [live_tbl.c.id]

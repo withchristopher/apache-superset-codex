@@ -204,7 +204,7 @@ def _lookup_entity_uuids(
             if api_kind not in NAME_COLUMN:
                 continue
             model_cls = load_shadow_model(NAME_COLUMN[api_kind][0])
-            live_tbl = model_cls.__table__  # type: ignore[attr-defined]
+            live_tbl = model_cls.__table__
             rows = (
                 db.session.connection()
                 .execute(
