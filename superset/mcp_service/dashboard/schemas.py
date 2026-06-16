@@ -737,6 +737,14 @@ class UpdateDashboardRequest(BaseModel):
         ),
     )
     css: str | None = Field(None, description="Custom CSS applied to the dashboard.")
+    tags: list[int] | None = Field(
+        None,
+        description=(
+            "FULL REPLACEMENT list of tag IDs. The provided list replaces "
+            "existing tags — include existing tag IDs to keep them. Discover "
+            "valid tag IDs with list_tags / get_tag_info."
+        ),
+    )
 
     # Convenience fields merged into the dashboard's json_metadata
     cross_filters_enabled: bool | None = Field(

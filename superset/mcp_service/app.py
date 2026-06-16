@@ -130,7 +130,7 @@ Dashboard Management:
 - get_dashboard_layout: Get parsed tabs and chart positions for a dashboard (companion to get_dashboard_info when its omitted_fields hint flags position_json)
 - generate_dashboard: Create a dashboard from chart IDs (requires write access)
 - add_chart_to_existing_dashboard: Add a chart to an existing dashboard (requires write access)
-- update_dashboard: Partially update dashboard metadata — title, slug, published, CSS, cross-filtering, refresh frequency, filter bar orientation (requires write access)
+- update_dashboard: Partially update dashboard metadata — title, slug, published, tags, CSS, cross-filtering, refresh frequency, filter bar orientation (requires write access)
 
 Annotation Layers:
 - list_annotation_layers: List annotation layers with advanced filters (1-based pagination)

@@ -27,7 +27,7 @@ Covers:
 - Dashboard not found
 - Permission denied (user does not own the dashboard) -> permission_denied=True
 - No fields provided -> error
-- Successful direct-field updates (title, publish, slug, CSS)
+- Successful direct-field updates (title, publish, slug, CSS, tags)
 - json_metadata merge preserves existing keys (the set_dash_metadata gotcha)
 - Command failure -> error response
 - Schema-level validation (title sanitization, filter_bar_orientation literal)
@@ -316,6 +316,37 @@ async def test_update_css_and_slug(
 
     _, cmd_properties = mock_update_cmd_cls.call_args.args
     assert cmd_properties == {"css": ".dashboard { color: red; }", "slug": "styled"}
+
+
+@patch("superset.commands.dashboard.update.UpdateDashboardCommand")
+@patch("superset.security_manager.raise_for_ownership")
+@patch("superset.daos.dashboard.DashboardDAO.find_by_id")
+@pytest.mark.asyncio
+async def test_update_tags(
+    mock_find_by_id: Mock,
+    mock_raise_for_ownership: Mock,
+    mock_update_cmd_cls: Mock,
+    mcp_server: object,
+) -> None:
+    """A tags ID list is passed through as a full replacement."""
+    dashboard = _mock_dashboard(id=3)
+    mock_find_by_id.side_effect = [dashboard, dashboard]
+    mock_raise_for_ownership.return_value = None
+
+    mock_update_cmd = Mock()
+    mock_update_cmd.run.return_value = dashboard
+    mock_update_cmd_cls.return_value = mock_update_cmd
+
+    content = await _call_update(
+        mcp_server,
+        {"dashboard_id": 3, "tags": [7, 8]},
+    )
+
+    assert content["error"] is None
+    assert content["updated_fields"] == ["tags"]
+
+    _, cmd_properties = mock_update_cmd_cls.call_args.args
+    assert cmd_properties == {"tags": [7, 8]}
 
 
 # ---------------------------------------------------------------------------
