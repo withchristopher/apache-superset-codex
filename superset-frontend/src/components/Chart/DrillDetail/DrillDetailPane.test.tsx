@@ -66,12 +66,6 @@ const MOCKED_DATASET = {
     first_name: 'John',
     last_name: 'Doe',
   },
-  owners: [
-    {
-      first_name: 'John',
-      last_name: 'Doe',
-    },
-  ],
 };
 
 const setupDatasetEndpoint = () => {

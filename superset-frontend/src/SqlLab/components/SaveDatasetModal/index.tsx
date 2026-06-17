@@ -48,11 +48,7 @@ import { useAppSelector } from 'src/SqlLab/hooks/useAppSelector';
 import rison from 'rison';
 import { createDatasource } from 'src/SqlLab/actions/sqlLab';
 import { addDangerToast } from 'src/components/MessageToasts/actions';
-import {
-  DatasetRadioState,
-  EXPLORE_CHART_DEFAULT,
-  DatasetOwner,
-} from 'src/SqlLab/types';
+import { DatasetRadioState, EXPLORE_CHART_DEFAULT } from 'src/SqlLab/types';
 import { mountExploreUrl } from 'src/explore/exploreUtils';
 import { postFormData } from 'src/explore/exploreUtils/formData';
 import { URL_PARAMS } from 'src/constants';
@@ -152,7 +148,7 @@ type UpdateDatasetPayload = {
   datasetId: number;
   sql: string;
   columns: Array<Record<string, any>>;
-  owners: number[];
+  editors: number[];
   overrideColumns: boolean;
   templateParams?: string;
 };
@@ -162,7 +158,7 @@ const updateDataset = async ({
   datasetId,
   sql,
   columns,
-  owners,
+  editors,
   overrideColumns,
   templateParams,
 }: UpdateDatasetPayload) => {
@@ -171,7 +167,7 @@ const updateDataset = async ({
   const body = JSON.stringify({
     sql,
     columns,
-    owners,
+    editors,
     database_id: dbId,
     ...(templateParams !== undefined && { template_params: templateParams }),
   });
@@ -279,7 +275,9 @@ export const SaveDatasetModal = ({
               is_dttm: d.is_dttm,
             }),
           ),
-          owners: datasetToOverwrite?.owners?.map((o: DatasetOwner) => o.id),
+          editors: datasetToOverwrite?.editors?.map(
+            (o: { id: number }) => o.id,
+          ),
           overrideColumns: true,
           templateParams,
         }),
@@ -324,7 +322,7 @@ export const SaveDatasetModal = ({
             value: input,
           },
           {
-            col: 'owners',
+            col: 'editors',
             opr: 'rel_m_m',
             value: userId,
           },
@@ -337,11 +335,15 @@ export const SaveDatasetModal = ({
         endpoint: `/api/v1/dataset/?q=${queryParams}`,
       }).then(response => ({
         data: response.json.result.map(
-          (r: { table_name: string; id: number; owners: [DatasetOwner] }) => ({
+          (r: {
+            table_name: string;
+            id: number;
+            editors: { id: number }[];
+          }) => ({
             value: r.table_name,
             label: r.table_name,
             datasetid: r.id,
-            owners: r.owners,
+            editors: r.editors,
           }),
         ),
         totalCount: response.json.count,

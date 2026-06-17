@@ -21,7 +21,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Superset VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-08 12:27-0700\n"
+"POT-Creation-Date: 2026-06-11 11:56-0700\n"
 "PO-Revision-Date: 2024-10-20 00:07+0330\n"
 "Last-Translator: Emad Rad <codewithemad@gmail.com>\n"
 "Language: fa\n"
@@ -30,7 +30,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.17.0\n"
+"Generated-By: Babel 2.18.0\n"
 
 msgid ""
 "\n"
@@ -860,17 +860,24 @@ msgstr ""
 "لیستی از نام‌های دامنه که می‌توانند این داشبورد را در خود بگنجانند. خالی "
 "گذاشتن این فیلد اجازه می‌دهد تا از هر دامنه‌ای گنجانش انجام شود."
 
+#, fuzzy
+msgid "A list of subjects who can alter the chart. Searchable by name."
+msgstr ""
+"لیستی از کاربرانی که می‌توانند نمودار را تغییر دهند. قابلیت جستجو با نام "
+"یا نام کاربری."
+
+#, fuzzy
+msgid "A list of subjects who can view the chart. Searchable by name."
+msgstr ""
+"لیستی از کاربرانی که می‌توانند نمودار را تغییر دهند. قابلیت جستجو با نام "
+"یا نام کاربری."
+
 msgid "A list of tags that have been applied to this chart."
 msgstr "فهرست برچسب‌هایی که به این نمودار اعمال شده‌اند."
 
 #, fuzzy
 msgid "A list of tags that have been applied to this dashboard."
 msgstr "فهرست برچسب‌هایی که به این نمودار اعمال شده‌اند."
-
-msgid "A list of users who can alter the chart. Searchable by name or username."
-msgstr ""
-"لیستی از کاربرانی که می‌توانند نمودار را تغییر دهند. قابلیت جستجو با نام "
-"یا نام کاربری."
 
 msgid "A map of the world, that can indicate values in different countries."
 msgstr "نقشه‌ای از جهان که می‌تواند مقادیر را در کشورهای مختلف نشان دهد."
@@ -1004,8 +1011,8 @@ msgid "About"
 msgstr "در مورد"
 
 #, fuzzy
-msgid "Access & ownership"
-msgstr "توکن دسترسی"
+msgid "Access"
+msgstr "موفقیت"
 
 msgid "Access token"
 msgstr "توکن دسترسی"
@@ -1693,10 +1700,6 @@ msgid "An error occurred while fetching %s info: %s"
 msgstr "هنگام بازیابی اطلاعات %s خطایی رخ داد: %s"
 
 #, fuzzy, python-format
-msgid "An error occurred while fetching %s owner values: %s"
-msgstr "یک خطا در حین دریافت مقادیر مالکین رخ داد: %s"
-
-#, fuzzy, python-format
 msgid "An error occurred while fetching %s related data"
 msgstr "یک خطا در حین دریافت داده‌های مرتبط با مجموعه داده‌ها رخ داد."
 
@@ -1723,8 +1726,12 @@ msgstr "در هنگام بارگیری الگوهای CSS موجود یک خطا
 msgid "An error occurred while fetching available views"
 msgstr "در هنگام بارگیری الگوهای CSS موجود یک خطا رخ داد"
 
-#, python-format
-msgid "An error occurred while fetching chart owners values: %s"
+#, fuzzy, python-format
+msgid "An error occurred while fetching chart editor values: %s"
+msgstr "هنگام بازیابی مقادیر مالکین نمودار خطایی رخ داده است: %s"
+
+#, fuzzy, python-format
+msgid "An error occurred while fetching chart viewer values: %s"
 msgstr "هنگام بازیابی مقادیر مالکین نمودار خطایی رخ داده است: %s"
 
 #, fuzzy
@@ -1735,8 +1742,12 @@ msgstr "در حین بازیابی نام‌های تابع، خطایی رخ د
 msgid "An error occurred while fetching created by values: %s"
 msgstr "در حین دریافت ارزش‌های طرح خطایی رخ داد: %s"
 
-#, python-format
-msgid "An error occurred while fetching dashboard owner values: %s"
+#, fuzzy, python-format
+msgid "An error occurred while fetching dashboard editor values: %s"
+msgstr "در حین دریافت مقادیر مالک داشبورد خطایی رخ داد: %s"
+
+#, fuzzy, python-format
+msgid "An error occurred while fetching dashboard viewer values: %s"
 msgstr "در حین دریافت مقادیر مالک داشبورد خطایی رخ داد: %s"
 
 msgid "An error occurred while fetching dashboards"
@@ -1758,16 +1769,20 @@ msgstr "هنگام گرفتن مقادیر پایگاه داده خطایی رخ
 msgid "An error occurred while fetching dataset datasource values: %s"
 msgstr "در حین دریافت مقادیر منبع داده مجموعه داده، خطایی رخ داد: %s"
 
+#, fuzzy, python-format
+msgid "An error occurred while fetching dataset editor values: %s"
+msgstr "در حین دریافت مقادیر منبع داده مجموعه داده، خطایی رخ داد: %s"
+
 #, python-format
 msgid "An error occurred while fetching dataset related data: %s"
 msgstr "در حین دریافت اطلاعات مربوط به مجموعه داده خطایی رخ داده است: %s"
 
+#, fuzzy, python-format
+msgid "An error occurred while fetching editor values: %s"
+msgstr "هنگام دریافت مقادیر کاربر، خطایی رخ داد: %s"
+
 msgid "An error occurred while fetching function names."
 msgstr "در حین بازیابی نام‌های تابع، خطایی رخ داد."
-
-#, python-format
-msgid "An error occurred while fetching owners values: %s"
-msgstr "یک خطا در حین دریافت مقادیر مالکین رخ داد: %s"
 
 #, python-format
 msgid "An error occurred while fetching schema values: %s"
@@ -1831,6 +1846,11 @@ msgstr "یک خطا در حین بارگذاری SQL رخ داد."
 #, python-format
 msgid "An error occurred while importing %s: %s"
 msgstr "هنگام وارد کردن %s خطایی رخ داد: %s"
+
+msgid ""
+"An error occurred while loading SQL Lab. This may be caused by a "
+"corrupted query state."
+msgstr ""
 
 msgid "An error occurred while loading dashboard information."
 msgstr "هنگام بارگذاری اطلاعات داشبورد خطایی رخ داده است."
@@ -3019,6 +3039,12 @@ msgstr "چارت %(id)s پیدا نشد"
 msgid "Chart Data: %s"
 msgstr "داده‌های نمودار: %s"
 
+#, fuzzy, python-format
+msgid "Chart Editor: %s"
+msgid_plural "Chart Editors: %s"
+msgstr[0] "داده‌های نمودار: %s"
+msgstr[1] ""
+
 msgid "Chart ID"
 msgstr "شماره نمودار"
 
@@ -3027,12 +3053,6 @@ msgstr "گزینه‌های نمودار"
 
 msgid "Chart Orientation"
 msgstr "چرخش نمودار"
-
-#, python-format
-msgid "Chart Owner: %s"
-msgid_plural "Chart Owners: %s"
-msgstr[0] ""
-msgstr[1] ""
 
 msgid "Chart Source"
 msgstr "منبع نمودار"
@@ -3078,6 +3098,10 @@ msgstr "مقدار فیلتر ضروری است"
 msgid "Chart does not exist"
 msgstr "چارت وجود ندارد"
 
+#, fuzzy
+msgid "Chart editors"
+msgstr "مالکان نمودار"
+
 msgid "Chart has no query context saved. Please save the chart again."
 msgstr ""
 "چارت هیچ زمینه‌ی کوئری ذخیره‌شده‌ای ندارد. لطفاً چارت را دوباره ذخیره "
@@ -3101,9 +3125,6 @@ msgstr "نمودار یافت نشد"
 
 msgid "Chart options"
 msgstr "گزینه‌های نمودار"
-
-msgid "Chart owners"
-msgstr "مالکان نمودار"
 
 msgid "Chart parameters are invalid."
 msgstr "پارامترهای چارت نامعتبر هستند."
@@ -3997,6 +4018,9 @@ msgstr "نتوانستیم همه نمودارهای ذخیره شده را با
 
 msgid "Could not find viz object"
 msgstr "توانایی پیدا کردن شیء نمایشی وجود ندارد"
+
+msgid "Could not load SQL Lab"
+msgstr ""
 
 msgid "Could not load database driver"
 msgstr "نمی‌توان درایور پایگاه داده را بارگذاری کرد"
@@ -5853,11 +5877,35 @@ msgstr "زمان محدوده را ویرایش کنید"
 msgid "Edit user"
 msgstr "ویرایش کوئری"
 
+#, fuzzy
+msgid "Editable"
+msgstr "ویرایش هشدار"
+
 msgid "Edited"
 msgstr "ویرایش شده"
 
 msgid "Editing 1 filter:"
 msgstr "ویرایش ۱ فیلتر:"
+
+#, fuzzy
+msgid "Editor"
+msgstr "ویرایش"
+
+#, fuzzy
+msgid "Editors"
+msgstr "ویرایش"
+
+#, fuzzy
+msgid "Editors is a list of subjects who can alter the dashboard."
+msgstr "مالکین فهرستی از کاربرانی هستند که می‌توانند داشبورد را تغییر دهند."
+
+#, fuzzy
+msgid ""
+"Editors is a list of subjects who can alter the dashboard. Searchable by "
+"name."
+msgstr ""
+"مالکین فهرستی از کاربران هستند که می‌توانند داشبورد را تغییر دهند. قابل "
+"جستجو بر اساس نام یا نام کاربری."
 
 msgid "Either the database is spelled incorrectly or does not exist."
 msgstr "یا نام پایگاه داده به درستی نوشته نشده است یا وجود ندارد."
@@ -6333,8 +6381,9 @@ msgstr "بارگذاری اکسل"
 msgid "Exclude selected values"
 msgstr "مقادیر انتخاب شده را مستثنا کنید"
 
-msgid "Excluded roles"
-msgstr "نقش‌های مستثنی شده"
+#, fuzzy
+msgid "Excluded subjects"
+msgstr "موضوع را انتخاب کنید"
 
 msgid "Executed SQL"
 msgstr "SQL اجرا شده"
@@ -6746,6 +6795,12 @@ msgstr ""
 msgid "File settings"
 msgstr "تنظیمات فایل"
 
+#, python-format
+msgid ""
+"File size %(size)s bytes exceeds the maximum allowed upload size of "
+"%(max_size)s bytes"
+msgstr ""
+
 msgid "File upload"
 msgstr "آپلود فایل"
 
@@ -6956,10 +7011,11 @@ msgid ""
 "function, refer to the"
 msgstr "برای اطلاعات بیشتر درباره اشیایی که در زمینه این تابع وجود دارند، به"
 
+#, fuzzy
 msgid ""
-"For regular filters, these are the roles this filter will be applied to. "
-"For base filters, these are the roles that the filter DOES NOT apply to, "
-"e.g. Admin if admin should see all data."
+"For regular filters, these are the subjects (users, roles, groups) this "
+"filter will be applied to. For base filters, these are the subjects that "
+"the filter DOES NOT apply to, e.g. Admin if admin should see all data."
 msgstr ""
 "برای فیلترهای عادی، این‌ها نقشی هستند که این فیلتر بر آن‌ها اعمال خواهد "
 "شد. برای فیلترهای پایه، این‌ها نقشی هستند که فیلتر به آن‌ها اعمال "
@@ -8502,7 +8558,7 @@ msgstr ""
 msgid "Manage"
 msgstr "مدیریت"
 
-msgid "Manage dashboard owners and access permissions"
+msgid "Manage dashboard editors and access permissions"
 msgstr ""
 
 msgid "Manage email report"
@@ -9888,25 +9944,6 @@ msgstr "متن را در ویرایشگر با یک کوئری در این جد�
 msgid "Owned Created or Favored"
 msgstr "مالکیت ایجاد شده یا مورد علاقه"
 
-msgid "Owner"
-msgstr "مالک"
-
-msgid "Owners"
-msgstr "مالکین"
-
-msgid "Owners are invalid"
-msgstr "مالکین نامعتبر هستند"
-
-msgid "Owners is a list of users who can alter the dashboard."
-msgstr "مالکین فهرستی از کاربرانی هستند که می‌توانند داشبورد را تغییر دهند."
-
-msgid ""
-"Owners is a list of users who can alter the dashboard. Searchable by name"
-" or username."
-msgstr ""
-"مالکین فهرستی از کاربران هستند که می‌توانند داشبورد را تغییر دهند. قابل "
-"جستجو بر اساس نام یا نام کاربری."
-
 #, fuzzy
 msgid "PDF download failed, please refresh and try again."
 msgstr "دانلود تصویر ناموفق بود، لطفاً صفحه را تازه‌سازی کرده و دوباره تلاش کنید."
@@ -10297,8 +10334,9 @@ msgstr ""
 "لطفاً فایل خود را دوباره صادر کنید و دوباره سعی در وارد کردن آن داشته "
 "باشید."
 
-msgid "Please reach out to the Chart Owner for assistance."
-msgid_plural "Please reach out to the Chart Owners for assistance."
+#, fuzzy
+msgid "Please reach out to the Chart Editor for assistance."
+msgid_plural "Please reach out to the Chart Editors for assistance."
 msgstr[0] "لطفاً برای کمک با مالک نمودار تماس بگیرید."
 msgstr[1] "لطفاً برای کمک با مالکان نمودارها تماس بگیرید."
 
@@ -10813,6 +10851,9 @@ msgstr "کمیت نسبی"
 msgid "Reload"
 msgstr "بارگذاری مجدد"
 
+msgid "Reload SQL Lab"
+msgstr ""
+
 msgid "Remove"
 msgstr "حذف"
 
@@ -10981,6 +11022,10 @@ msgstr "مقادیر کنترل مورد نیاز حذف شده‌اند"
 msgid "Resample"
 msgstr "نمونه‌برداری مجدد"
 
+#, python-format
+msgid "Resample method '%(method)s' is not supported."
+msgstr ""
+
 msgid "Resample method should be in "
 msgstr "روش نمونه‌برداری باید در"
 
@@ -11026,7 +11071,7 @@ msgstr "منبع قبلاً یک گزارش ضمایم شده دارد."
 msgid "Resource was not found."
 msgstr "منبع پیدا نشد."
 
-msgid "Resource was removed before ownership could be verified"
+msgid "Resource was removed before editorship could be verified"
 msgstr ""
 
 msgid "Restore filter"
@@ -11131,24 +11176,6 @@ msgstr "نام الزامی است"
 
 msgid "Roles"
 msgstr "نقش‌ها"
-
-msgid ""
-"Roles is a list which defines access to the dashboard. Granting a role "
-"access to a dashboard will bypass dataset level checks. If no roles are "
-"defined, regular access permissions apply."
-msgstr ""
-"نقش‌ها فهرستی هستند که دسترسی به داشبورد را تعریف می‌کنند. اعطای دسترسی "
-"یک نقش به یک داشبورد، بررسی‌های سطح داده‌ را نادیده می‌گیرد. اگر هیچ نقشی"
-" تعریف نشده باشد، مجوزهای دسترسی معمولی اعمال می‌شوند."
-
-msgid ""
-"Roles is a list which defines access to the dashboard. Granting a role "
-"access to a dashboard will bypass dataset level checks.If no roles are "
-"defined, regular access permissions apply."
-msgstr ""
-"نقش‌ها فهرستی هستند که دسترسی به داشبورد را تعریف می‌کنند. اعطای دسترسی "
-"یک نقش به یک داشبورد، بررسی‌های سطح دیتاست را نادیده خواهد گرفت. اگر نقشی"
-" تعریف نشده باشد، مجوزهای دسترسی عادی اعمال می‌شوند."
 
 msgid "Rolling Function"
 msgstr "توابع متحرک"
@@ -11607,7 +11634,7 @@ msgid "Search calculated columns by name"
 msgstr "ستون‌های محاسباتی"
 
 #, fuzzy
-msgid "Search charts by name, owner, or dashboard"
+msgid "Search charts by name, editor, or dashboard"
 msgstr "هیچ نموداری به این داشبورد اضافه نشده است"
 
 msgid "Search columns"
@@ -11621,6 +11648,10 @@ msgstr "جستجوی ستون‌ها"
 msgid "Search columns..."
 msgstr "جستجوی ستون‌ها"
 
+#, fuzzy
+msgid "Search editors"
+msgstr "مالکین را انتخاب کنید"
+
 msgid "Search in filters"
 msgstr "جستجو در فیلترها"
 
@@ -11629,16 +11660,12 @@ msgid "Search metrics by key or label"
 msgstr "جستجوی معیارها و ستون‌ها"
 
 #, fuzzy
-msgid "Search owners"
-msgstr "مالکین را انتخاب کنید"
-
-#, fuzzy
-msgid "Search roles"
-msgstr "جستجوی ستون‌ها"
-
-#, fuzzy
 msgid "Search tags"
 msgstr "برچسب‌ها را انتخاب کنید"
+
+#, fuzzy
+msgid "Search viewers"
+msgstr "مالکین را انتخاب کنید"
 
 msgid "Search..."
 msgstr "جستجو..."
@@ -11916,6 +11943,10 @@ msgstr "ابعادی را انتخاب کنید"
 msgid "Select dimension values"
 msgstr "ابعادی را انتخاب کنید"
 
+#, fuzzy
+msgid "Select editors"
+msgstr "مالکین را انتخاب کنید"
+
 msgid "Select file"
 msgstr "فایل را انتخاب کنید"
 
@@ -11980,9 +12011,6 @@ msgstr "نماد ارز را انتخاب کنید یا وارد کنید"
 
 msgid "Select or type dataset name"
 msgstr "نام مجموعه داده را انتخاب یا تایپ کنید"
-
-msgid "Select owners"
-msgstr "مالکین را انتخاب کنید"
 
 #, fuzzy
 msgid "Select page size"
@@ -13086,6 +13114,9 @@ msgstr "خیابان‌ها"
 msgid "Streets (Carto)"
 msgstr "نمودار درختی"
 
+msgid "Streets (OSM)"
+msgstr ""
+
 msgid "Strength to pull the graph toward center"
 msgstr "قدرت کشیدن نمودار به سمت مرکز"
 
@@ -13120,6 +13151,22 @@ msgstr "دسته‌بندی"
 
 msgid "Subdomain"
 msgstr "زیر دامنه"
+
+#, fuzzy
+msgid "Subject"
+msgstr "موضوع ایمیل"
+
+#, fuzzy
+msgid "Subject type"
+msgstr "نوع مرحله"
+
+#, fuzzy
+msgid "Subjects"
+msgstr "موضوع ایمیل"
+
+#, fuzzy
+msgid "Subjects are invalid"
+msgstr "مالکین نامعتبر هستند"
 
 msgid "Submit"
 msgstr "ارسال"
@@ -15363,6 +15410,18 @@ msgstr "برای دریافت یک URL قابل خواندن برای داشبو
 msgid "Token Request URI"
 msgstr ""
 
+#, python-format
+msgid ""
+"Too many sub-slices requested. The maximum allowed is %(max)s, but "
+"%(count)s were requested."
+msgstr ""
+
+#, python-format
+msgid ""
+"Too many time comparisons requested. The maximum allowed is %(max)s, but "
+"%(count)s were requested."
+msgstr ""
+
 #, fuzzy
 msgid "Tool Panel"
 msgstr "همه پنل‌ها"
@@ -16203,6 +16262,20 @@ msgstr "مشاهده شده"
 #, python-format
 msgid "Viewed %s"
 msgstr "مشاهده شده %s"
+
+#, fuzzy
+msgid "Viewer"
+msgstr "مشاهده شده"
+
+#, fuzzy
+msgid "Viewers"
+msgstr "مشاهده شده"
+
+msgid ""
+"Viewers is a list of subjects who can view the dashboard. If no viewers "
+"are defined, the dashboard is accessible to all users with appropriate "
+"datasource permissions."
+msgstr ""
 
 msgid "Viewport"
 msgstr "نمایشگر"
@@ -17092,6 +17165,9 @@ msgstr "شما مجوز ویرایش این داشبورد را ندارید."
 msgid "You do not have sufficient permissions to edit the chart"
 msgstr "شما مجوزهای کافی برای ویرایش نمودار را ندارید."
 
+msgid "You don't have access to one or more of the referenced datasources."
+msgstr ""
+
 msgid "You don't have access to this chart."
 msgstr "شما به این نمودار دسترسی ندارید."
 
@@ -17368,6 +17444,9 @@ msgstr "`row_offset` باید بزرگتر از یا برابر با ۰ باشد
 
 msgid "`width` must be greater or equal to 0"
 msgstr "`عرض` باید بزرگتر یا برابر با ۰ باشد."
+
+msgid "`window` must be between 1 and 10000"
+msgstr ""
 
 #, fuzzy
 msgid "a few seconds"
@@ -17695,6 +17774,10 @@ msgstr ""
 msgid "edit mode"
 msgstr "حالت ویرایش"
 
+#, fuzzy
+msgid "editors"
+msgstr "ویرایش"
+
 msgid "email subject"
 msgstr "موضوع ایمیل"
 
@@ -18008,9 +18091,6 @@ msgstr "متن اصلی"
 msgid "overall"
 msgstr "کلی"
 
-msgid "owners"
-msgstr "مالکین"
-
 msgid "p-value precision"
 msgstr "دقت p-value"
 
@@ -18283,6 +18363,26 @@ msgstr ""
 
 msgid "zoom area"
 msgstr "منطقه‌ی زوم"
+
+#, python-brace-format
+msgid ""
+"{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;"
+"\n"
+"\n"
+"/** The classic emailregex.com regex for RFC 5322-compliant emails */\n"
+"export const rfc5322Email =\n"
+"  "
+"/^(([^<>()[]\\.,;:s@\"]+(.[^<>()[]\\.,;:s@\"]+)*)|(\".+\"))@(([[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}])|(([a-zA-Z-0-9]+.)+[a-zA-Z]{2,}))$/;"
+"\n"
+"\n"
+"/** A loose regex that allows Unicode characters, enforces length limits,"
+" and that's about it. */\n"
+"export const unicodeEmail = /^[^s@\"]{1,64}@[^s@]{1,255}$/u;\n"
+"export const idnEmail = unicodeEmail;\n"
+"\n"
+"export const browserEmail: RegExp =\n"
+"  /^[a-zA-Z0-9.!#$%&'*+/=?^_"
+msgstr ""
 
 msgid "© Layer attribution"
 msgstr ""

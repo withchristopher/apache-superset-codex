@@ -21,7 +21,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Superset VERSION\n"
 "Report-Msgid-Bugs-To: avsarcoteli@gmail.com\n"
-"POT-Creation-Date: 2026-06-08 12:27-0700\n"
+"POT-Creation-Date: 2026-06-11 11:56-0700\n"
 "PO-Revision-Date: 2024-02-25 14:00+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: tr\n"
@@ -30,7 +30,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.17.0\n"
+"Generated-By: Babel 2.18.0\n"
 
 msgid ""
 "\n"
@@ -782,15 +782,18 @@ msgid ""
 "empty will allow embedding from any domain."
 msgstr ""
 
+msgid "A list of subjects who can alter the chart. Searchable by name."
+msgstr "Grafiği değiştirebilen öznelerin listesi. Ada göre aranabilir."
+
+msgid "A list of subjects who can view the chart. Searchable by name."
+msgstr "Grafiği görüntüleyebilen öznelerin listesi. Ada göre aranabilir."
+
 msgid "A list of tags that have been applied to this chart."
 msgstr ""
 
 #, fuzzy
 msgid "A list of tags that have been applied to this dashboard."
 msgstr "Bu dashboarda erişemezsiniz."
-
-msgid "A list of users who can alter the chart. Searchable by name or username."
-msgstr ""
 
 msgid "A map of the world, that can indicate values in different countries."
 msgstr ""
@@ -911,8 +914,8 @@ msgstr "Uyarı"
 msgid "About"
 msgstr "Hakkında"
 
-msgid "Access & ownership"
-msgstr ""
+msgid "Access"
+msgstr "Erişim"
 
 msgid "Access token"
 msgstr ""
@@ -1568,10 +1571,6 @@ msgid "An error occurred while fetching %s info: %s"
 msgstr ""
 
 #, fuzzy, python-format
-msgid "An error occurred while fetching %s owner values: %s"
-msgstr "Verisetini kaydederken bir hata oluştu"
-
-#, fuzzy, python-format
 msgid "An error occurred while fetching %s related data"
 msgstr "Verisetini kaydederken bir hata oluştu"
 
@@ -1599,8 +1598,12 @@ msgid "An error occurred while fetching available views"
 msgstr "Verisetini kaydederken bir hata oluştu"
 
 #, python-format
-msgid "An error occurred while fetching chart owners values: %s"
-msgstr ""
+msgid "An error occurred while fetching chart editor values: %s"
+msgstr "Grafik düzenleyici değerleri alınırken bir hata oluştu: %s"
+
+#, python-format
+msgid "An error occurred while fetching chart viewer values: %s"
+msgstr "Grafik görüntüleyici değerleri alınırken bir hata oluştu: %s"
 
 #, fuzzy
 msgid "An error occurred while fetching connections"
@@ -1611,8 +1614,12 @@ msgid "An error occurred while fetching created by values: %s"
 msgstr "Verisetini kaydederken bir hata oluştu"
 
 #, python-format
-msgid "An error occurred while fetching dashboard owner values: %s"
-msgstr ""
+msgid "An error occurred while fetching dashboard editor values: %s"
+msgstr "Pano düzenleyici değerleri alınırken bir hata oluştu: %s"
+
+#, python-format
+msgid "An error occurred while fetching dashboard viewer values: %s"
+msgstr "Pano görüntüleyici değerleri alınırken bir hata oluştu: %s"
 
 msgid "An error occurred while fetching dashboards"
 msgstr ""
@@ -1634,14 +1641,18 @@ msgid "An error occurred while fetching dataset datasource values: %s"
 msgstr ""
 
 #, python-format
+msgid "An error occurred while fetching dataset editor values: %s"
+msgstr "Veri kümesi düzenleyici değerleri alınırken bir hata oluştu: %s"
+
+#, python-format
 msgid "An error occurred while fetching dataset related data: %s"
 msgstr ""
 
-msgid "An error occurred while fetching function names."
-msgstr ""
-
 #, python-format
-msgid "An error occurred while fetching owners values: %s"
+msgid "An error occurred while fetching editor values: %s"
+msgstr "Düzenleyici değerleri alınırken bir hata oluştu: %s"
+
+msgid "An error occurred while fetching function names."
 msgstr ""
 
 #, python-format
@@ -1705,6 +1716,11 @@ msgstr "Verisetini kaydederken bir hata oluştu"
 
 #, python-format
 msgid "An error occurred while importing %s: %s"
+msgstr ""
+
+msgid ""
+"An error occurred while loading SQL Lab. This may be caused by a "
+"corrupted query state."
 msgstr ""
 
 msgid "An error occurred while loading dashboard information."
@@ -2829,6 +2845,11 @@ msgstr "Grafik %(id)s bulunamadı"
 msgid "Chart Data: %s"
 msgstr "Grafik Verisi: %s"
 
+#, python-format
+msgid "Chart Editor: %s"
+msgid_plural "Chart Editors: %s"
+msgstr[0] "Grafik Düzenleyicisi: %s"
+
 msgid "Chart ID"
 msgstr "Grafik ID"
 
@@ -2837,11 +2858,6 @@ msgstr "Grafik Seçenekleri"
 
 msgid "Chart Orientation"
 msgstr "Grafik Yönü"
-
-#, fuzzy, python-format
-msgid "Chart Owner: %s"
-msgid_plural "Chart Owners: %s"
-msgstr[0] "Grafik Sahibi: %s"
 
 msgid "Chart Source"
 msgstr "Grafik Kaynağı"
@@ -2887,6 +2903,9 @@ msgstr "Filtre değeri gereklidir"
 msgid "Chart does not exist"
 msgstr "Grafik yok"
 
+msgid "Chart editors"
+msgstr "Grafik düzenleyicileri"
+
 msgid "Chart has no query context saved. Please save the chart again."
 msgstr ""
 
@@ -2908,9 +2927,6 @@ msgstr "Grafik bulunamadı"
 
 msgid "Chart options"
 msgstr "Grafik seçenekleri"
-
-msgid "Chart owners"
-msgstr "Grafik sahipleri"
 
 msgid "Chart parameters are invalid."
 msgstr ""
@@ -3768,6 +3784,9 @@ msgid "Could not fetch all saved charts"
 msgstr "Tüm kayıtlı grafikler getirilemedi"
 
 msgid "Could not find viz object"
+msgstr ""
+
+msgid "Could not load SQL Lab"
 msgstr ""
 
 msgid "Could not load database driver"
@@ -5513,11 +5532,30 @@ msgstr ""
 msgid "Edit user"
 msgstr "Sorguyu düzenle"
 
+msgid "Editable"
+msgstr "Düzenlenebilir"
+
 msgid "Edited"
 msgstr "Düzenlendi"
 
 msgid "Editing 1 filter:"
 msgstr ""
+
+msgid "Editor"
+msgstr "Düzenleyici"
+
+msgid "Editors"
+msgstr "Düzenleyiciler"
+
+msgid "Editors is a list of subjects who can alter the dashboard."
+msgstr "Düzenleyiciler, panoyu değiştirebilen öznelerin listesidir."
+
+msgid ""
+"Editors is a list of subjects who can alter the dashboard. Searchable by "
+"name."
+msgstr ""
+"Düzenleyiciler, panoyu değiştirebilen öznelerin listesidir. Ada göre "
+"aranabilir."
 
 msgid "Either the database is spelled incorrectly or does not exist."
 msgstr ""
@@ -5982,8 +6020,8 @@ msgstr "Yükle"
 msgid "Exclude selected values"
 msgstr ""
 
-msgid "Excluded roles"
-msgstr ""
+msgid "Excluded subjects"
+msgstr "Hariç tutulan özneler"
 
 msgid "Executed SQL"
 msgstr ""
@@ -6378,6 +6416,12 @@ msgstr ""
 msgid "File settings"
 msgstr "Ayarları Filtrele"
 
+#, python-format
+msgid ""
+"File size %(size)s bytes exceeds the maximum allowed upload size of "
+"%(max_size)s bytes"
+msgstr ""
+
 #, fuzzy
 msgid "File upload"
 msgstr "Yükle"
@@ -6571,9 +6615,9 @@ msgid ""
 msgstr ""
 
 msgid ""
-"For regular filters, these are the roles this filter will be applied to. "
-"For base filters, these are the roles that the filter DOES NOT apply to, "
-"e.g. Admin if admin should see all data."
+"For regular filters, these are the subjects (users, roles, groups) this "
+"filter will be applied to. For base filters, these are the subjects that "
+"the filter DOES NOT apply to, e.g. Admin if admin should see all data."
 msgstr ""
 
 msgid "Forbidden"
@@ -8051,8 +8095,8 @@ msgstr ""
 msgid "Manage"
 msgstr "Yönetim"
 
-msgid "Manage dashboard owners and access permissions"
-msgstr ""
+msgid "Manage dashboard editors and access permissions"
+msgstr "Pano düzenleyicilerini ve erişim izinlerini yönet"
 
 msgid "Manage email report"
 msgstr ""
@@ -9364,23 +9408,6 @@ msgstr ""
 msgid "Owned Created or Favored"
 msgstr ""
 
-msgid "Owner"
-msgstr "Sahibi"
-
-msgid "Owners"
-msgstr "Sahipler"
-
-msgid "Owners are invalid"
-msgstr ""
-
-msgid "Owners is a list of users who can alter the dashboard."
-msgstr ""
-
-msgid ""
-"Owners is a list of users who can alter the dashboard. Searchable by name"
-" or username."
-msgstr ""
-
 msgid "PDF download failed, please refresh and try again."
 msgstr ""
 
@@ -9743,10 +9770,9 @@ msgstr ""
 msgid "Please re-export your file and try importing again"
 msgstr ""
 
-#, fuzzy
-msgid "Please reach out to the Chart Owner for assistance."
-msgid_plural "Please reach out to the Chart Owners for assistance."
-msgstr[0] ""
+msgid "Please reach out to the Chart Editor for assistance."
+msgid_plural "Please reach out to the Chart Editors for assistance."
+msgstr[0] "Yardım için lütfen Grafik Düzenleyicisine ulaşın."
 
 msgid "Please save your chart first, then try creating a new email report."
 msgstr ""
@@ -10238,6 +10264,9 @@ msgstr ""
 msgid "Reload"
 msgstr ""
 
+msgid "Reload SQL Lab"
+msgstr ""
+
 msgid "Remove"
 msgstr ""
 
@@ -10405,6 +10434,10 @@ msgstr ""
 msgid "Resample"
 msgstr ""
 
+#, python-format
+msgid "Resample method '%(method)s' is not supported."
+msgstr ""
+
 msgid "Resample method should be in "
 msgstr ""
 
@@ -10449,8 +10482,8 @@ msgstr ""
 msgid "Resource was not found."
 msgstr ""
 
-msgid "Resource was removed before ownership could be verified"
-msgstr ""
+msgid "Resource was removed before editorship could be verified"
+msgstr "Düzenleme yetkisi doğrulanamadan kaynak kaldırıldı"
 
 msgid "Restore filter"
 msgstr ""
@@ -10550,18 +10583,6 @@ msgstr "İsim gereklidir"
 
 msgid "Roles"
 msgstr "Roller"
-
-msgid ""
-"Roles is a list which defines access to the dashboard. Granting a role "
-"access to a dashboard will bypass dataset level checks. If no roles are "
-"defined, regular access permissions apply."
-msgstr ""
-
-msgid ""
-"Roles is a list which defines access to the dashboard. Granting a role "
-"access to a dashboard will bypass dataset level checks.If no roles are "
-"defined, regular access permissions apply."
-msgstr ""
 
 msgid "Rolling Function"
 msgstr ""
@@ -11006,9 +11027,8 @@ msgstr "Sorgu metni ile arama"
 msgid "Search calculated columns by name"
 msgstr "Kolonları ara"
 
-#, fuzzy
-msgid "Search charts by name, owner, or dashboard"
-msgstr "Dashboardın adını ekleyin"
+msgid "Search charts by name, editor, or dashboard"
+msgstr "Grafikleri ada, düzenleyiciye veya panoya göre ara"
 
 msgid "Search columns"
 msgstr "Kolonları ara"
@@ -11021,6 +11041,9 @@ msgstr "Kolonları ara"
 msgid "Search columns..."
 msgstr "Kolonları ara"
 
+msgid "Search editors"
+msgstr "Düzenleyicileri ara"
+
 msgid "Search in filters"
 msgstr "Filtrelerde ara"
 
@@ -11029,16 +11052,11 @@ msgid "Search metrics by key or label"
 msgstr "Kolonları ara"
 
 #, fuzzy
-msgid "Search owners"
-msgstr "Kolonları ara"
-
-#, fuzzy
-msgid "Search roles"
-msgstr "Kolonları ara"
-
-#, fuzzy
 msgid "Search tags"
 msgstr "Ara"
+
+msgid "Search viewers"
+msgstr "Görüntüleyicileri ara"
 
 msgid "Search..."
 msgstr "Ara…"
@@ -11315,6 +11333,9 @@ msgstr "Dashboard seç"
 msgid "Select dimension values"
 msgstr "Birden fazla değer seçilebilir"
 
+msgid "Select editors"
+msgstr "Düzenleyicileri seç"
+
 msgid "Select file"
 msgstr "Dosya seç"
 
@@ -11375,9 +11396,6 @@ msgstr ""
 
 msgid "Select or type dataset name"
 msgstr "Veriseti ismini seçin / girin"
-
-msgid "Select owners"
-msgstr ""
 
 #, fuzzy
 msgid "Select page size"
@@ -12406,6 +12424,9 @@ msgstr ""
 msgid "Streets (Carto)"
 msgstr ""
 
+msgid "Streets (OSM)"
+msgstr ""
+
 msgid "Strength to pull the graph toward center"
 msgstr ""
 
@@ -12440,6 +12461,18 @@ msgstr "Kategori"
 
 msgid "Subdomain"
 msgstr ""
+
+msgid "Subject"
+msgstr "Özne"
+
+msgid "Subject type"
+msgstr "Özne türü"
+
+msgid "Subjects"
+msgstr "Özneler"
+
+msgid "Subjects are invalid"
+msgstr "Özneler geçersiz"
 
 msgid "Submit"
 msgstr ""
@@ -14438,6 +14471,18 @@ msgstr ""
 msgid "Token Request URI"
 msgstr ""
 
+#, python-format
+msgid ""
+"Too many sub-slices requested. The maximum allowed is %(max)s, but "
+"%(count)s were requested."
+msgstr ""
+
+#, python-format
+msgid ""
+"Too many time comparisons requested. The maximum allowed is %(max)s, but "
+"%(count)s were requested."
+msgstr ""
+
 #, fuzzy
 msgid "Tool Panel"
 msgstr "Tüm paneller"
@@ -15224,6 +15269,21 @@ msgstr "Görüldü"
 msgid "Viewed %s"
 msgstr "%s görüldü"
 
+msgid "Viewer"
+msgstr "Görüntüleyici"
+
+msgid "Viewers"
+msgstr "Görüntüleyiciler"
+
+msgid ""
+"Viewers is a list of subjects who can view the dashboard. If no viewers "
+"are defined, the dashboard is accessible to all users with appropriate "
+"datasource permissions."
+msgstr ""
+"Görüntüleyiciler, panoyu görüntüleyebilen öznelerin listesidir. "
+"Görüntüleyici tanımlanmamışsa pano, uygun veri kaynağı izinlerine sahip "
+"tüm kullanıcılar tarafından erişilebilir."
+
 msgid "Viewport"
 msgstr ""
 
@@ -16002,6 +16062,9 @@ msgstr "Bu dashboardı değiştirmeye yetkiniz yok."
 msgid "You do not have sufficient permissions to edit the chart"
 msgstr ""
 
+msgid "You don't have access to one or more of the referenced datasources."
+msgstr ""
+
 msgid "You don't have access to this chart."
 msgstr "Bu grafiğe erişemezsiniz."
 
@@ -16250,6 +16313,9 @@ msgid "`row_offset` must be greater than or equal to 0"
 msgstr ""
 
 msgid "`width` must be greater or equal to 0"
+msgstr ""
+
+msgid "`window` must be between 1 and 10000"
 msgstr ""
 
 #, fuzzy
@@ -16580,6 +16646,9 @@ msgstr ""
 msgid "edit mode"
 msgstr "düzenleme modu"
 
+msgid "editors"
+msgstr "düzenleyiciler"
+
 msgid "email subject"
 msgstr ""
 
@@ -16877,10 +16946,6 @@ msgstr "Giriş"
 msgid "overall"
 msgstr ""
 
-#, fuzzy
-msgid "owners"
-msgstr "Sahipler"
-
 msgid "p-value precision"
 msgstr ""
 
@@ -17142,6 +17207,26 @@ msgid "your-project-1234-a1"
 msgstr ""
 
 msgid "zoom area"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;"
+"\n"
+"\n"
+"/** The classic emailregex.com regex for RFC 5322-compliant emails */\n"
+"export const rfc5322Email =\n"
+"  "
+"/^(([^<>()[]\\.,;:s@\"]+(.[^<>()[]\\.,;:s@\"]+)*)|(\".+\"))@(([[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}])|(([a-zA-Z-0-9]+.)+[a-zA-Z]{2,}))$/;"
+"\n"
+"\n"
+"/** A loose regex that allows Unicode characters, enforces length limits,"
+" and that's about it. */\n"
+"export const unicodeEmail = /^[^s@\"]{1,64}@[^s@]{1,255}$/u;\n"
+"export const idnEmail = unicodeEmail;\n"
+"\n"
+"export const browserEmail: RegExp =\n"
+"  /^[a-zA-Z0-9.!#$%&'*+/=?^_"
 msgstr ""
 
 msgid "© Layer attribution"

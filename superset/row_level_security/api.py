@@ -47,6 +47,10 @@ from superset.row_level_security.schemas import (
     RLSPutSchema,
     RLSShowSchema,
 )
+from superset.subjects.filters import (
+    FilterRelatedSubjects,
+    subject_type_filter,
+)
 from superset.views.base import DatasourceFilter
 from superset.views.base_api import (
     BaseSupersetModelRestApi,
@@ -55,10 +59,9 @@ from superset.views.base_api import (
     statsd_metrics,
 )
 from superset.views.filters import (
-    BaseFilterRelatedRoles,
     BaseFilterRelatedUsers,
-    FilterRelatedOwners,
     FilterRelatedTables,
+    FilterRelatedUsers,
 )
 
 logger = logging.getLogger(__name__)
@@ -84,6 +87,10 @@ class RLSRestApi(BaseSupersetModelRestApi):
         "tables.table_name",
         "roles.id",
         "roles.name",
+        "subjects.id",
+        "subjects.label",
+        "subjects.secondary_label",
+        "subjects.type",
         "clause",
         "changed_on_delta_humanized",
         "changed_by.first_name",
@@ -104,6 +111,7 @@ class RLSRestApi(BaseSupersetModelRestApi):
         "filter_type",
         "tables",
         "roles",
+        "subjects",
         "group_key",
         "clause",
     ]
@@ -114,8 +122,10 @@ class RLSRestApi(BaseSupersetModelRestApi):
         "tables.id",
         "tables.schema",
         "tables.table_name",
-        "roles.id",
-        "roles.name",
+        "subjects.id",
+        "subjects.label",
+        "subjects.secondary_label",
+        "subjects.type",
         "group_key",
         "clause",
     ]
@@ -124,7 +134,7 @@ class RLSRestApi(BaseSupersetModelRestApi):
         "description",
         "filter_type",
         "tables",
-        "roles",
+        "subjects",
         "group_key",
         "clause",
         "created_by",
@@ -137,14 +147,23 @@ class RLSRestApi(BaseSupersetModelRestApi):
     add_model_schema = RLSPostSchema()
     edit_model_schema = RLSPutSchema()
 
-    allowed_rel_fields = {"tables", "roles", "created_by", "changed_by"}
+    allowed_rel_fields = {"tables", "subjects", "created_by", "changed_by"}
+    text_field_rel_fields = {
+        "subjects": "label",
+    }
+    extra_fields_rel_fields = {
+        "subjects": ["type", "active", "secondary_label", "img"],
+    }
     related_field_filters = {
         "tables": RelatedFieldFilter("table_name", FilterRelatedTables),
-        "changed_by": RelatedFieldFilter("first_name", FilterRelatedOwners),
+        "subjects": RelatedFieldFilter("label", FilterRelatedSubjects),
+        "changed_by": RelatedFieldFilter("first_name", FilterRelatedUsers),
     }
     base_related_field_filters = {
         "tables": [["id", DatasourceFilter, lambda: []]],
-        "roles": [["id", BaseFilterRelatedRoles, lambda: []]],
+        "subjects": [
+            ["id", subject_type_filter("SUBJECTS_RELATED_TYPES_RLS"), lambda: []]
+        ],
         "changed_by": [["id", BaseFilterRelatedUsers, lambda: []]],
     }
 

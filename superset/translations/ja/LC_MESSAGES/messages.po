@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-08 12:27-0700\n"
+"POT-Creation-Date: 2026-06-11 11:56-0700\n"
 "PO-Revision-Date: 2024-05-14 13:30+0900\n"
 "Last-Translator: Yuri Umezaki <bungoume@gmail.com>\n"
 "Language: ja\n"
@@ -26,7 +26,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.17.0\n"
+"Generated-By: Babel 2.18.0\n"
 
 msgid ""
 "\n"
@@ -820,14 +820,17 @@ msgid ""
 "empty will allow embedding from any domain."
 msgstr "このダッシュボードを埋め込むことができるドメイン名のリスト。このフィールドを空のままにすると、任意のドメインからの埋め込みが許可されます。"
 
+msgid "A list of subjects who can alter the chart. Searchable by name."
+msgstr "チャートを変更できるサブジェクトのリスト。名前で検索できます。"
+
+msgid "A list of subjects who can view the chart. Searchable by name."
+msgstr "チャートを閲覧できるサブジェクトのリスト。名前で検索できます。"
+
 msgid "A list of tags that have been applied to this chart."
 msgstr "このチャートに適用されているタグのリスト。"
 
 msgid "A list of tags that have been applied to this dashboard."
 msgstr "このダッシュボードに適用されているタグのリスト"
-
-msgid "A list of users who can alter the chart. Searchable by name or username."
-msgstr "チャートを変更できるユーザーのリスト。名前またはユーザー名で検索できます。"
 
 msgid "A map of the world, that can indicate values in different countries."
 msgstr "国別の値を表示可能な世界地図です。"
@@ -952,8 +955,8 @@ msgstr "処理中"
 msgid "About"
 msgstr "詳細"
 
-msgid "Access & ownership"
-msgstr "アクセスと所有権"
+msgid "Access"
+msgstr "アクセス"
 
 msgid "Access token"
 msgstr "アクセストークン"
@@ -1588,10 +1591,6 @@ msgid "An error occurred while fetching %s info: %s"
 msgstr "%s 情報の取得中にエラーが発生しました: %s"
 
 #, fuzzy, python-format
-msgid "An error occurred while fetching %s owner values: %s"
-msgstr "所有者の値を取得中にエラーが発生しました: %s"
-
-#, fuzzy, python-format
 msgid "An error occurred while fetching %s related data"
 msgstr "データセット関連データの取得中にエラーが発生しました"
 
@@ -1618,8 +1617,12 @@ msgid "An error occurred while fetching available views"
 msgstr "利用可能なテーマの取得中にエラーが発生しました"
 
 #, python-format
-msgid "An error occurred while fetching chart owners values: %s"
-msgstr "チャート所有者の値を取得中にエラーが発生しました: %s"
+msgid "An error occurred while fetching chart editor values: %s"
+msgstr "チャート編集者の値を取得中にエラーが発生しました: %s"
+
+#, python-format
+msgid "An error occurred while fetching chart viewer values: %s"
+msgstr "チャート閲覧者の値を取得中にエラーが発生しました: %s"
 
 #, fuzzy
 msgid "An error occurred while fetching connections"
@@ -1630,8 +1633,12 @@ msgid "An error occurred while fetching created by values: %s"
 msgstr "スキーマの値を取得中にエラーが発生しました: %s"
 
 #, python-format
-msgid "An error occurred while fetching dashboard owner values: %s"
-msgstr "ダッシュボード所有者の値を取得中にエラーが発生しました: %s"
+msgid "An error occurred while fetching dashboard editor values: %s"
+msgstr "ダッシュボード編集者の値を取得中にエラーが発生しました: %s"
+
+#, python-format
+msgid "An error occurred while fetching dashboard viewer values: %s"
+msgstr "ダッシュボード閲覧者の値を取得中にエラーが発生しました: %s"
 
 msgid "An error occurred while fetching dashboards"
 msgstr "ダッシュボードの取得中にエラーが発生しました"
@@ -1653,15 +1660,19 @@ msgid "An error occurred while fetching dataset datasource values: %s"
 msgstr "データセットのデータソース値を取得中にエラーが発生しました: %s"
 
 #, python-format
+msgid "An error occurred while fetching dataset editor values: %s"
+msgstr "データセット編集者の値を取得中にエラーが発生しました: %s"
+
+#, python-format
 msgid "An error occurred while fetching dataset related data: %s"
 msgstr "データセット関連データの取得中にエラーが発生しました: %s"
 
+#, python-format
+msgid "An error occurred while fetching editor values: %s"
+msgstr "編集者の値を取得中にエラーが発生しました: %s"
+
 msgid "An error occurred while fetching function names."
 msgstr "関数名の取得中にエラーが発生しました。"
-
-#, python-format
-msgid "An error occurred while fetching owners values: %s"
-msgstr "所有者の値を取得中にエラーが発生しました: %s"
 
 #, python-format
 msgid "An error occurred while fetching schema values: %s"
@@ -1723,6 +1734,11 @@ msgstr "SQLの整形中にエラーが発生しました"
 #, python-format
 msgid "An error occurred while importing %s: %s"
 msgstr "%s のインポート中にエラーが発生しました: %s"
+
+msgid ""
+"An error occurred while loading SQL Lab. This may be caused by a "
+"corrupted query state."
+msgstr ""
 
 msgid "An error occurred while loading dashboard information."
 msgstr "ダッシュボード情報の読み込み中にエラーが発生しました。"
@@ -2822,6 +2838,11 @@ msgstr "チャート (ID: %(id)s) が見つかりません"
 msgid "Chart Data: %s"
 msgstr "チャートデータ: %s"
 
+#, python-format
+msgid "Chart Editor: %s"
+msgid_plural "Chart Editors: %s"
+msgstr[0] "チャート編集者: %s"
+
 msgid "Chart ID"
 msgstr "チャートID"
 
@@ -2830,11 +2851,6 @@ msgstr "チャート設定"
 
 msgid "Chart Orientation"
 msgstr "チャートの向き"
-
-#, python-format
-msgid "Chart Owner: %s"
-msgid_plural "Chart Owners: %s"
-msgstr[0] "チャート所有者: %s"
 
 msgid "Chart Source"
 msgstr "チャートソース"
@@ -2878,6 +2894,9 @@ msgstr "チャートのカスタマイズ値が必要です"
 msgid "Chart does not exist"
 msgstr "チャートが存在しません"
 
+msgid "Chart editors"
+msgstr "チャート編集者"
+
 msgid "Chart has no query context saved. Please save the chart again."
 msgstr "チャートにクエリコンテキストが保存されていません。チャートを再度保存してください。"
 
@@ -2898,9 +2917,6 @@ msgstr "チャートが見つかりません"
 
 msgid "Chart options"
 msgstr "チャート設定"
-
-msgid "Chart owners"
-msgstr "チャート所有者"
 
 msgid "Chart parameters are invalid."
 msgstr "チャートパラメータが無効です。"
@@ -3727,6 +3743,9 @@ msgstr "保存済みチャートをすべて取得できませんでした"
 
 msgid "Could not find viz object"
 msgstr "視覚化(Viz)オブジェクトが見つかりませんでした"
+
+msgid "Could not load SQL Lab"
+msgstr ""
 
 msgid "Could not load database driver"
 msgstr "データベースドライバーを読み込めませんでした"
@@ -5410,11 +5429,28 @@ msgstr "期間を編集"
 msgid "Edit user"
 msgstr "ユーザーを編集"
 
+msgid "Editable"
+msgstr "編集可能"
+
 msgid "Edited"
 msgstr "編集"
 
 msgid "Editing 1 filter:"
 msgstr "1個のフィルターを編集しています:"
+
+msgid "Editor"
+msgstr "編集者"
+
+msgid "Editors"
+msgstr "編集者"
+
+msgid "Editors is a list of subjects who can alter the dashboard."
+msgstr "編集者は、ダッシュボードを変更できるサブジェクトのリストです。"
+
+msgid ""
+"Editors is a list of subjects who can alter the dashboard. Searchable by "
+"name."
+msgstr "編集者は、ダッシュボードを変更できるサブジェクトのリストです。名前で検索できます。"
 
 msgid "Either the database is spelled incorrectly or does not exist."
 msgstr "データベース名が正しくないか、存在しません。"
@@ -5855,8 +5891,8 @@ msgstr "Excelアップロード"
 msgid "Exclude selected values"
 msgstr "選択した値を除外"
 
-msgid "Excluded roles"
-msgstr "除外されたロール"
+msgid "Excluded subjects"
+msgstr "除外されたサブジェクト"
 
 msgid "Executed SQL"
 msgstr "実行されたSQL"
@@ -6245,6 +6281,12 @@ msgstr "このブラウザではファイル操作がサポートされていま
 msgid "File settings"
 msgstr "ファイル設定"
 
+#, python-format
+msgid ""
+"File size %(size)s bytes exceeds the maximum allowed upload size of "
+"%(max_size)s bytes"
+msgstr ""
+
 msgid "File upload"
 msgstr "ファイルアップロード"
 
@@ -6434,10 +6476,11 @@ msgid ""
 "function, refer to the"
 msgstr "この関数のスコープ内で利用可能なオブジェクトの詳細は次を確認してください"
 
+#, fuzzy
 msgid ""
-"For regular filters, these are the roles this filter will be applied to. "
-"For base filters, these are the roles that the filter DOES NOT apply to, "
-"e.g. Admin if admin should see all data."
+"For regular filters, these are the subjects (users, roles, groups) this "
+"filter will be applied to. For base filters, these are the subjects that "
+"the filter DOES NOT apply to, e.g. Admin if admin should see all data."
 msgstr "通常フィルターの場合、これらはフィルターを適用するロールです。基本フィルターの場合、これらはフィルターを「適用しない」ロールです。(例：管理者がすべてのデータを閲覧できるようにする場合のAdminロール)"
 
 msgid "Forbidden"
@@ -7869,8 +7912,8 @@ msgstr "リクエスト形式が不正です。slice_id、または table_name �
 msgid "Manage"
 msgstr "管理"
 
-msgid "Manage dashboard owners and access permissions"
-msgstr "ダッシュボードの所有者とアクセス権限の管理"
+msgid "Manage dashboard editors and access permissions"
+msgstr "ダッシュボード編集者とアクセス権限を管理"
 
 msgid "Manage email report"
 msgstr "メールレポートの管理"
@@ -9163,23 +9206,6 @@ msgstr "エディターの内容をこのテーブルのクエリで上書き"
 msgid "Owned Created or Favored"
 msgstr "所有・作成・またはお気に入り"
 
-msgid "Owner"
-msgstr "所有者"
-
-msgid "Owners"
-msgstr "所有者"
-
-msgid "Owners are invalid"
-msgstr "所有者の指定が無効です"
-
-msgid "Owners is a list of users who can alter the dashboard."
-msgstr "所有者はダッシュボードを変更可能なユーザーのリストです。"
-
-msgid ""
-"Owners is a list of users who can alter the dashboard. Searchable by name"
-" or username."
-msgstr "所有者はダッシュボードを変更可能なユーザーのリストです。名前またはユーザー名で検索できます。"
-
 msgid "PDF download failed, please refresh and try again."
 msgstr "PDFのダウンロードに失敗しました。更新して再試行してください。"
 
@@ -9533,9 +9559,9 @@ msgstr "パスワードを再入力してください。"
 msgid "Please re-export your file and try importing again"
 msgstr "ファイルを再エクスポートし、インポートを再試行してください"
 
-msgid "Please reach out to the Chart Owner for assistance."
-msgid_plural "Please reach out to the Chart Owners for assistance."
-msgstr[0] "サポートが必要な場合は、チャートの所有者にお問い合わせください。"
+msgid "Please reach out to the Chart Editor for assistance."
+msgid_plural "Please reach out to the Chart Editors for assistance."
+msgstr[0] "サポートが必要な場合は、チャート編集者にお問い合わせください。"
 
 msgid "Please save your chart first, then try creating a new email report."
 msgstr "まずチャートを保存してから、新しいメールレポートを作成してください。"
@@ -10021,6 +10047,9 @@ msgstr "相対量"
 msgid "Reload"
 msgstr "再読み込み"
 
+msgid "Reload SQL Lab"
+msgstr ""
+
 msgid "Remove"
 msgstr "削除"
 
@@ -10187,6 +10216,10 @@ msgstr "必須の制御値が削除されました"
 msgid "Resample"
 msgstr "リサンプリング"
 
+#, python-format
+msgid "Resample method '%(method)s' is not supported."
+msgstr ""
+
 msgid "Resample method should be in "
 msgstr "リサンプリング方法は以下の通りです "
 
@@ -10227,8 +10260,8 @@ msgstr "リソースには既にレポートが添付されています。"
 msgid "Resource was not found."
 msgstr "リソースが見つかりませんでした。"
 
-msgid "Resource was removed before ownership could be verified"
-msgstr ""
+msgid "Resource was removed before editorship could be verified"
+msgstr "編集権限を確認する前にリソースが削除されました"
 
 msgid "Restore filter"
 msgstr "フィルターを復元"
@@ -10325,18 +10358,6 @@ msgstr "ロール名は必須です"
 
 msgid "Roles"
 msgstr "ロール"
-
-msgid ""
-"Roles is a list which defines access to the dashboard. Granting a role "
-"access to a dashboard will bypass dataset level checks. If no roles are "
-"defined, regular access permissions apply."
-msgstr "ロールはダッシュボードへのアクセスを定義するリストです。ロールにダッシュボードへのアクセス権を与えると、データセットレベルのチェックがバイパスされます。ロールが定義されていない場合は、通常のアクセス許可が適用されます。"
-
-msgid ""
-"Roles is a list which defines access to the dashboard. Granting a role "
-"access to a dashboard will bypass dataset level checks.If no roles are "
-"defined, regular access permissions apply."
-msgstr "ロールはダッシュボードへのアクセスを定義するリストです。ロールにダッシュボードへのアクセス権を与えると、データセットレベルのチェックがバイパスされます。ロールが定義されていない場合は、通常のアクセス許可が適用されます。"
 
 msgid "Rolling Function"
 msgstr "ローリング機能"
@@ -10781,9 +10802,8 @@ msgstr "クエリテキストで検索"
 msgid "Search calculated columns by name"
 msgstr "計算列"
 
-#, fuzzy
-msgid "Search charts by name, owner, or dashboard"
-msgstr "このダッシュボードにはチャートが追加されていません"
+msgid "Search charts by name, editor, or dashboard"
+msgstr "名前、編集者、またはダッシュボードでチャートを検索"
 
 msgid "Search columns"
 msgstr "列を検索"
@@ -10795,6 +10815,9 @@ msgstr "列を検索"
 msgid "Search columns..."
 msgstr "列を検索..."
 
+msgid "Search editors"
+msgstr "編集者を検索"
+
 msgid "Search in filters"
 msgstr "フィルター内を検索"
 
@@ -10802,14 +10825,11 @@ msgstr "フィルター内を検索"
 msgid "Search metrics by key or label"
 msgstr "メトリックと列を検索"
 
-msgid "Search owners"
-msgstr "所有者を検索"
-
-msgid "Search roles"
-msgstr "ロールを検索"
-
 msgid "Search tags"
 msgstr "タグを検索"
+
+msgid "Search viewers"
+msgstr "閲覧者を検索"
 
 msgid "Search..."
 msgstr "検索…"
@@ -11063,6 +11083,9 @@ msgstr "上位N件のディメンションを選択"
 msgid "Select dimension values"
 msgstr "ディメンション値を選択"
 
+msgid "Select editors"
+msgstr "編集者を選択"
+
 msgid "Select file"
 msgstr "ファイルを選択"
 
@@ -11122,9 +11145,6 @@ msgstr "通貨記号を選択または入力"
 
 msgid "Select or type dataset name"
 msgstr "データセット名を選択または入力"
-
-msgid "Select owners"
-msgstr "所有者を選択"
 
 msgid "Select page size"
 msgstr "ページサイズを選択"
@@ -12139,6 +12159,9 @@ msgstr "ストリート"
 msgid "Streets (Carto)"
 msgstr "ツリーチャート"
 
+msgid "Streets (OSM)"
+msgstr ""
+
 msgid "Strength to pull the graph toward center"
 msgstr "グラフを中心へ引き寄せる強さ"
 
@@ -12171,6 +12194,18 @@ msgstr "サブカテゴリ"
 
 msgid "Subdomain"
 msgstr "サブドメイン"
+
+msgid "Subject"
+msgstr "サブジェクト"
+
+msgid "Subject type"
+msgstr "サブジェクトタイプ"
+
+msgid "Subjects"
+msgstr "サブジェクト"
+
+msgid "Subjects are invalid"
+msgstr "サブジェクトが無効です"
 
 msgid "Submit"
 msgstr "送信"
@@ -14174,6 +14209,18 @@ msgstr "ダッシュボードのわかりやすい URL を取得するには"
 msgid "Token Request URI"
 msgstr "トークンリクエスト URI"
 
+#, python-format
+msgid ""
+"Too many sub-slices requested. The maximum allowed is %(max)s, but "
+"%(count)s were requested."
+msgstr ""
+
+#, python-format
+msgid ""
+"Too many time comparisons requested. The maximum allowed is %(max)s, but "
+"%(count)s were requested."
+msgstr ""
+
 msgid "Tool Panel"
 msgstr "ツールパネル"
 
@@ -14946,6 +14993,18 @@ msgstr "閲覧"
 #, python-format
 msgid "Viewed %s"
 msgstr "%s に閲覧しました"
+
+msgid "Viewer"
+msgstr "閲覧者"
+
+msgid "Viewers"
+msgstr "閲覧者"
+
+msgid ""
+"Viewers is a list of subjects who can view the dashboard. If no viewers "
+"are defined, the dashboard is accessible to all users with appropriate "
+"datasource permissions."
+msgstr "閲覧者は、ダッシュボードを閲覧できるサブジェクトのリストです。閲覧者が定義されていない場合、適切なデータソース権限を持つすべてのユーザーがダッシュボードにアクセスできます。"
 
 msgid "Viewport"
 msgstr "ビューポート"
@@ -15733,6 +15792,9 @@ msgstr "このダッシュボードを編集する権限がありません。"
 msgid "You do not have sufficient permissions to edit the chart"
 msgstr "チャートを編集するための十分な権限がありません"
 
+msgid "You don't have access to one or more of the referenced datasources."
+msgstr ""
+
 msgid "You don't have access to this chart."
 msgstr "このチャートへのアクセス権がありません。"
 
@@ -15987,6 +16049,9 @@ msgstr "`row_offset` は 0 以上である必要があります"
 
 msgid "`width` must be greater or equal to 0"
 msgstr "`width` は 0 以上である必要があります"
+
+msgid "`window` must be between 1 and 10000"
+msgstr ""
 
 #, fuzzy
 msgid "a few seconds"
@@ -16307,6 +16372,9 @@ msgstr ""
 msgid "edit mode"
 msgstr "編集モード"
 
+msgid "editors"
+msgstr "編集者"
+
 msgid "email subject"
 msgstr "メールの件名"
 
@@ -16610,9 +16678,6 @@ msgstr "オリジナル"
 msgid "overall"
 msgstr "全体"
 
-msgid "owners"
-msgstr "所有者"
-
 msgid "p-value precision"
 msgstr "P値の精度"
 
@@ -16872,6 +16937,26 @@ msgstr "your-project-1234-a1"
 
 msgid "zoom area"
 msgstr "ズームエリア"
+
+#, python-brace-format
+msgid ""
+"{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;"
+"\n"
+"\n"
+"/** The classic emailregex.com regex for RFC 5322-compliant emails */\n"
+"export const rfc5322Email =\n"
+"  "
+"/^(([^<>()[]\\.,;:s@\"]+(.[^<>()[]\\.,;:s@\"]+)*)|(\".+\"))@(([[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}])|(([a-zA-Z-0-9]+.)+[a-zA-Z]{2,}))$/;"
+"\n"
+"\n"
+"/** A loose regex that allows Unicode characters, enforces length limits,"
+" and that's about it. */\n"
+"export const unicodeEmail = /^[^s@\"]{1,64}@[^s@]{1,255}$/u;\n"
+"export const idnEmail = unicodeEmail;\n"
+"\n"
+"export const browserEmail: RegExp =\n"
+"  /^[a-zA-Z0-9.!#$%&'*+/=?^_"
+msgstr ""
 
 msgid "© Layer attribution"
 msgstr "© レイヤー帰属情報"

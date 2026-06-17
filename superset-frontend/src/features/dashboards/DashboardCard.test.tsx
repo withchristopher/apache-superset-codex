@@ -37,10 +37,6 @@ const mockDashboard = {
   url: '/dashboard/1',
   thumbnail_url: '/thumbnails/1.png',
   changed_on_delta_humanized: '2 days ago',
-  owners: [
-    { id: 1, name: 'Alice', first_name: 'Alice', last_name: 'Doe' },
-    { id: 2, name: 'Bob', first_name: 'Bob', last_name: 'Smith' },
-  ],
   changed_by_name: 'John Doe',
   changed_by: 'john.doe@example.com',
 };
@@ -119,7 +115,6 @@ test('should fetch thumbnail when dashboard has no thumbnail URL and feature fla
         dashboard_title: '',
         published: false,
         url: '',
-        owners: [],
       }}
       hasPerm={() => true}
       bulkSelectEnabled={false}
@@ -145,7 +140,6 @@ test('should fetch thumbnail when dashboard has no thumbnail URL and feature fla
         dashboard_title: '',
         published: false,
         url: '',
-        owners: [],
       }}
       hasPerm={() => true}
       bulkSelectEnabled={false}

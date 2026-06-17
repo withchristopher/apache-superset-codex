@@ -285,7 +285,8 @@ def import_dashboard(  # noqa: C901
     if existing:
         if overwrite and can_write and user:
             if not security_manager.can_access_dashboard(existing) or (
-                user not in existing.owners and not security_manager.is_admin()
+                not security_manager.is_editor(existing)
+                and not security_manager.is_admin()
             ):
                 raise ImportFailedError(
                     "A dashboard already exists and user doesn't "
@@ -326,8 +327,12 @@ def import_dashboard(  # noqa: C901
     if dashboard.id is None:
         db.session.flush()
 
-    if not existing and user and user not in dashboard.owners:
-        dashboard.owners.append(user)
+    if not existing and user:
+        from superset.subjects.utils import get_user_subject
+
+        subj = get_user_subject(user.id)
+        if subj and subj not in dashboard.editors:
+            dashboard.editors.append(subj)
 
     # Re-attach DASHBOARD_RBAC role assignments by name. Role IDs are
     # environment-local; names are how exports cross environments. Roles

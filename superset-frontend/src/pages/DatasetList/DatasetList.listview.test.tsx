@@ -190,7 +190,7 @@ test('renders all required column headers', async () => {
     within(table).getByRole('columnheader', { name: /Schema/i }),
   ).toBeInTheDocument();
   expect(
-    within(table).getByRole('columnheader', { name: /Owners/i }),
+    within(table).getByRole('columnheader', { name: /Editors/i }),
   ).toBeInTheDocument();
   expect(
     within(table).getByRole('columnheader', { name: /Last modified/i }),
@@ -991,10 +991,10 @@ test('virtual dataset shows delete, export, edit, and duplicate actions', async 
   expect(duplicateButton).toBeInTheDocument();
 });
 
-test('edit action is enabled for dataset owner', async () => {
+test('edit action is enabled for dataset editor', async () => {
   const dataset = {
     ...mockDatasets[0],
-    owners: [{ id: mockAdminUser.userId, username: 'admin' }],
+    editors: [{ id: mockAdminUser.userId, value: mockAdminUser.userId }],
   };
 
   mockDatasetListEndpoints({ result: [dataset], count: 1 });
@@ -1014,10 +1014,10 @@ test('edit action is enabled for dataset owner', async () => {
   expect(editButton).not.toHaveClass('disabled');
 });
 
-test('edit action is disabled for non-owner', async () => {
+test('edit action is disabled for non-editor', async () => {
   const dataset = {
     ...mockDatasets[0],
-    owners: [{ id: 999, username: 'other_user' }], // Different user
+    editors: [{ id: 999, value: 999 }],
   };
 
   mockDatasetListEndpoints({ result: [dataset], count: 1 });
@@ -1046,7 +1046,7 @@ test('edit action is disabled for non-owner', async () => {
 test('all action buttons are clickable and enabled for admin user', async () => {
   const virtualDataset = {
     ...mockDatasets[1],
-    owners: [{ id: mockAdminUser.userId, username: 'admin' }],
+    editors: [{ id: mockAdminUser.userId, value: mockAdminUser.userId }],
   };
 
   mockDatasetListEndpoints({ result: [virtualDataset], count: 1 });
@@ -1237,11 +1237,10 @@ test('delete action gracefully handles 500 internal server error', async () => {
 test('duplicate action shows error toast on 403 forbidden', async () => {
   const virtualDataset = {
     ...mockDatasets[1],
-    owners: [
+    editors: [
       {
-        first_name: mockAdminUser.firstName,
-        last_name: mockAdminUser.lastName,
         id: mockAdminUser.userId as number,
+        value: mockAdminUser.userId as number,
       },
     ],
   };
@@ -1295,11 +1294,10 @@ test('duplicate action shows error toast on 403 forbidden', async () => {
 test('duplicate action shows error toast on 500 internal server error', async () => {
   const virtualDataset = {
     ...mockDatasets[1],
-    owners: [
+    editors: [
       {
-        first_name: mockAdminUser.firstName,
-        last_name: mockAdminUser.lastName,
         id: mockAdminUser.userId as number,
+        value: mockAdminUser.userId as number,
       },
     ],
   };
@@ -1704,14 +1702,13 @@ test('type filter persists after duplicating a dataset', async () => {
 
 test('edit action shows error toast when dataset fetch fails', async () => {
   const dataset = mockDatasets[0];
-  // Make the dataset owned by admin so edit button is enabled
+  // Make the dataset edited by admin so edit button is enabled
   const ownedDataset = {
     ...dataset,
-    owners: [
+    editors: [
       {
-        first_name: mockAdminUser.firstName,
-        last_name: mockAdminUser.lastName,
         id: mockAdminUser.userId as number,
+        value: mockAdminUser.userId as number,
       },
     ],
   };

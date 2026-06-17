@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-08 12:27-0700\n"
+"POT-Creation-Date: 2026-06-11 11:56-0700\n"
 "PO-Revision-Date: 2019-02-02 22:28+0900\n"
 "Last-Translator: \n"
 "Language: ko\n"
@@ -26,7 +26,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.17.0\n"
+"Generated-By: Babel 2.18.0\n"
 
 msgid ""
 "\n"
@@ -803,13 +803,16 @@ msgid ""
 "empty will allow embedding from any domain."
 msgstr ""
 
+msgid "A list of subjects who can alter the chart. Searchable by name."
+msgstr "차트를 수정할 수 있는 주체 목록입니다. 이름으로 검색할 수 있습니다."
+
+msgid "A list of subjects who can view the chart. Searchable by name."
+msgstr "차트를 볼 수 있는 주체 목록입니다. 이름으로 검색할 수 있습니다."
+
 msgid "A list of tags that have been applied to this chart."
 msgstr ""
 
 msgid "A list of tags that have been applied to this dashboard."
-msgstr ""
-
-msgid "A list of users who can alter the chart. Searchable by name or username."
 msgstr ""
 
 msgid "A map of the world, that can indicate values in different countries."
@@ -937,8 +940,8 @@ msgstr "주석"
 msgid "About"
 msgstr ""
 
-msgid "Access & ownership"
-msgstr ""
+msgid "Access"
+msgstr "액세스"
 
 msgid "Access token"
 msgstr ""
@@ -1620,10 +1623,6 @@ msgid "An error occurred while fetching %s info: %s"
 msgstr "데이터 베이스 목록을 가져오는 도중 에러가 발생하였습니다."
 
 #, fuzzy, python-format
-msgid "An error occurred while fetching %s owner values: %s"
-msgstr "데이터 베이스 목록을 가져오는 도중 에러가 발생하였습니다."
-
-#, fuzzy, python-format
 msgid "An error occurred while fetching %s related data"
 msgstr "데이터 베이스 목록을 가져오는 도중 에러가 발생하였습니다."
 
@@ -1651,8 +1650,12 @@ msgid "An error occurred while fetching available views"
 msgstr "데이터 베이스 목록을 가져오는 도중 에러가 발생하였습니다."
 
 #, python-format
-msgid "An error occurred while fetching chart owners values: %s"
-msgstr ""
+msgid "An error occurred while fetching chart editor values: %s"
+msgstr "차트 편집자 값을 가져오는 중 오류가 발생했습니다: %s"
+
+#, python-format
+msgid "An error occurred while fetching chart viewer values: %s"
+msgstr "차트 조회자 값을 가져오는 중 오류가 발생했습니다: %s"
 
 #, fuzzy
 msgid "An error occurred while fetching connections"
@@ -1663,8 +1666,12 @@ msgid "An error occurred while fetching created by values: %s"
 msgstr "데이터 베이스 목록을 가져오는 도중 에러가 발생하였습니다."
 
 #, python-format
-msgid "An error occurred while fetching dashboard owner values: %s"
-msgstr "데이터 베이스 목록을 가져오는 도중 에러가 발생하였습니다."
+msgid "An error occurred while fetching dashboard editor values: %s"
+msgstr "대시보드 편집자 값을 가져오는 중 오류가 발생했습니다: %s"
+
+#, python-format
+msgid "An error occurred while fetching dashboard viewer values: %s"
+msgstr "대시보드 조회자 값을 가져오는 중 오류가 발생했습니다: %s"
 
 #, fuzzy
 msgid "An error occurred while fetching dashboards"
@@ -1687,15 +1694,19 @@ msgid "An error occurred while fetching dataset datasource values: %s"
 msgstr "데이터 베이스 목록을 가져오는 도중 에러가 발생하였습니다."
 
 #, python-format
+msgid "An error occurred while fetching dataset editor values: %s"
+msgstr "데이터셋 편집자 값을 가져오는 중 오류가 발생했습니다: %s"
+
+#, python-format
 msgid "An error occurred while fetching dataset related data: %s"
 msgstr "데이터 베이스 목록을 가져오는 도중 에러가 발생하였습니다."
 
+#, python-format
+msgid "An error occurred while fetching editor values: %s"
+msgstr "편집자 값을 가져오는 중 오류가 발생했습니다: %s"
+
 msgid "An error occurred while fetching function names."
 msgstr ""
-
-#, fuzzy, python-format
-msgid "An error occurred while fetching owners values: %s"
-msgstr "데이터 베이스 목록을 가져오는 도중 에러가 발생하였습니다."
 
 #, python-format
 msgid "An error occurred while fetching schema values: %s"
@@ -1759,6 +1770,11 @@ msgstr "데이터 베이스 목록을 가져오는 도중 에러가 발생하였
 #, fuzzy, python-format
 msgid "An error occurred while importing %s: %s"
 msgstr "데이터 베이스 목록을 가져오는 도중 에러가 발생하였습니다."
+
+msgid ""
+"An error occurred while loading SQL Lab. This may be caused by a "
+"corrupted query state."
+msgstr ""
 
 #, fuzzy
 msgid "An error occurred while loading dashboard information."
@@ -2933,6 +2949,11 @@ msgstr ""
 msgid "Chart Data: %s"
 msgstr "차트"
 
+#, python-format
+msgid "Chart Editor: %s"
+msgid_plural "Chart Editors: %s"
+msgstr[0] "차트 편집자: %s"
+
 msgid "Chart ID"
 msgstr ""
 
@@ -2943,11 +2964,6 @@ msgstr "주석"
 #, fuzzy
 msgid "Chart Orientation"
 msgstr "주석"
-
-#, fuzzy, python-format
-msgid "Chart Owner: %s"
-msgid_plural "Chart Owners: %s"
-msgstr[0] ""
 
 #, fuzzy
 msgid "Chart Source"
@@ -2995,6 +3011,9 @@ msgstr "데이터소스"
 msgid "Chart does not exist"
 msgstr "차트가 존재하지 않습니다"
 
+msgid "Chart editors"
+msgstr "차트 편집자"
+
 msgid "Chart has no query context saved. Please save the chart again."
 msgstr ""
 
@@ -3020,10 +3039,6 @@ msgstr "데이터베이스를 찾을 수 없습니다."
 #, fuzzy
 msgid "Chart options"
 msgstr "주석"
-
-#, fuzzy
-msgid "Chart owners"
-msgstr "차트"
 
 msgid "Chart parameters are invalid."
 msgstr "차트의 파라미터가 부적절합니다."
@@ -3917,6 +3932,9 @@ msgid "Could not fetch all saved charts"
 msgstr ""
 
 msgid "Could not find viz object"
+msgstr ""
+
+msgid "Could not load SQL Lab"
 msgstr ""
 
 msgid "Could not load database driver"
@@ -5727,11 +5745,28 @@ msgstr ""
 msgid "Edit user"
 msgstr "저장된 Query 수정"
 
+msgid "Editable"
+msgstr "편집 가능"
+
 msgid "Edited"
 msgstr "테이블 수정"
 
 msgid "Editing 1 filter:"
 msgstr ""
+
+msgid "Editor"
+msgstr "편집자"
+
+msgid "Editors"
+msgstr "편집자"
+
+msgid "Editors is a list of subjects who can alter the dashboard."
+msgstr "편집자는 대시보드를 수정할 수 있는 주체 목록입니다."
+
+msgid ""
+"Editors is a list of subjects who can alter the dashboard. Searchable by "
+"name."
+msgstr "편집자는 대시보드를 수정할 수 있는 주체 목록입니다. 이름으로 검색할 수 있습니다."
 
 msgid "Either the database is spelled incorrectly or does not exist."
 msgstr ""
@@ -6211,8 +6246,8 @@ msgstr "CSV 업로드"
 msgid "Exclude selected values"
 msgstr ""
 
-msgid "Excluded roles"
-msgstr ""
+msgid "Excluded subjects"
+msgstr "제외된 주체"
 
 #, fuzzy
 msgid "Executed SQL"
@@ -6619,6 +6654,12 @@ msgstr ""
 msgid "File settings"
 msgstr "Query 공유"
 
+#, python-format
+msgid ""
+"File size %(size)s bytes exceeds the maximum allowed upload size of "
+"%(max_size)s bytes"
+msgstr ""
+
 #, fuzzy
 msgid "File upload"
 msgstr "CSV 업로드"
@@ -6821,9 +6862,9 @@ msgid ""
 msgstr ""
 
 msgid ""
-"For regular filters, these are the roles this filter will be applied to. "
-"For base filters, these are the roles that the filter DOES NOT apply to, "
-"e.g. Admin if admin should see all data."
+"For regular filters, these are the subjects (users, roles, groups) this "
+"filter will be applied to. For base filters, these are the subjects that "
+"the filter DOES NOT apply to, e.g. Admin if admin should see all data."
 msgstr ""
 
 msgid "Forbidden"
@@ -8366,8 +8407,8 @@ msgstr ""
 msgid "Manage"
 msgstr "관리"
 
-msgid "Manage dashboard owners and access permissions"
-msgstr ""
+msgid "Manage dashboard editors and access permissions"
+msgstr "대시보드 편집자 및 액세스 권한 관리"
 
 #, fuzzy
 msgid "Manage email report"
@@ -9743,23 +9784,6 @@ msgstr ""
 msgid "Owned Created or Favored"
 msgstr ""
 
-msgid "Owner"
-msgstr ""
-
-msgid "Owners"
-msgstr ""
-
-msgid "Owners are invalid"
-msgstr "소유자가 부적절합니다"
-
-msgid "Owners is a list of users who can alter the dashboard."
-msgstr ""
-
-msgid ""
-"Owners is a list of users who can alter the dashboard. Searchable by name"
-" or username."
-msgstr ""
-
 msgid "PDF download failed, please refresh and try again."
 msgstr ""
 
@@ -10137,10 +10161,9 @@ msgstr ""
 msgid "Please re-export your file and try importing again"
 msgstr ""
 
-#, fuzzy
-msgid "Please reach out to the Chart Owner for assistance."
-msgid_plural "Please reach out to the Chart Owners for assistance."
-msgstr[0] ""
+msgid "Please reach out to the Chart Editor for assistance."
+msgid_plural "Please reach out to the Chart Editors for assistance."
+msgstr[0] "도움이 필요하면 차트 편집자에게 문의하세요."
 
 msgid "Please save your chart first, then try creating a new email report."
 msgstr ""
@@ -10667,6 +10690,9 @@ msgstr ""
 msgid "Reload"
 msgstr "생성자"
 
+msgid "Reload SQL Lab"
+msgstr ""
+
 msgid "Remove"
 msgstr ""
 
@@ -10841,6 +10867,10 @@ msgstr ""
 msgid "Resample"
 msgstr ""
 
+#, python-format
+msgid "Resample method '%(method)s' is not supported."
+msgstr ""
+
 msgid "Resample method should be in "
 msgstr ""
 
@@ -10886,8 +10916,8 @@ msgstr ""
 msgid "Resource was not found."
 msgstr "데이터베이스를 찾을 수 없습니다."
 
-msgid "Resource was removed before ownership could be verified"
-msgstr ""
+msgid "Resource was removed before editorship could be verified"
+msgstr "편집 권한을 확인하기 전에 리소스가 제거되었습니다"
 
 msgid "Restore filter"
 msgstr ""
@@ -10990,18 +11020,6 @@ msgstr "데이터소스"
 
 msgid "Roles"
 msgstr "역할"
-
-msgid ""
-"Roles is a list which defines access to the dashboard. Granting a role "
-"access to a dashboard will bypass dataset level checks. If no roles are "
-"defined, regular access permissions apply."
-msgstr ""
-
-msgid ""
-"Roles is a list which defines access to the dashboard. Granting a role "
-"access to a dashboard will bypass dataset level checks.If no roles are "
-"defined, regular access permissions apply."
-msgstr ""
 
 msgid "Rolling Function"
 msgstr ""
@@ -11470,9 +11488,8 @@ msgstr ""
 msgid "Search calculated columns by name"
 msgstr "컬럼 목록"
 
-#, fuzzy
-msgid "Search charts by name, owner, or dashboard"
-msgstr "대시보드 추가"
+msgid "Search charts by name, editor, or dashboard"
+msgstr "이름, 편집자 또는 대시보드로 차트 검색"
 
 #, fuzzy
 msgid "Search columns"
@@ -11486,6 +11503,9 @@ msgstr "컬럼 추가"
 msgid "Search columns..."
 msgstr "컬럼 추가"
 
+msgid "Search editors"
+msgstr "편집자 검색"
+
 #, fuzzy
 msgid "Search in filters"
 msgstr "필터"
@@ -11495,16 +11515,11 @@ msgid "Search metrics by key or label"
 msgstr "컬럼 추가"
 
 #, fuzzy
-msgid "Search owners"
-msgstr "컬럼 추가"
-
-#, fuzzy
-msgid "Search roles"
-msgstr "컬럼 추가"
-
-#, fuzzy
 msgid "Search tags"
 msgstr "테이블 선택"
+
+msgid "Search viewers"
+msgstr "조회자 검색"
 
 msgid "Search..."
 msgstr "검색"
@@ -11799,6 +11814,9 @@ msgstr "대시보드 저장"
 msgid "Select dimension values"
 msgstr "대시보드 저장"
 
+msgid "Select editors"
+msgstr "편집자 선택"
+
 #, fuzzy
 msgid "Select file"
 msgstr "필터"
@@ -11859,9 +11877,6 @@ msgid "Select or type currency symbol"
 msgstr ""
 
 msgid "Select or type dataset name"
-msgstr ""
-
-msgid "Select owners"
 msgstr ""
 
 #, fuzzy
@@ -12952,6 +12967,9 @@ msgstr ""
 msgid "Streets (Carto)"
 msgstr "차트 이동"
 
+msgid "Streets (OSM)"
+msgstr ""
+
 msgid "Strength to pull the graph toward center"
 msgstr ""
 
@@ -12988,6 +13006,18 @@ msgstr "데이터소스 명"
 
 msgid "Subdomain"
 msgstr ""
+
+msgid "Subject"
+msgstr "주체"
+
+msgid "Subject type"
+msgstr "주체 유형"
+
+msgid "Subjects"
+msgstr "주체"
+
+msgid "Subjects are invalid"
+msgstr "주체가 올바르지 않습니다"
 
 msgid "Submit"
 msgstr ""
@@ -15027,6 +15057,18 @@ msgstr ""
 msgid "Token Request URI"
 msgstr ""
 
+#, python-format
+msgid ""
+"Too many sub-slices requested. The maximum allowed is %(max)s, but "
+"%(count)s were requested."
+msgstr ""
+
+#, python-format
+msgid ""
+"Too many time comparisons requested. The maximum allowed is %(max)s, but "
+"%(count)s were requested."
+msgstr ""
+
 msgid "Tool Panel"
 msgstr ""
 
@@ -15847,6 +15889,20 @@ msgstr ""
 msgid "Viewed %s"
 msgstr "삭제"
 
+msgid "Viewer"
+msgstr "조회자"
+
+msgid "Viewers"
+msgstr "조회자"
+
+msgid ""
+"Viewers is a list of subjects who can view the dashboard. If no viewers "
+"are defined, the dashboard is accessible to all users with appropriate "
+"datasource permissions."
+msgstr ""
+"조회자는 대시보드를 볼 수 있는 주체 목록입니다. 조회자가 정의되지 않은 경우 적절한 데이터 소스 권한이 있는 모든 사용자가 "
+"대시보드에 액세스할 수 있습니다."
+
 msgid "Viewport"
 msgstr ""
 
@@ -16629,6 +16685,9 @@ msgstr ""
 msgid "You do not have sufficient permissions to edit the chart"
 msgstr ""
 
+msgid "You don't have access to one or more of the referenced datasources."
+msgstr ""
+
 msgid "You don't have access to this chart."
 msgstr ""
 
@@ -16875,6 +16934,9 @@ msgid "`row_offset` must be greater than or equal to 0"
 msgstr ""
 
 msgid "`width` must be greater or equal to 0"
+msgstr ""
+
+msgid "`window` must be between 1 and 10000"
 msgstr ""
 
 #, fuzzy
@@ -17220,6 +17282,9 @@ msgstr ""
 msgid "edit mode"
 msgstr "Query 검색"
 
+msgid "editors"
+msgstr "편집자"
+
 msgid "email subject"
 msgstr ""
 
@@ -17540,10 +17605,6 @@ msgstr "원본 값"
 msgid "overall"
 msgstr ""
 
-#, fuzzy
-msgid "owners"
-msgstr "차트"
-
 msgid "p-value precision"
 msgstr ""
 
@@ -17817,6 +17878,26 @@ msgid "your-project-1234-a1"
 msgstr ""
 
 msgid "zoom area"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;"
+"\n"
+"\n"
+"/** The classic emailregex.com regex for RFC 5322-compliant emails */\n"
+"export const rfc5322Email =\n"
+"  "
+"/^(([^<>()[]\\.,;:s@\"]+(.[^<>()[]\\.,;:s@\"]+)*)|(\".+\"))@(([[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}])|(([a-zA-Z-0-9]+.)+[a-zA-Z]{2,}))$/;"
+"\n"
+"\n"
+"/** A loose regex that allows Unicode characters, enforces length limits,"
+" and that's about it. */\n"
+"export const unicodeEmail = /^[^s@\"]{1,64}@[^s@]{1,255}$/u;\n"
+"export const idnEmail = unicodeEmail;\n"
+"\n"
+"export const browserEmail: RegExp =\n"
+"  /^[a-zA-Z0-9.!#$%&'*+/=?^_"
 msgstr ""
 
 msgid "© Layer attribution"

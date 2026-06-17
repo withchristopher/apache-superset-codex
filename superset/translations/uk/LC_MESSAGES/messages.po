@@ -18,7 +18,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  \n"
 "Report-Msgid-Bugs-To: ted.korostiled@gmail.com\n"
-"POT-Creation-Date: 2026-06-08 12:27-0700\n"
+"POT-Creation-Date: 2026-06-11 11:56-0700\n"
 "PO-Revision-Date: 2026-04-30 22:04+0300\n"
 "Last-Translator: Danylo Korostil\n"
 "Language: uk\n"
@@ -28,7 +28,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.17.0\n"
+"Generated-By: Babel 2.18.0\n"
 
 msgid ""
 "\n"
@@ -900,16 +900,21 @@ msgstr ""
 "Список доменів, з яких дозволено вбудовувати цей звіт. Якщо поле порожнє,"
 " дозволено вбудовування з будь-якого домену."
 
+msgid "A list of subjects who can alter the chart. Searchable by name."
+msgstr ""
+"Список суб’єктів, які можуть змінювати діаграму. Доступний пошук за "
+"іменем."
+
+msgid "A list of subjects who can view the chart. Searchable by name."
+msgstr ""
+"Список суб’єктів, які можуть переглядати діаграму. Доступний пошук за "
+"іменем."
+
 msgid "A list of tags that have been applied to this chart."
 msgstr "Перелік міток для цієї діаграми."
 
 msgid "A list of tags that have been applied to this dashboard."
 msgstr "Перелік міток, застосованих до цього звіту."
-
-msgid "A list of users who can alter the chart. Searchable by name or username."
-msgstr ""
-"Перелік користувачів, які можуть редагувати цю діаграму. Пошук за ім’ям "
-"або псевдонімом."
 
 msgid "A map of the world, that can indicate values in different countries."
 msgstr "Карта світу, яка може показувати значення для різних країн."
@@ -1042,8 +1047,8 @@ msgstr "Опрацьовується"
 msgid "About"
 msgstr "Про програму"
 
-msgid "Access & ownership"
-msgstr "Доступ та власність"
+msgid "Access"
+msgstr "Доступ"
 
 msgid "Access token"
 msgstr "Токен доступу"
@@ -1708,10 +1713,6 @@ msgid "An error occurred while fetching %s info: %s"
 msgstr "Не вдалось одержати інформацію про %s: %s"
 
 #, fuzzy, python-format
-msgid "An error occurred while fetching %s owner values: %s"
-msgstr "Не вдалось одержати перелік власників: %s"
-
-#, fuzzy, python-format
 msgid "An error occurred while fetching %s related data"
 msgstr "Не вдалось одержати інформацію про набір даних"
 
@@ -1738,8 +1739,12 @@ msgid "An error occurred while fetching available views"
 msgstr "Не вдалось одержати доступні теми"
 
 #, python-format
-msgid "An error occurred while fetching chart owners values: %s"
-msgstr "Не вдалось одержати перелік власників діаграми: %s"
+msgid "An error occurred while fetching chart editor values: %s"
+msgstr "Під час отримання значень редакторів діаграми сталася помилка: %s"
+
+#, python-format
+msgid "An error occurred while fetching chart viewer values: %s"
+msgstr "Під час отримання значень переглядачів діаграми сталася помилка: %s"
 
 #, fuzzy
 msgid "An error occurred while fetching connections"
@@ -1750,8 +1755,12 @@ msgid "An error occurred while fetching created by values: %s"
 msgstr "Не вдалось одержати інформацію про схему: %s"
 
 #, python-format
-msgid "An error occurred while fetching dashboard owner values: %s"
-msgstr "Сталася помилка під час отримання власників звіту: %s"
+msgid "An error occurred while fetching dashboard editor values: %s"
+msgstr "Під час отримання значень редакторів дашборда сталася помилка: %s"
+
+#, python-format
+msgid "An error occurred while fetching dashboard viewer values: %s"
+msgstr "Під час отримання значень переглядачів дашборда сталася помилка: %s"
 
 msgid "An error occurred while fetching dashboards"
 msgstr "Сталася помилка під час отримання списку звітів"
@@ -1773,15 +1782,19 @@ msgid "An error occurred while fetching dataset datasource values: %s"
 msgstr "Не вдалось одержати інформацію з набору даних: %s"
 
 #, python-format
+msgid "An error occurred while fetching dataset editor values: %s"
+msgstr "Під час отримання значень редакторів набору даних сталася помилка: %s"
+
+#, python-format
 msgid "An error occurred while fetching dataset related data: %s"
 msgstr "Не вдалось одержати інформацію про набір даних: %s"
 
+#, python-format
+msgid "An error occurred while fetching editor values: %s"
+msgstr "Під час отримання значень редакторів сталася помилка: %s"
+
 msgid "An error occurred while fetching function names."
 msgstr "Не вдалось одержати назви функцій."
-
-#, python-format
-msgid "An error occurred while fetching owners values: %s"
-msgstr "Не вдалось одержати перелік власників: %s"
 
 #, python-format
 msgid "An error occurred while fetching schema values: %s"
@@ -1843,6 +1856,11 @@ msgstr "Не вдалося відформатувати код"
 #, python-format
 msgid "An error occurred while importing %s: %s"
 msgstr "Не вдалось імпортувати %s: %s"
+
+msgid ""
+"An error occurred while loading SQL Lab. This may be caused by a "
+"corrupted query state."
+msgstr ""
 
 msgid "An error occurred while loading dashboard information."
 msgstr "Сталася помилка під час завантаження інформації про звіт."
@@ -3005,6 +3023,14 @@ msgstr "Діаграму %(id)s не знайдено"
 msgid "Chart Data: %s"
 msgstr "Дані діаграми: %s"
 
+#, python-format
+msgid "Chart Editor: %s"
+msgid_plural "Chart Editors: %s"
+msgstr[0] "Редактор діаграми: %s"
+msgstr[1] "Редактори діаграми: %s"
+msgstr[2] "Редактори діаграми: %s"
+msgstr[3] "Редактори діаграми: %s"
+
 msgid "Chart ID"
 msgstr "Ідентифікатор діаграми"
 
@@ -3013,14 +3039,6 @@ msgstr "Параметри діаграми"
 
 msgid "Chart Orientation"
 msgstr "Напрямок діаграми"
-
-#, python-format
-msgid "Chart Owner: %s"
-msgid_plural "Chart Owners: %s"
-msgstr[0] "Власник діаграми: %s"
-msgstr[1] "Власники діаграми: %s"
-msgstr[2] "Власники діаграми: %s"
-msgstr[3] "Власник діаграми: %s"
 
 msgid "Chart Source"
 msgstr "Джерело діаграми"
@@ -3064,6 +3082,9 @@ msgstr "Значення налаштування діаграми обовʼя�
 msgid "Chart does not exist"
 msgstr "Діаграма не існує"
 
+msgid "Chart editors"
+msgstr "Редактори діаграми"
+
 msgid "Chart has no query context saved. Please save the chart again."
 msgstr ""
 "Діаграма не має збереженого контексту запиту. Будь ласка, збережіть "
@@ -3086,9 +3107,6 @@ msgstr "Діаграму не знайдено"
 
 msgid "Chart options"
 msgstr "Параметри діаграми"
-
-msgid "Chart owners"
-msgstr "Власники діаграм"
 
 msgid "Chart parameters are invalid."
 msgstr "Параметри діаграми некоректні."
@@ -3949,6 +3967,9 @@ msgstr "Не вдалося одержати всі збережені діаг�
 
 msgid "Could not find viz object"
 msgstr "Не вдалося знайти об'єкт візуалізації"
+
+msgid "Could not load SQL Lab"
+msgstr ""
 
 msgid "Could not load database driver"
 msgstr "Не вдалося завантажити драйвер бази даних"
@@ -5760,11 +5781,30 @@ msgstr "Редагувати часовий проміжок"
 msgid "Edit user"
 msgstr "Редагувати користувача"
 
+msgid "Editable"
+msgstr "Редагований"
+
 msgid "Edited"
 msgstr "Змінено"
 
 msgid "Editing 1 filter:"
 msgstr "Редагування 1 фільтра:"
+
+msgid "Editor"
+msgstr "Редактор"
+
+msgid "Editors"
+msgstr "Редактори"
+
+msgid "Editors is a list of subjects who can alter the dashboard."
+msgstr "Редактори — це список суб’єктів, які можуть змінювати дашборд."
+
+msgid ""
+"Editors is a list of subjects who can alter the dashboard. Searchable by "
+"name."
+msgstr ""
+"Редактори — це список суб’єктів, які можуть змінювати дашборд. Доступний "
+"пошук за іменем."
 
 msgid "Either the database is spelled incorrectly or does not exist."
 msgstr "Неправильна назва бази даних або її не існує."
@@ -6211,8 +6251,8 @@ msgstr "Вивантаження Excel"
 msgid "Exclude selected values"
 msgstr "Відкинути вибрані значення"
 
-msgid "Excluded roles"
-msgstr "Відкинуті ролі"
+msgid "Excluded subjects"
+msgstr "Виключені суб’єкти"
 
 msgid "Executed SQL"
 msgstr "Виконаний запит"
@@ -6609,6 +6649,12 @@ msgstr ""
 msgid "File settings"
 msgstr "Налаштування файла"
 
+#, python-format
+msgid ""
+"File size %(size)s bytes exceeds the maximum allowed upload size of "
+"%(max_size)s bytes"
+msgstr ""
+
 msgid "File upload"
 msgstr "Вивантаження з файлу"
 
@@ -6810,10 +6856,11 @@ msgid ""
 "function, refer to the"
 msgstr "Якщо бажаєте детальніше ознайомитися з обʼєктами цієї функції, дивіться"
 
+#, fuzzy
 msgid ""
-"For regular filters, these are the roles this filter will be applied to. "
-"For base filters, these are the roles that the filter DOES NOT apply to, "
-"e.g. Admin if admin should see all data."
+"For regular filters, these are the subjects (users, roles, groups) this "
+"filter will be applied to. For base filters, these are the subjects that "
+"the filter DOES NOT apply to, e.g. Admin if admin should see all data."
 msgstr ""
 "Для звичайних фільтрів це ролі, до яких буде застосовано цей фільтр. Для "
 "базових фільтрів це ролі, до яких фільтр НЕ застосовується, наприклад "
@@ -8292,8 +8339,8 @@ msgstr ""
 msgid "Manage"
 msgstr "Налаштувати"
 
-msgid "Manage dashboard owners and access permissions"
-msgstr "Організувати власників звіту та доступи до них"
+msgid "Manage dashboard editors and access permissions"
+msgstr "Керувати редакторами дашборда та правами доступу"
 
 msgid "Manage email report"
 msgstr "Налаштувати надсилання доповідей"
@@ -9649,25 +9696,6 @@ msgstr "Перезаписати текст у редакторі запитом
 msgid "Owned Created or Favored"
 msgstr "Власні, створені або улюблені"
 
-msgid "Owner"
-msgstr "Власник"
-
-msgid "Owners"
-msgstr "Власники"
-
-msgid "Owners are invalid"
-msgstr "Власники неправильні"
-
-msgid "Owners is a list of users who can alter the dashboard."
-msgstr "Власники – це перелік користувачів, які можуть редагувати звіт."
-
-msgid ""
-"Owners is a list of users who can alter the dashboard. Searchable by name"
-" or username."
-msgstr ""
-"Власники – це перелік користувачів, які можуть редагувати звіт. Можна "
-"шукати за іменем або псевдонімом."
-
 msgid "PDF download failed, please refresh and try again."
 msgstr "Не вдалося звантажити PDF. Оновіть сторінку та спробуйте ще раз."
 
@@ -10033,12 +10061,12 @@ msgstr "Будь ласка, повторно введіть пароль."
 msgid "Please re-export your file and try importing again"
 msgstr "Будь ласка, експортуйте повторно файл і спробуйте імпортувати ще раз"
 
-msgid "Please reach out to the Chart Owner for assistance."
-msgid_plural "Please reach out to the Chart Owners for assistance."
-msgstr[0] "Будь ласка, зверніться до власника діаграми по допомогу."
-msgstr[1] "Будь ласка, зверніться до власників діаграми по допомогу."
-msgstr[2] "Будь ласка, зверніться до власників діаграми по допомогу."
-msgstr[3] "Будь ласка, зверніться до власника діаграми по допомогу."
+msgid "Please reach out to the Chart Editor for assistance."
+msgid_plural "Please reach out to the Chart Editors for assistance."
+msgstr[0] "Зверніться до редактора діаграми по допомогу."
+msgstr[1] "Зверніться до редакторів діаграми по допомогу."
+msgstr[2] "Зверніться до редакторів діаграми по допомогу."
+msgstr[3] "Зверніться до редакторів діаграми по допомогу."
 
 msgid "Please save your chart first, then try creating a new email report."
 msgstr "Спочатку збережіть діаграму, а потім спробуйте створити нову доповідь."
@@ -10536,6 +10564,9 @@ msgstr "Відносна кількість"
 msgid "Reload"
 msgstr "Перезавантажити"
 
+msgid "Reload SQL Lab"
+msgstr ""
+
 msgid "Remove"
 msgstr "Вилучити"
 
@@ -10707,6 +10738,10 @@ msgstr "Обов’язкові значення параметрів вилуч
 msgid "Resample"
 msgstr "Передискретизація"
 
+#, python-format
+msgid "Resample method '%(method)s' is not supported."
+msgstr ""
+
 msgid "Resample method should be in "
 msgstr "Спосіб передискретизація повинен бути один із "
 
@@ -10746,8 +10781,8 @@ msgstr "Ресурс уже долучено до доповіді."
 msgid "Resource was not found."
 msgstr "Ресурс не знайдено."
 
-msgid "Resource was removed before ownership could be verified"
-msgstr ""
+msgid "Resource was removed before editorship could be verified"
+msgstr "Ресурс було видалено до перевірки права редагування"
 
 msgid "Restore filter"
 msgstr "Відновити фільтр"
@@ -10846,24 +10881,6 @@ msgstr "Назва ролі обовʼязкова"
 
 msgid "Roles"
 msgstr "Ролі"
-
-msgid ""
-"Roles is a list which defines access to the dashboard. Granting a role "
-"access to a dashboard will bypass dataset level checks. If no roles are "
-"defined, regular access permissions apply."
-msgstr ""
-"Ролі — це перелік, що визначає доступ до звіту. Надання ролі доступу до "
-"звіту обходить перевірки на рівні набору даних. Якщо ролі не задані, "
-"застосовуються стандартні правила доступу."
-
-msgid ""
-"Roles is a list which defines access to the dashboard. Granting a role "
-"access to a dashboard will bypass dataset level checks.If no roles are "
-"defined, regular access permissions apply."
-msgstr ""
-"Ролі — це перелік, що визначає доступ до звіту. Надання ролі доступу до "
-"звіту обходить перевірки на рівні набору даних. Якщо ролі не задані, "
-"застосовуються стандартні права доступу."
 
 msgid "Rolling Function"
 msgstr "Ковзна функція"
@@ -11317,9 +11334,8 @@ msgstr "Пошук за текстом у запитах"
 msgid "Search calculated columns by name"
 msgstr "Обчислювальний стовпець"
 
-#, fuzzy
-msgid "Search charts by name, owner, or dashboard"
-msgstr "До цього звіту не додано жодної діаграми"
+msgid "Search charts by name, editor, or dashboard"
+msgstr "Шукати діаграми за назвою, редактором або дашбордом"
 
 msgid "Search columns"
 msgstr "Пошук стовпців"
@@ -11331,6 +11347,9 @@ msgstr "Пошук стовпців"
 msgid "Search columns..."
 msgstr "Пошук стовпців..."
 
+msgid "Search editors"
+msgstr "Шукати редакторів"
+
 msgid "Search in filters"
 msgstr "Пошук у фільтрах"
 
@@ -11338,14 +11357,11 @@ msgstr "Пошук у фільтрах"
 msgid "Search metrics by key or label"
 msgstr "Пошук показників та стовпців"
 
-msgid "Search owners"
-msgstr "Пошук власників"
-
-msgid "Search roles"
-msgstr "Пошук ролей"
-
 msgid "Search tags"
 msgstr "Пошук міток"
+
+msgid "Search viewers"
+msgstr "Шукати переглядачів"
 
 msgid "Search..."
 msgstr "Пошук..."
@@ -11607,6 +11623,9 @@ msgstr "Вибрати вимір для найбільших значень"
 msgid "Select dimension values"
 msgstr "Вибрати значення виміру"
 
+msgid "Select editors"
+msgstr "Вибрати редакторів"
+
 msgid "Select file"
 msgstr "Вибрати файл"
 
@@ -11676,9 +11695,6 @@ msgstr "Виберіть або ведіть символ валюти"
 
 msgid "Select or type dataset name"
 msgstr "Виберіть або введіть назву набору даних"
-
-msgid "Select owners"
-msgstr "Вибрати власників"
 
 msgid "Select page size"
 msgstr "Вибрати розмір сторінки"
@@ -12755,6 +12771,9 @@ msgstr "Вулиці"
 msgid "Streets (Carto)"
 msgstr "Дерево"
 
+msgid "Streets (OSM)"
+msgstr ""
+
 msgid "Strength to pull the graph toward center"
 msgstr "Сила тяжіння до центру"
 
@@ -12787,6 +12806,18 @@ msgstr "Підкатегорії"
 
 msgid "Subdomain"
 msgstr "Розділ"
+
+msgid "Subject"
+msgstr "Суб’єкт"
+
+msgid "Subject type"
+msgstr "Тип суб’єкта"
+
+msgid "Subjects"
+msgstr "Суб’єкти"
+
+msgid "Subjects are invalid"
+msgstr "Суб’єкти недійсні"
 
 msgid "Submit"
 msgstr "Надіслати"
@@ -15003,6 +15034,18 @@ msgstr "Щоб одержати просте для читання посила�
 msgid "Token Request URI"
 msgstr "Посилання запиту жетону"
 
+#, python-format
+msgid ""
+"Too many sub-slices requested. The maximum allowed is %(max)s, but "
+"%(count)s were requested."
+msgstr ""
+
+#, python-format
+msgid ""
+"Too many time comparisons requested. The maximum allowed is %(max)s, but "
+"%(count)s were requested."
+msgstr ""
+
 msgid "Tool Panel"
 msgstr "Панель інструментів"
 
@@ -15810,6 +15853,21 @@ msgstr "Переглянуто"
 #, python-format
 msgid "Viewed %s"
 msgstr "Переглянуті %s"
+
+msgid "Viewer"
+msgstr "Переглядач"
+
+msgid "Viewers"
+msgstr "Переглядачі"
+
+msgid ""
+"Viewers is a list of subjects who can view the dashboard. If no viewers "
+"are defined, the dashboard is accessible to all users with appropriate "
+"datasource permissions."
+msgstr ""
+"Переглядачі — це список суб’єктів, які можуть переглядати дашборд. Якщо "
+"переглядачів не визначено, дашборд доступний усім користувачам із "
+"відповідними правами на джерело даних."
 
 msgid "Viewport"
 msgstr "Перспектива"
@@ -16711,6 +16769,9 @@ msgstr "Ви не маєте прав для редагування цього �
 msgid "You do not have sufficient permissions to edit the chart"
 msgstr "У вас недостатньо прав для редагування діаграми"
 
+msgid "You don't have access to one or more of the referenced datasources."
+msgstr ""
+
 msgid "You don't have access to this chart."
 msgstr "У вас немає доступу до цієї діаграми."
 
@@ -16982,6 +17043,9 @@ msgstr "`row_offset` має бути більше або дорівнювати 
 
 msgid "`width` must be greater or equal to 0"
 msgstr "`width` має бути більше або дорівнювати нулю"
+
+msgid "`window` must be between 1 and 10000"
+msgstr ""
 
 #, fuzzy
 msgid "a few seconds"
@@ -17301,6 +17365,9 @@ msgstr ""
 msgid "edit mode"
 msgstr "режим редагування"
 
+msgid "editors"
+msgstr "редактори"
+
 msgid "email subject"
 msgstr "тема листа"
 
@@ -17603,9 +17670,6 @@ msgstr "початковий"
 msgid "overall"
 msgstr "загалом"
 
-msgid "owners"
-msgstr "власники"
-
 msgid "p-value precision"
 msgstr "точність значення p"
 
@@ -17869,6 +17933,26 @@ msgstr "your-project-1234-a1"
 
 msgid "zoom area"
 msgstr "ділянка масштабування"
+
+#, python-brace-format
+msgid ""
+"{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;"
+"\n"
+"\n"
+"/** The classic emailregex.com regex for RFC 5322-compliant emails */\n"
+"export const rfc5322Email =\n"
+"  "
+"/^(([^<>()[]\\.,;:s@\"]+(.[^<>()[]\\.,;:s@\"]+)*)|(\".+\"))@(([[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}])|(([a-zA-Z-0-9]+.)+[a-zA-Z]{2,}))$/;"
+"\n"
+"\n"
+"/** A loose regex that allows Unicode characters, enforces length limits,"
+" and that's about it. */\n"
+"export const unicodeEmail = /^[^s@\"]{1,64}@[^s@]{1,255}$/u;\n"
+"export const idnEmail = unicodeEmail;\n"
+"\n"
+"export const browserEmail: RegExp =\n"
+"  /^[a-zA-Z0-9.!#$%&'*+/=?^_"
+msgstr ""
 
 msgid "© Layer attribution"
 msgstr "© Атрибут шару"

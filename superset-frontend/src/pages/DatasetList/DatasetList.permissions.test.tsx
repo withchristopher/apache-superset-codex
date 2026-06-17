@@ -296,7 +296,6 @@ test('write user sees edit, delete, and export actions', async () => {
 
   const dataset = {
     ...mockDatasets[0],
-    owners: [{ id: mockWriteUser.userId, username: 'writeuser' }],
   };
 
   mockDatasetListEndpoints({ result: [dataset], count: 1 });

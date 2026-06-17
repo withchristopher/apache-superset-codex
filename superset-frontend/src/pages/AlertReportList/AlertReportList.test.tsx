@@ -46,8 +46,8 @@ const mockAlerts = [
     active: true,
     last_state: 'Success',
     type: 'Alert',
-    owners: [{ id: 1, first_name: 'Admin', last_name: 'User' }],
     recipients: [{ id: 1, type: 'Email' }],
+    editors: [{ id: 1, label: 'Admin User', type: 1 }],
     changed_by: { id: 1, first_name: 'Admin', last_name: 'User' },
     changed_on_delta_humanized: '1 day ago',
     created_by: { id: 1, first_name: 'Admin', last_name: 'User' },
@@ -63,8 +63,8 @@ const mockAlerts = [
     active: true,
     last_state: 'Error',
     type: 'Alert',
-    owners: [{ id: 2, first_name: 'Data', last_name: 'Analyst' }],
     recipients: [{ id: 2, type: 'Slack' }],
+    editors: [{ id: 2, label: 'Data Analyst', type: 1 }],
     changed_by: { id: 2, first_name: 'Data', last_name: 'Analyst' },
     changed_on_delta_humanized: '2 days ago',
     created_by: { id: 2, first_name: 'Data', last_name: 'Analyst' },
@@ -80,8 +80,8 @@ const mockAlerts = [
     active: false,
     last_state: 'Working',
     type: 'Alert',
-    owners: [{ id: 1, first_name: 'Admin', last_name: 'User' }],
     recipients: [{ id: 3, type: 'Email' }],
+    editors: [{ id: 1, label: 'Admin User', type: 1 }],
     changed_by: { id: 1, first_name: 'Admin', last_name: 'User' },
     changed_on_delta_humanized: '5 days ago',
     created_by: { id: 1, first_name: 'Admin', last_name: 'User' },
@@ -100,8 +100,8 @@ const mockReports = [
     active: true,
     last_state: 'Success',
     type: 'Report',
-    owners: [{ id: 1, first_name: 'Admin', last_name: 'User' }],
     recipients: [{ id: 10, type: 'Email' }],
+    editors: [{ id: 1, label: 'Admin User', type: 1 }],
     changed_by: { id: 1, first_name: 'Admin', last_name: 'User' },
     changed_on_delta_humanized: '1 day ago',
     created_by: { id: 1, first_name: 'Admin', last_name: 'User' },
@@ -117,8 +117,8 @@ const mockReports = [
     active: false,
     last_state: 'Not triggered',
     type: 'Report',
-    owners: [{ id: 1, first_name: 'Admin', last_name: 'User' }],
     recipients: [{ id: 11, type: 'Slack' }],
+    editors: [{ id: 1, label: 'Admin User', type: 1 }],
     changed_by: { id: 1, first_name: 'Admin', last_name: 'User' },
     changed_on_delta_humanized: '3 days ago',
     created_by: { id: 1, first_name: 'Admin', last_name: 'User' },
@@ -143,7 +143,6 @@ const ENDPOINTS = {
   INFO: 'glob:*/api/v1/report/_info*',
   SINGLE: 'glob:*/api/v1/report/*',
   CREATED_BY: 'glob:*/api/v1/report/related/created_by*',
-  OWNERS: 'glob:*/api/v1/report/related/owners*',
   CHANGED_BY: 'glob:*/api/v1/report/related/changed_by*',
 };
 
@@ -187,8 +186,6 @@ const setupMocks = (
   );
 
   fetchMock.get(ENDPOINTS.CREATED_BY, { result: [] }, { name: 'created-by' });
-
-  fetchMock.get(ENDPOINTS.OWNERS, { result: [], count: 0 }, { name: 'owners' });
 
   fetchMock.get(
     ENDPOINTS.CHANGED_BY,

@@ -447,7 +447,7 @@ interface DashboardSaveData extends JsonObject {
   certification_details?: string;
   css?: string;
   dashboard_title?: string;
-  owners?: { id: number }[] | number[];
+  editors?: { id: number }[] | number[];
   roles?: JsonObject[];
   slug?: string | null;
   tags?: JsonObject[];
@@ -486,8 +486,7 @@ export function saveDashboardRequest(
       certification_details,
       css,
       dashboard_title,
-      owners,
-      roles,
+      editors,
       slug,
       tags,
     } = data;
@@ -512,14 +511,10 @@ export function saveDashboardRequest(
       }),
       css: css || '',
       dashboard_title: dashboard_title || t('[ untitled dashboard ]'),
-      owners: ensureIsArray(owners as JsonObject[]).map((o: JsonObject) =>
+      editors: ensureIsArray(editors as JsonObject[]).map((o: JsonObject) =>
         hasId(o) ? o.id : o,
       ),
-      roles: !isFeatureEnabled(FeatureFlag.DashboardRbac)
-        ? undefined
-        : ensureIsArray(roles as JsonObject[]).map((r: JsonObject) =>
-            hasId(r) ? r.id : r,
-          ),
+      roles: undefined,
       slug: slug || null,
       tags: !isFeatureEnabled(FeatureFlag.TaggingSystem)
         ? undefined
@@ -672,7 +667,7 @@ export function saveDashboardRequest(
               css: cleanedData.css,
               dashboard_title: cleanedData.dashboard_title,
               slug: cleanedData.slug,
-              owners: cleanedData.owners,
+              editors: cleanedData.editors,
               roles: cleanedData.roles,
               tags: cleanedData.tags || [],
               theme_id: cleanedData.theme_id,

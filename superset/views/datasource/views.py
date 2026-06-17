@@ -30,7 +30,6 @@ from superset.commands.dataset.exceptions import (
     DatasetForbiddenError,
     DatasetNotFoundError,
 )
-from superset.commands.utils import populate_owner_list
 from superset.connectors.sqla.models import SqlaTable
 from superset.connectors.sqla.utils import get_physical_table_metadata
 from superset.daos.dashboard import DashboardDAO
@@ -88,13 +87,9 @@ class Datasource(BaseSupersetView):
 
         if orm_datasource.owner_class is not None:
             try:
-                security_manager.raise_for_ownership(orm_datasource)
+                security_manager.raise_for_editorship(orm_datasource)
             except SupersetSecurityException as ex:
                 raise DatasetForbiddenError() from ex
-
-        datasource_dict["owners"] = populate_owner_list(
-            datasource_dict["owners"], default_to_user=False
-        )
 
         duplicates = [
             name

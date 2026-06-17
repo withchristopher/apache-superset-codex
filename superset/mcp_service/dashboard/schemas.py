@@ -27,6 +27,7 @@ Example usage:
         id=1,
         dashboard_title="Sales Dashboard",
         published=True,
+        editors=[SubjectInfo(id=1, label="admin", type="USER")],
         tags=[TagInfo(id=1, name="sales")],
         charts=[DashboardChartSummary(id=1, slice_name="Sales Chart")]
     )
@@ -86,17 +87,20 @@ if TYPE_CHECKING:
 from superset.daos.base import ColumnOperator, ColumnOperatorEnum
 from superset.mcp_service.common.cache_schemas import (
     CreatedByMeMixin,
+    EditedByMeMixin,
     MetadataCacheControl,
-    OwnedByMeMixin,
 )
 from superset.mcp_service.constants import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 from superset.mcp_service.privacy import (
     filter_user_directory_fields,
+    strip_user_directory_fields_from_schema,
     user_can_view_data_model_metadata,
 )
 from superset.mcp_service.system.schemas import (
     PaginationInfo,
     RoleInfo,
+    serialize_subject_object,
+    SubjectInfo,
     TagInfo,
 )
 from superset.mcp_service.utils import (
@@ -172,6 +176,7 @@ class DashboardFilter(ColumnOperator):
     col: Literal[  # pyright: ignore[reportIncompatibleVariableOverride]
         "dashboard_title",
         "published",
+        "editor",
         "favorite",
         "created_by_fk",
         "changed_by_fk",
@@ -195,7 +200,7 @@ class DashboardFilter(ColumnOperator):
     )
 
 
-class ListDashboardsRequest(OwnedByMeMixin, CreatedByMeMixin, MetadataCacheControl):
+class ListDashboardsRequest(EditedByMeMixin, CreatedByMeMixin, MetadataCacheControl):
     """Request schema for list_dashboards with clear, unambiguous types."""
 
     filters: Annotated[
@@ -400,7 +405,7 @@ class DashboardChartSummary(BaseModel):
 
     Contains only the fields needed for LLMs to understand which charts
     are on a dashboard, omitting verbose fields like form_data, tags,
-    owners, and timestamps that bloat the response.
+    editors, and timestamps that bloat the response.
     """
 
     id: int | None = Field(None, description="Chart ID")
@@ -429,6 +434,7 @@ class DashboardInfo(BaseModel):
     created_on_humanized: str | None = None
     changed_on_humanized: str | None = None
     chart_count: int = 0
+    editors: List[SubjectInfo] = Field(default_factory=list)
     tags: List[TagInfo] = Field(default_factory=list)
     charts: List[DashboardChartSummary] = Field(default_factory=list)
 
@@ -483,7 +489,11 @@ class DashboardInfo(BaseModel):
         ),
     )
 
-    model_config = ConfigDict(from_attributes=True, ser_json_timedelta="iso8601")
+    model_config = ConfigDict(
+        from_attributes=True,
+        ser_json_timedelta="iso8601",
+        json_schema_extra=strip_user_directory_fields_from_schema,
+    )
 
     @model_serializer(mode="wrap")
     def _filter_fields_by_context(self, serializer: Any, info: Any) -> Dict[str, Any]:
@@ -1150,6 +1160,13 @@ def dashboard_serializer(dashboard: "Dashboard") -> DashboardInfo:
                 json_metadata_str,
                 position_json_str,
             ),
+            editors=[
+                info
+                for editor in dashboard.editors
+                if (info := serialize_subject_object(editor)) is not None
+            ]
+            if dashboard.editors
+            else [],
             tags=[
                 TagInfo.model_validate(tag, from_attributes=True)
                 for tag in dashboard.tags
@@ -1222,6 +1239,13 @@ def serialize_dashboard_object(dashboard: Any) -> DashboardInfo:
             if getattr(dashboard, "uuid", None)
             else None,
             chart_count=len(getattr(dashboard, "slices", [])),
+            editors=[
+                info
+                for editor in getattr(dashboard, "editors", [])
+                if (info := serialize_subject_object(editor)) is not None
+            ]
+            if getattr(dashboard, "editors", None)
+            else [],
             tags=[
                 TagInfo.model_validate(tag, from_attributes=True)
                 for tag in getattr(dashboard, "tags", [])

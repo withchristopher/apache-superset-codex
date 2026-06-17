@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  superset-ds\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-08 12:27-0700\n"
+"POT-Creation-Date: 2026-06-11 11:56-0700\n"
 "PO-Revision-Date: 2024-05-08 14:41+0000\n"
 "Last-Translator: \n"
 "Language: nl\n"
@@ -22,7 +22,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.17.0\n"
+"Generated-By: Babel 2.18.0\n"
 
 msgid ""
 "\n"
@@ -845,17 +845,18 @@ msgstr ""
 "Een lijst met domeinnamen die dit dashboard kunnen embedden. Als dit veld"
 " leeg blijft, kan de embedding van elk domein worden toegestaan."
 
+msgid "A list of subjects who can alter the chart. Searchable by name."
+msgstr "Een lijst met subjects die de grafiek kunnen aanpassen. Zoekbaar op naam."
+
+msgid "A list of subjects who can view the chart. Searchable by name."
+msgstr "Een lijst met subjects die de grafiek kunnen bekijken. Zoekbaar op naam."
+
 msgid "A list of tags that have been applied to this chart."
 msgstr "Een lijst met tags die zijn toegepast op deze grafiek."
 
 #, fuzzy
 msgid "A list of tags that have been applied to this dashboard."
 msgstr "Een lijst met tags die zijn toegepast op deze grafiek."
-
-msgid "A list of users who can alter the chart. Searchable by name or username."
-msgstr ""
-"Een lijst van gebruikers die de grafiek kunnen wijzigen. Zoekbaar op naam"
-" of gebruikersnaam."
 
 msgid "A map of the world, that can indicate values in different countries."
 msgstr "Een kaart van de wereld, die waarden in verschillende landen kan aangeven."
@@ -992,9 +993,8 @@ msgstr "Werken"
 msgid "About"
 msgstr "Over"
 
-#, fuzzy
-msgid "Access & ownership"
-msgstr "Toegangstoken"
+msgid "Access"
+msgstr "Toegang"
 
 msgid "Access token"
 msgstr "Toegangstoken"
@@ -1699,10 +1699,6 @@ msgid "An error occurred while fetching %s info: %s"
 msgstr "Er is een fout opgetreden bij het ophalen van %s info: %s"
 
 #, fuzzy, python-format
-msgid "An error occurred while fetching %s owner values: %s"
-msgstr "Er is een fout opgetreden bij het ophalen van eigenaars waarden: %s"
-
-#, fuzzy, python-format
 msgid "An error occurred while fetching %s related data"
 msgstr ""
 "Er is een fout opgetreden tijdens het ophalen van dataset gerelateerde "
@@ -1738,10 +1734,16 @@ msgstr ""
 "templates"
 
 #, python-format
-msgid "An error occurred while fetching chart owners values: %s"
+msgid "An error occurred while fetching chart editor values: %s"
 msgstr ""
-"Er is een fout opgetreden tijdens het ophalen van de grafiek eigenaars "
-"waarden: %s"
+"Er is een fout opgetreden bij het ophalen van waarden voor "
+"grafiekbewerkers: %s"
+
+#, python-format
+msgid "An error occurred while fetching chart viewer values: %s"
+msgstr ""
+"Er is een fout opgetreden bij het ophalen van waarden voor "
+"grafiekkijkers: %s"
 
 #, fuzzy
 msgid "An error occurred while fetching connections"
@@ -1752,10 +1754,16 @@ msgid "An error occurred while fetching created by values: %s"
 msgstr "Er is een fout opgetreden tijdens het ophalen van schemawaarden: %s"
 
 #, python-format
-msgid "An error occurred while fetching dashboard owner values: %s"
+msgid "An error occurred while fetching dashboard editor values: %s"
 msgstr ""
-"Er is een fout opgetreden tijdens het ophalen van dashboard eigenaar "
-"waarden: %s"
+"Er is een fout opgetreden bij het ophalen van waarden voor "
+"dashboardbewerkers: %s"
+
+#, python-format
+msgid "An error occurred while fetching dashboard viewer values: %s"
+msgstr ""
+"Er is een fout opgetreden bij het ophalen van waarden voor "
+"dashboardkijkers: %s"
 
 msgid "An error occurred while fetching dashboards"
 msgstr "Er is een fout opgetreden bij het ophalen van dashboards"
@@ -1781,17 +1789,23 @@ msgstr ""
 "waarden: %s"
 
 #, python-format
+msgid "An error occurred while fetching dataset editor values: %s"
+msgstr ""
+"Er is een fout opgetreden bij het ophalen van waarden voor "
+"datasetbewerkers: %s"
+
+#, python-format
 msgid "An error occurred while fetching dataset related data: %s"
 msgstr ""
 "Er is een fout opgetreden tijdens het ophalen van gegevens over de "
 "dataset: %s"
 
+#, python-format
+msgid "An error occurred while fetching editor values: %s"
+msgstr "Er is een fout opgetreden bij het ophalen van bewerkerwaarden: %s"
+
 msgid "An error occurred while fetching function names."
 msgstr "Er is een fout opgetreden bij het ophalen van functienamen."
-
-#, python-format
-msgid "An error occurred while fetching owners values: %s"
-msgstr "Er is een fout opgetreden bij het ophalen van eigenaars waarden: %s"
 
 #, python-format
 msgid "An error occurred while fetching schema values: %s"
@@ -1867,6 +1881,11 @@ msgstr "Er is een fout opgetreden bij het laden van de SQL"
 #, python-format
 msgid "An error occurred while importing %s: %s"
 msgstr "Er is een fout opgetreden tijdens het importeren van %s: %s"
+
+msgid ""
+"An error occurred while loading SQL Lab. This may be caused by a "
+"corrupted query state."
+msgstr ""
 
 msgid "An error occurred while loading dashboard information."
 msgstr "Er is een fout opgetreden bij het laden van dashboard informatie."
@@ -3072,6 +3091,12 @@ msgstr "Grafiek %(id)s niet gevonden"
 msgid "Chart Data: %s"
 msgstr "Grafiekgegevens: %s"
 
+#, python-format
+msgid "Chart Editor: %s"
+msgid_plural "Chart Editors: %s"
+msgstr[0] "Grafiekbewerker: %s"
+msgstr[1] "Grafiekbewerkers: %s"
+
 msgid "Chart ID"
 msgstr "Grafiek ID"
 
@@ -3080,12 +3105,6 @@ msgstr "Grafiek Opties"
 
 msgid "Chart Orientation"
 msgstr "Grafiek Oriëntatie"
-
-#, fuzzy, python-format
-msgid "Chart Owner: %s"
-msgid_plural "Chart Owners: %s"
-msgstr[0] "Eigenaar grafiek: %s"
-msgstr[1] ""
 
 msgid "Chart Source"
 msgstr "Grafiek Bron"
@@ -3131,6 +3150,9 @@ msgstr "Filterwaarde is vereist"
 msgid "Chart does not exist"
 msgstr "Grafiek bestaat niet"
 
+msgid "Chart editors"
+msgstr "Grafiekbewerkers"
+
 msgid "Chart has no query context saved. Please save the chart again."
 msgstr "De grafiek heeft geen query context opgeslagen. Sla de grafiek opnieuw op."
 
@@ -3152,9 +3174,6 @@ msgstr "Grafiek niet gevonden"
 
 msgid "Chart options"
 msgstr "Grafiek opties"
-
-msgid "Chart owners"
-msgstr "Grafiek eigenaars"
 
 msgid "Chart parameters are invalid."
 msgstr "Grafiekparameters zijn ongeldig."
@@ -4072,6 +4091,9 @@ msgstr "Kon niet alle opgeslagen grafieken ophalen"
 
 msgid "Could not find viz object"
 msgstr "Kon het viz object niet vinden"
+
+msgid "Could not load SQL Lab"
+msgstr ""
 
 msgid "Could not load database driver"
 msgstr "Kon het database driver niet laden"
@@ -5950,11 +5972,30 @@ msgstr "Tijdsbereik bewerken"
 msgid "Edit user"
 msgstr "Bewerk query"
 
+msgid "Editable"
+msgstr "Bewerkbaar"
+
 msgid "Edited"
 msgstr "Bewerkt"
 
 msgid "Editing 1 filter:"
 msgstr "Bewerk 1 filter:"
+
+msgid "Editor"
+msgstr "Bewerker"
+
+msgid "Editors"
+msgstr "Bewerkers"
+
+msgid "Editors is a list of subjects who can alter the dashboard."
+msgstr "Bewerkers zijn een lijst met subjects die het dashboard kunnen aanpassen."
+
+msgid ""
+"Editors is a list of subjects who can alter the dashboard. Searchable by "
+"name."
+msgstr ""
+"Bewerkers zijn een lijst met subjects die het dashboard kunnen aanpassen."
+" Zoekbaar op naam."
 
 msgid "Either the database is spelled incorrectly or does not exist."
 msgstr "Of de database is onjuist gespeld of bestaat niet."
@@ -6437,8 +6478,8 @@ msgstr "CSV upload"
 msgid "Exclude selected values"
 msgstr "Geselecteerde waarden uitsluiten"
 
-msgid "Excluded roles"
-msgstr "Uitgesloten rollen"
+msgid "Excluded subjects"
+msgstr "Uitgesloten subjects"
 
 msgid "Executed SQL"
 msgstr "Uitgevoerde SQL"
@@ -6856,6 +6897,12 @@ msgstr ""
 msgid "File settings"
 msgstr "Filter Instellingen"
 
+#, python-format
+msgid ""
+"File size %(size)s bytes exceeds the maximum allowed upload size of "
+"%(max_size)s bytes"
+msgstr ""
+
 #, fuzzy
 msgid "File upload"
 msgstr "Upload"
@@ -7070,10 +7117,11 @@ msgstr ""
 "Voor meer informatie over objecten in de context van deze functie, "
 "verwijzen we naar de"
 
+#, fuzzy
 msgid ""
-"For regular filters, these are the roles this filter will be applied to. "
-"For base filters, these are the roles that the filter DOES NOT apply to, "
-"e.g. Admin if admin should see all data."
+"For regular filters, these are the subjects (users, roles, groups) this "
+"filter will be applied to. For base filters, these are the subjects that "
+"the filter DOES NOT apply to, e.g. Admin if admin should see all data."
 msgstr ""
 "Voor reguliere filters zijn dit de rollen waarop dit filter zal worden "
 "toegepast. Voor de basisfilters zijn dit de rollen waarop het filter NIET"
@@ -8634,8 +8682,8 @@ msgstr ""
 msgid "Manage"
 msgstr "Beheer"
 
-msgid "Manage dashboard owners and access permissions"
-msgstr ""
+msgid "Manage dashboard editors and access permissions"
+msgstr "Dashboardbewerkers en toegangsrechten beheren"
 
 msgid "Manage email report"
 msgstr "E-mailrapport beheren"
@@ -10031,25 +10079,6 @@ msgstr "Overschrijf tekst in de editor met een query op deze tabel"
 msgid "Owned Created or Favored"
 msgstr "Eigenaar Gemaakt of Favoriet"
 
-msgid "Owner"
-msgstr "Eigenaar"
-
-msgid "Owners"
-msgstr "Eigenaars"
-
-msgid "Owners are invalid"
-msgstr "Eigenaren zijn ongeldig"
-
-msgid "Owners is a list of users who can alter the dashboard."
-msgstr "Eigenaars is een lijst van gebruikers die het dashboard kunnen wijzigen."
-
-msgid ""
-"Owners is a list of users who can alter the dashboard. Searchable by name"
-" or username."
-msgstr ""
-"Eigenaren zijn een lijst met gebruikers die het dashboard kunnen "
-"veranderen. Doorzoekbaar op naam of gebruikersnaam."
-
 #, fuzzy
 msgid "PDF download failed, please refresh and try again."
 msgstr ""
@@ -10444,11 +10473,10 @@ msgstr "Voer het wachtwoord opnieuw in."
 msgid "Please re-export your file and try importing again"
 msgstr "Exporteer uw bestand opnieuw en probeer opnieuw te importeren"
 
-#, fuzzy
-msgid "Please reach out to the Chart Owner for assistance."
-msgid_plural "Please reach out to the Chart Owners for assistance."
-msgstr[0] "Neem contact op met de grafiek eigenaar voor hulp."
-msgstr[1] ""
+msgid "Please reach out to the Chart Editor for assistance."
+msgid_plural "Please reach out to the Chart Editors for assistance."
+msgstr[0] "Neem contact op met de grafiekbewerker voor hulp."
+msgstr[1] "Neem contact op met de grafiekbewerkers voor hulp."
 
 msgid "Please save your chart first, then try creating a new email report."
 msgstr "Sla eerst je grafiek op, probeer dan een nieuw e-mailrapport te maken."
@@ -10962,6 +10990,9 @@ msgstr "Relatieve hoeveelheid"
 msgid "Reload"
 msgstr "Herlaad"
 
+msgid "Reload SQL Lab"
+msgstr ""
+
 msgid "Remove"
 msgstr "Verwijder"
 
@@ -11135,6 +11166,10 @@ msgstr "Vereiste controlewaarden zijn verwijderd"
 msgid "Resample"
 msgstr "Opnieuw bemonsteren"
 
+#, python-format
+msgid "Resample method '%(method)s' is not supported."
+msgstr ""
+
 #, fuzzy
 msgid "Resample method should be in "
 msgstr "Hermonsteren methode moet in "
@@ -11181,8 +11216,10 @@ msgstr "Deze bron heeft al een bijgevoegd rapport."
 msgid "Resource was not found."
 msgstr "Bron is niet gevonden."
 
-msgid "Resource was removed before ownership could be verified"
+msgid "Resource was removed before editorship could be verified"
 msgstr ""
+"Resource is verwijderd voordat bewerkingsrechten konden worden "
+"gecontroleerd"
 
 msgid "Restore filter"
 msgstr "Herstel Filter"
@@ -11288,26 +11325,6 @@ msgstr "Naam is vereist"
 
 msgid "Roles"
 msgstr "Rollen"
-
-msgid ""
-"Roles is a list which defines access to the dashboard. Granting a role "
-"access to a dashboard will bypass dataset level checks. If no roles are "
-"defined, regular access permissions apply."
-msgstr ""
-"Rollen is een lijst die toegang tot het dashboard definieert. Het "
-"verlenen van een rol toegang tot een dashboard zal controle op het "
-"dataset niveau omzeilen. Als geen rollen zijn gedefinieerd, zijn "
-"reguliere toegangsrechten van toepassing."
-
-msgid ""
-"Roles is a list which defines access to the dashboard. Granting a role "
-"access to a dashboard will bypass dataset level checks.If no roles are "
-"defined, regular access permissions apply."
-msgstr ""
-"Rollen is een lijst die toegang tot het dashboard definieert. Het "
-"verlenen van een rol-toegang tot een dashboard zal controle op het "
-"dataset niveau omzeilen. Als er geen rollen zijn gedefinieerd, dan zijn "
-"reguliere toegangsrechten van toepassing."
 
 msgid "Rolling Function"
 msgstr "Rollende fFnctie"
@@ -11771,9 +11788,8 @@ msgstr "Zoek op querytekst"
 msgid "Search calculated columns by name"
 msgstr "Berekende kolommen"
 
-#, fuzzy
-msgid "Search charts by name, owner, or dashboard"
-msgstr "Er zijn geen grafieken toegevoegd aan dit dashboard"
+msgid "Search charts by name, editor, or dashboard"
+msgstr "Grafieken zoeken op naam, bewerker of dashboard"
 
 msgid "Search columns"
 msgstr "Zoek kolommen"
@@ -11786,6 +11802,9 @@ msgstr "Zoek kolommen"
 msgid "Search columns..."
 msgstr "Zoek kolommen"
 
+msgid "Search editors"
+msgstr "Bewerkers zoeken"
+
 msgid "Search in filters"
 msgstr "Zoek in filters"
 
@@ -11794,16 +11813,11 @@ msgid "Search metrics by key or label"
 msgstr "Zoek Metriek & Kolommen"
 
 #, fuzzy
-msgid "Search owners"
-msgstr "Selecteer eigenaren"
-
-#, fuzzy
-msgid "Search roles"
-msgstr "Zoek kolommen"
-
-#, fuzzy
 msgid "Search tags"
 msgstr "Selecteer Tags"
+
+msgid "Search viewers"
+msgstr "Kijkers zoeken"
 
 msgid "Search..."
 msgstr "Zoek…"
@@ -12090,6 +12104,9 @@ msgstr "Kies een dimensie"
 msgid "Select dimension values"
 msgstr "Kies een dimensie"
 
+msgid "Select editors"
+msgstr "Bewerkers selecteren"
+
 msgid "Select file"
 msgstr "Selecteer bestand"
 
@@ -12158,9 +12175,6 @@ msgstr "Selecteer of typ valuta symbool"
 
 msgid "Select or type dataset name"
 msgstr "Selecteer of typ dataset naam"
-
-msgid "Select owners"
-msgstr "Selecteer eigenaren"
 
 #, fuzzy
 msgid "Select page size"
@@ -13269,6 +13283,9 @@ msgstr "Straten"
 msgid "Streets (Carto)"
 msgstr "Boomdiagram"
 
+msgid "Streets (OSM)"
+msgstr ""
+
 msgid "Strength to pull the graph toward center"
 msgstr "Sterkte om de grafiek naar het midden te trekken"
 
@@ -13303,6 +13320,18 @@ msgstr "Categorie"
 
 msgid "Subdomain"
 msgstr "Subdomein"
+
+msgid "Subject"
+msgstr "Subject"
+
+msgid "Subject type"
+msgstr "Subjecttype"
+
+msgid "Subjects"
+msgstr "Subjects"
+
+msgid "Subjects are invalid"
+msgstr "Subjects zijn ongeldig"
 
 msgid "Submit"
 msgstr "Bevestigen"
@@ -15578,6 +15607,18 @@ msgstr "Om een leesbare URL voor uw dashboard te krijgen"
 msgid "Token Request URI"
 msgstr ""
 
+#, python-format
+msgid ""
+"Too many sub-slices requested. The maximum allowed is %(max)s, but "
+"%(count)s were requested."
+msgstr ""
+
+#, python-format
+msgid ""
+"Too many time comparisons requested. The maximum allowed is %(max)s, but "
+"%(count)s were requested."
+msgstr ""
+
 #, fuzzy
 msgid "Tool Panel"
 msgstr "Alle panelen"
@@ -16437,6 +16478,21 @@ msgstr "Bekeken"
 #, python-format
 msgid "Viewed %s"
 msgstr "Bekeken %s"
+
+msgid "Viewer"
+msgstr "Kijker"
+
+msgid "Viewers"
+msgstr "Kijkers"
+
+msgid ""
+"Viewers is a list of subjects who can view the dashboard. If no viewers "
+"are defined, the dashboard is accessible to all users with appropriate "
+"datasource permissions."
+msgstr ""
+"Kijkers zijn een lijst met subjects die het dashboard kunnen bekijken. "
+"Als er geen kijkers zijn gedefinieerd, is het dashboard toegankelijk voor"
+" alle gebruikers met passende databronrechten."
 
 msgid "Viewport"
 msgstr "Weergavevenster"
@@ -17359,6 +17415,9 @@ msgstr "U hebt geen rechten om dit dashboard te bewerken."
 msgid "You do not have sufficient permissions to edit the chart"
 msgstr "U heeft niet voldoende rechten om de grafiek te bewerken"
 
+msgid "You don't have access to one or more of the referenced datasources."
+msgstr ""
+
 msgid "You don't have access to this chart."
 msgstr "U heeft geen toegang tot deze grafiek."
 
@@ -17637,6 +17696,9 @@ msgstr "`rij_offset` moet groter zijn dan of gelijk aan 0"
 
 msgid "`width` must be greater or equal to 0"
 msgstr "`breedte` moet groter of gelijk zijn aan 0"
+
+msgid "`window` must be between 1 and 10000"
+msgstr ""
 
 #, fuzzy
 msgid "a few seconds"
@@ -17970,6 +18032,9 @@ msgstr ""
 msgid "edit mode"
 msgstr "bewerk modus"
 
+msgid "editors"
+msgstr "bewerkers"
+
 #, fuzzy
 msgid "email subject"
 msgstr "Selecteer onderwerp"
@@ -18285,10 +18350,6 @@ msgstr "Origineel"
 msgid "overall"
 msgstr "algemeen"
 
-#, fuzzy
-msgid "owners"
-msgstr "Eigenaars"
-
 msgid "p-value precision"
 msgstr "p-waarde precisie"
 
@@ -18562,6 +18623,26 @@ msgstr ""
 
 msgid "zoom area"
 msgstr "zoom gebied"
+
+#, python-brace-format
+msgid ""
+"{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;"
+"\n"
+"\n"
+"/** The classic emailregex.com regex for RFC 5322-compliant emails */\n"
+"export const rfc5322Email =\n"
+"  "
+"/^(([^<>()[]\\.,;:s@\"]+(.[^<>()[]\\.,;:s@\"]+)*)|(\".+\"))@(([[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}])|(([a-zA-Z-0-9]+.)+[a-zA-Z]{2,}))$/;"
+"\n"
+"\n"
+"/** A loose regex that allows Unicode characters, enforces length limits,"
+" and that's about it. */\n"
+"export const unicodeEmail = /^[^s@\"]{1,64}@[^s@]{1,255}$/u;\n"
+"export const idnEmail = unicodeEmail;\n"
+"\n"
+"export const browserEmail: RegExp =\n"
+"  /^[a-zA-Z0-9.!#$%&'*+/=?^_"
+msgstr ""
 
 msgid "© Layer attribution"
 msgstr ""

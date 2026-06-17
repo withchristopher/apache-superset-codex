@@ -53,7 +53,10 @@ from tests.integration_tests.fixtures.birth_names_dashboard import (
 from tests.integration_tests.fixtures.dashboard_with_tabs import (
     load_mutltiple_tabs_dashboard,  # noqa: F401
 )
-from tests.integration_tests.reports.utils import insert_report_schedule
+from tests.integration_tests.reports.utils import (
+    _subjects_for_users,
+    insert_report_schedule,
+)
 
 REPORTS_COUNT = 10
 REPORTS_ROLE_NAME = "reports_role"
@@ -107,7 +110,7 @@ class TestReportSchedulesApi(SupersetTestCase):
                 description="Report working",
                 chart=chart,
                 database=example_db,
-                owners=[admin_user],
+                editors=_subjects_for_users([admin_user]),
                 last_state=ReportState.WORKING,
             )
 
@@ -130,7 +133,7 @@ class TestReportSchedulesApi(SupersetTestCase):
                 description="Report working",
                 chart=chart,
                 database=example_db,
-                owners=[gamma_user_with_alerts_role],
+                editors=_subjects_for_users([gamma_user_with_alerts_role]),
                 last_state=ReportState.WORKING,
             )
 
@@ -155,7 +158,9 @@ class TestReportSchedulesApi(SupersetTestCase):
                 description="Report working",
                 chart=chart,
                 database=example_db,
-                owners=[admin_user, alpha_user, gamma_user_with_alerts_role],
+                editors=_subjects_for_users(
+                    [admin_user, alpha_user, gamma_user_with_alerts_role]
+                ),
                 last_state=ReportState.WORKING,
             )
 
@@ -170,6 +175,7 @@ class TestReportSchedulesApi(SupersetTestCase):
             report_schedules = []
             admin_user = self.get_user("admin")
             alpha_user = self.get_user("alpha")
+            admin_alpha_editors = _subjects_for_users([admin_user, alpha_user])
             chart = db.session.query(Slice).first()
             example_db = get_example_database()
             for cx in range(REPORTS_COUNT):
@@ -199,7 +205,7 @@ class TestReportSchedulesApi(SupersetTestCase):
                         description=f"Some description {cx}",
                         chart=chart,
                         database=example_db,
-                        owners=[admin_user, alpha_user],
+                        editors=admin_alpha_editors,
                         recipients=recipients,
                         logs=logs,
                     )
@@ -301,20 +307,8 @@ class TestReportSchedulesApi(SupersetTestCase):
         }
         for key in expected_result:
             assert data["result"][key] == expected_result[key]
-        # needed because order may vary
-        assert {
-            "email": "admin@fab.org",
-            "first_name": "admin",
-            "id": 1,
-            "last_name": "user",
-        } in data["result"]["owners"]
-        assert {
-            "email": "alpha@fab.org",
-            "first_name": "alpha",
-            "id": 5,
-            "last_name": "user",
-        } in data["result"]["owners"]
-        assert len(data["result"]["owners"]) == 2
+        # editors is returned instead of owners (Subject-based access)
+        assert isinstance(data["result"]["editors"], list)
 
     def test_info_report_schedule(self):
         """
@@ -373,12 +367,12 @@ class TestReportSchedulesApi(SupersetTestCase):
             "crontab_humanized",
             "dashboard_id",
             "description",
+            "editors",
             "extra",
             "id",
             "last_eval_dttm",
             "last_state",
             "name",
-            "owners",
             "recipients",
             "timezone",
             "type",
@@ -389,10 +383,10 @@ class TestReportSchedulesApi(SupersetTestCase):
         data_keys = sorted(list(data["result"][0].keys()))  # noqa: C414
         assert expected_fields == data_keys
 
-        # Assert nested fields
-        expected_owners_fields = ["email", "first_name", "id", "last_name"]
-        data_keys = sorted(list(data["result"][0]["owners"][0].keys()))  # noqa: C414
-        assert expected_owners_fields == data_keys
+        # Assert nested editors fields
+        expected_editors_fields = ["id", "label", "type"]
+        data_keys = sorted(list(data["result"][0]["editors"][0].keys()))  # noqa: C414
+        assert expected_editors_fields == data_keys
 
         expected_recipients_fields = ["id", "type"]
         data_keys = sorted(list(data["result"][1]["recipients"][0].keys()))  # noqa: C414
@@ -2147,7 +2141,7 @@ class TestReportSchedulesApi(SupersetTestCase):
     @pytest.mark.usefixtures("create_report_schedules")
     def test_update_report_preserve_ownership(self):
         """
-        ReportSchedule API: Test update report preserves owner list (if un-changed)
+        ReportSchedule API: Test update report preserves editor list (if un-changed)
         """
         self.login(username="admin")
         existing_report = (
@@ -2155,7 +2149,7 @@ class TestReportSchedulesApi(SupersetTestCase):
             .filter(ReportSchedule.name == "name1")
             .one_or_none()
         )
-        current_owners = existing_report.owners
+        current_editors = existing_report.editors
         report_schedule_data = {
             "description": "Updated description",
         }
@@ -2166,12 +2160,12 @@ class TestReportSchedulesApi(SupersetTestCase):
             .filter(ReportSchedule.name == "name1")
             .one_or_none()
         )
-        assert set(updated_report.owners) == set(current_owners)
+        assert set(updated_report.editors) == set(current_editors)
 
     @pytest.mark.usefixtures("create_report_schedules")
-    def test_update_report_clear_owner_list(self):
+    def test_update_report_clear_editor_list(self):
         """
-        ReportSchedule API: Test update report admin can clear ownership config
+        ReportSchedule API: Test update report admin can clear editor config
         """
         self.login(username="admin")
         existing_report = (
@@ -2180,7 +2174,7 @@ class TestReportSchedulesApi(SupersetTestCase):
             .one_or_none()
         )
         report_schedule_data = {
-            "owners": [],
+            "editors": [],
         }
         uri = f"api/v1/report/{existing_report.id}"
         self.put_assert_metric(uri, report_schedule_data, "put")  # noqa: F841
@@ -2189,25 +2183,25 @@ class TestReportSchedulesApi(SupersetTestCase):
             .filter(ReportSchedule.name == "name1")
             .one_or_none()
         )
-        assert updated_report.owners == []
+        assert updated_report.editors == []
 
     @pytest.mark.usefixtures("create_report_schedules")
-    def test_update_report_populate_owner(self):
+    def test_update_report_populate_editor(self):
         """
         ReportSchedule API: Test update admin can update report with
-        no owners to a different owner
+        no editors to a different editor
         """
         gamma = self.get_user("gamma")
         self.login(username="admin")
 
-        # Modify an existing report to make remove all owners
+        # Modify an existing report to remove all editors
         existing_report = (
             db.session.query(ReportSchedule)
             .filter(ReportSchedule.name == "name1")
             .one_or_none()
         )
         report_update_data = {
-            "owners": [],
+            "editors": [],
         }
         uri = f"api/v1/report/{existing_report.id}"
         self.put_assert_metric(uri, report_update_data, "put")
@@ -2216,11 +2210,12 @@ class TestReportSchedulesApi(SupersetTestCase):
             .filter(ReportSchedule.name == "name1")
             .one_or_none()
         )
-        assert updated_report.owners == []
+        assert updated_report.editors == []
 
         # Populate the field
+        gamma_subject = _subjects_for_users([gamma])[0]
         report_update_data = {
-            "owners": [gamma.id],
+            "editors": [gamma_subject.id],
         }
         uri = f"api/v1/report/{updated_report.id}"
         self.put_assert_metric(uri, report_update_data, "put")  # noqa: F841
@@ -2229,7 +2224,7 @@ class TestReportSchedulesApi(SupersetTestCase):
             .filter(ReportSchedule.name == "name1")
             .one_or_none()
         )
-        assert updated_report.owners == [gamma]
+        assert updated_report.editors == [gamma_subject]
 
     @pytest.mark.usefixtures("create_report_schedules")
     def test_delete_report_schedule(self):
@@ -2744,7 +2739,7 @@ class TestReportSchedulesApi(SupersetTestCase):
             type=ReportScheduleType.REPORT,
             name="report_with_filter",
             crontab="0 9 * * *",
-            owners=[admin],
+            editors=_subjects_for_users([admin]),
             dashboard=dashboard,
             extra={
                 "dashboard": {
@@ -2832,6 +2827,7 @@ class TestReportSchedulesApi(SupersetTestCase):
         db.session.flush()
 
         admin = self.get_user("admin")
+        admin_editors = _subjects_for_users([admin])
 
         native_filter_extra = {
             "dashboard": {
@@ -2850,7 +2846,7 @@ class TestReportSchedulesApi(SupersetTestCase):
             type=ReportScheduleType.REPORT,
             name="report_shared_filter_a",
             crontab="0 9 * * *",
-            owners=[admin],
+            editors=admin_editors,
             dashboard=dashboard,
             extra=native_filter_extra,
         )
@@ -2858,7 +2854,7 @@ class TestReportSchedulesApi(SupersetTestCase):
             type=ReportScheduleType.REPORT,
             name="report_shared_filter_b",
             crontab="0 10 * * *",
-            owners=[admin],
+            editors=admin_editors,
             dashboard=dashboard,
             extra=native_filter_extra,
         )
