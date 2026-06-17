@@ -24,6 +24,10 @@ assists people when migrating to a new version.
 
 ## Next
 
+### Database authentication password API
+
+When `AUTH_TYPE` is `AUTH_DB`, changing the signed-in user's password must use `PUT /api/v1/me/password` with JSON `current_password`, `new_password`, and `confirm_password` (confirmation must match `new_password`). Sending `password` on `PUT /api/v1/me/` is rejected with HTTP 400. Policy is controlled by the `AUTH_DB_CONFIG` dict (see `superset/config.py` defaults and `docs/admin_docs/configuration/configuring-superset.mdx`).
+
 ### Webhook alerts/reports block private/internal hosts by default
 
 Webhook alert/report dispatch (`WebhookNotification.send`) now validates the target URL's host against the same private/internal-IP block applied to dataset import URLs. If the resolved host is in a loopback, link-local, private (RFC-1918), shared-CGNAT, or multicast range, the webhook is rejected with `NotificationParamException`.

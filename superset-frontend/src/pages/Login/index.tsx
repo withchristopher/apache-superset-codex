@@ -33,6 +33,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { capitalize } from 'lodash/fp';
 import { addDangerToast } from 'src/components/MessageToasts/actions';
 import { useDispatch } from 'react-redux';
+import { AuthType } from 'src/constants/auth';
 import getBootstrapData from 'src/utils/getBootstrapData';
 
 type OAuthProvider = {
@@ -50,14 +51,6 @@ type Provider = OAuthProvider | OIDProvider;
 interface LoginForm {
   username: string;
   password: string;
-}
-
-enum AuthType {
-  AuthOID = 0,
-  AuthDB = 1,
-  AuthLDAP = 2,
-  AuthOauth = 4,
-  AuthSAML = 5,
 }
 
 const StyledCard = styled(Card)`
@@ -198,6 +191,19 @@ export default function Login() {
                 </Form.Item>
               ))}
             </Form>
+          </Flex>
+        )}
+
+        {authType === AuthType.AuthRemoteUser && (
+          <Flex justify="center" vertical gap="middle">
+            <Typography.Text type="secondary">
+              {t(
+                'Authentication is provided by your web server. Contact your administrator if you are not signed in automatically.',
+              )}
+            </Typography.Text>
+            <Button href={loginEndpoint} block data-test="remote-user-retry-button">
+              {t('Retry')}
+            </Button>
           </Flex>
         )}
 

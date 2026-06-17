@@ -117,6 +117,9 @@ class SemanticLayer(ABC, Generic[ConfigT, SemanticViewT]):
         The runtime configuration can provide information like a given project or
         schema, used to restrict the semantic views returned.
         """
+        raise NotImplementedError(
+            "Semantic layers must implement the get_semantic_views method"
+        )
 
     @abstractmethod
     def get_semantic_view(
@@ -127,3 +130,6 @@ class SemanticLayer(ABC, Generic[ConfigT, SemanticViewT]):
         """
         Get a specific semantic view by its name and additional configuration.
         """
+        raise NotImplementedError(
+            "Semantic layers must implement the get_semantic_view method"
+        )

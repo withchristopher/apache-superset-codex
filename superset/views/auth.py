@@ -18,11 +18,12 @@
 import logging
 from typing import Optional
 
-from flask import g, redirect
+from flask import g, redirect, request
 from flask_appbuilder import expose
-from flask_appbuilder.const import LOGMSG_ERR_SEC_NO_REGISTER_HASH
+from flask_appbuilder.const import AUTH_REMOTE_USER, LOGMSG_ERR_SEC_NO_REGISTER_HASH
 from flask_appbuilder.security.decorators import no_cache
-from flask_appbuilder.security.views import AuthView, WerkzeugResponse
+from flask_appbuilder.security.views import AuthView, WerkzeugResponse, get_safe_redirect
+from flask_login import login_user
 from flask_babel import lazy_gettext
 
 from superset.views.base import BaseSupersetView
@@ -38,6 +39,13 @@ class SupersetAuthView(BaseSupersetView, AuthView):
     def login(self, provider: Optional[str] = None) -> WerkzeugResponse:
         if g.user is not None and g.user.is_authenticated:
             return redirect(self.appbuilder.get_url_for_index)
+
+        if self.appbuilder.sm.auth_type == AUTH_REMOTE_USER:
+            username = request.environ.get(self.appbuilder.sm.auth_remote_user_env_var)
+            if username and (user := self.appbuilder.sm.auth_user_remote_user(username)):
+                login_user(user)
+                next_url = request.args.get("next", "")
+                return redirect(get_safe_redirect(next_url))
 
         return super().render_app_template()
 

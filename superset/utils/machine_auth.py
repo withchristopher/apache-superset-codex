@@ -121,9 +121,12 @@ class MachineAuthProvider:
 
     @staticmethod
     def get_auth_cookies(user: User) -> dict[str, str]:
+        from superset.utils.auth_session_stamp import sync_session_auth_stamp_on_login
+
         # Login with the user specified to get the reports
         with app.test_request_context("/login"):
             login_user(user)
+            sync_session_auth_stamp_on_login(user)
             # A mock response object to get the cookie information from
             response = Response()
             # To ensure all `after_request` functions are called i.e Websockets JWT Auth

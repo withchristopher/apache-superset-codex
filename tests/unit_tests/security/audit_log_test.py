@@ -17,6 +17,10 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+from flask_appbuilder.const import AUTH_DB
+from marshmallow import ValidationError
+
 from flask_appbuilder.security.sqla.models import Group, Role, User
 
 from superset.security.manager import (
@@ -107,6 +111,20 @@ def test_role_api_post_delete_logs_event(mock_log: MagicMock) -> None:
 # --- User CRUD ---
 
 
+def test_user_api_pre_update_weak_password_raises_validation_error(
+    app_context: None,
+) -> None:
+    """AUTH_DB policy failures surface as Marshmallow ``ValidationError`` on ``password``."""
+    from flask import current_app
+
+    current_app.config["AUTH_TYPE"] = AUTH_DB
+    api = SupersetUserApi.__new__(SupersetUserApi)
+    user = MagicMock(spec=User)
+    with pytest.raises(ValidationError) as exc_info:
+        api.pre_update(user, {"password": "short"})
+    assert "password" in exc_info.value.messages
+
+
 @patch("superset.security.manager._log_audit_event")
 def test_user_api_post_add_logs_event(mock_log: MagicMock) -> None:
     """SupersetUserApi.post_add logs a UserCreated event."""
@@ -143,6 +161,49 @@ def test_user_api_post_update_logs_event(mock_log: MagicMock) -> None:
             "target_user_id": 7,
             "email": "test@example.com",
             "active": True,
+        },
+    )
+
+
+@patch("superset.security.manager._log_audit_event")
+@patch("superset.daos.auth_audit_log.AuthAuditLogDAO.create")
+def test_user_api_post_update_logs_admin_password_change_audit(
+    mock_create: MagicMock,
+    mock_log: MagicMock,
+    app_context: None,
+) -> None:
+    """Admin-initiated password updates also emit ``auth_audit_log`` rows."""
+    from flask import current_app, g
+
+    current_app.config["AUTH_TYPE"] = AUTH_DB
+    api = SupersetUserApi.__new__(SupersetUserApi)
+    user = MagicMock(spec=User)
+    user.id = 7
+    user.username = "target-user"
+    user.email = "target@example.com"
+    user.active = True
+
+    with current_app.test_request_context(
+        "/api/v1/user/7",
+        headers={"User-Agent": "pytest-agent"},
+        environ_base={"REMOTE_ADDR": "203.0.113.17"},
+    ):
+        actor = MagicMock(spec=User)
+        actor.id = 1
+        g.user = actor
+        api.pre_update(user, {"password": "Str0ng!Password123"})
+        api.post_update(user)
+
+    mock_log.assert_called_once()
+    mock_create.assert_called_once_with(
+        event_type="password_change",
+        user_id=7,
+        ip_address="203.0.113.17",
+        user_agent="pytest-agent",
+        metadata={
+            "initiated_by": "admin",
+            "actor_user_id": 1,
+            "target_user_id": 7,
         },
     )
 

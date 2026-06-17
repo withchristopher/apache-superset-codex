@@ -25,7 +25,7 @@ from math import ceil
 from types import SimpleNamespace
 from typing import Any, Callable, cast, NamedTuple, Optional, TYPE_CHECKING, Union
 
-from flask import current_app, Flask, g, Request
+from flask import current_app, Flask, g, has_request_context, Request, request
 from flask_appbuilder import Model
 from flask_appbuilder.models.filters import BaseFilter
 from flask_appbuilder.security.sqla.apis import GroupApi, RoleApi, UserApi
@@ -132,6 +132,13 @@ _RLSCacheKey = tuple[str, int | str]
 _RLSCache = dict[_RLSCacheKey, list[SqlaQuery]]
 
 
+def _get_request_ip() -> str | None:
+    """Return client IP from current request context, when available."""
+    if not has_request_context():
+        return None
+    return request.remote_addr
+
+
 def _log_audit_event(action: str, payload: dict[str, Any]) -> None:
     """Log an audit event via the configured event logger.
 
@@ -211,6 +218,33 @@ class SupersetUserApi(UserApi):
     and to add audit logging for user CRUD operations.
     """
 
+    def pre_update(self, model: User, item: Any) -> None:  # noqa: ARG002
+        """Apply AUTH_DB password policy when an admin updates a user's password."""
+        from flask import current_app as app
+        from flask_appbuilder.const import AUTH_DB
+        from marshmallow import ValidationError
+
+        from superset.utils.auth_db_password import validate_auth_db_password
+
+        if app.config.get("AUTH_TYPE") == AUTH_DB:
+            # FAB's ``UserApi.put`` passes the schema-loaded ``item`` dict only; do not
+            # read ``request`` here so validation stays aligned with ``UserPutSchema``.
+            body: dict[str, Any] = item if isinstance(item, dict) else {}
+            if hasattr(g, "_auth_admin_password_change_user_id"):
+                delattr(g, "_auth_admin_password_change_user_id")
+            password = body.get("password")
+            if password:
+                try:
+                    validate_auth_db_password(str(password))
+                except ValidationError as err:
+                    pwd_errors = err.messages.get("new_password", err.messages)
+                    raise ValidationError({"password": pwd_errors}) from err
+                setattr(g, "_auth_admin_password_change_user_id", model.id)
+
+        super_pre_update = getattr(super(), "pre_update", None)
+        if callable(super_pre_update):
+            super_pre_update(model, item)
+
     base_filters = [["username", ExcludeUsersFilter, lambda: []]]
     search_columns = [
         "id",
@@ -245,6 +279,8 @@ class SupersetUserApi(UserApi):
         )
 
     def post_update(self, item: Model) -> None:
+        from superset.daos.auth_audit_log import AuthAuditLogDAO
+
         _log_audit_event(
             "UserUpdated",
             {
@@ -254,6 +290,26 @@ class SupersetUserApi(UserApi):
                 "active": item.active,
             },
         )
+        admin_password_target = getattr(g, "_auth_admin_password_change_user_id", None)
+        if admin_password_target == item.id:
+            from superset.utils.auth_session_stamp import bump_user_session_auth_stamp
+
+            bump_user_session_auth_stamp(item.id)
+            actor_user_id = getattr(getattr(g, "user", None), "id", None)
+            AuthAuditLogDAO.create(
+                event_type="password_change",
+                user_id=item.id,
+                ip_address=_get_request_ip(),
+                user_agent=request.headers.get("User-Agent")
+                if has_request_context()
+                else None,
+                metadata={
+                    "initiated_by": "admin",
+                    "actor_user_id": actor_user_id,
+                    "target_user_id": item.id,
+                },
+            )
+            delattr(g, "_auth_admin_password_change_user_id")
 
     def post_delete(self, item: Model) -> None:
         _log_audit_event(
@@ -815,6 +871,9 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
     def create_login_manager(self, app: Flask) -> LoginManager:
         lm = super().create_login_manager(app)
         lm.request_loader(self.request_loader)
+        from superset.utils.auth_session_stamp import register_session_auth_stamp_hook
+
+        register_session_auth_stamp_hook(app)
         return lm
 
     def reset_password(self, userid: Union[int, str], password: str) -> None:
@@ -871,6 +930,9 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
             "UserLoggedIn",
             {"username": user.username, "user_id": user.id},
         )
+        from superset.utils.auth_session_stamp import sync_session_auth_stamp_on_login
+
+        sync_session_auth_stamp_on_login(user)
 
     def on_user_login_failed(self, user: Any) -> None:
         _log_audit_event(

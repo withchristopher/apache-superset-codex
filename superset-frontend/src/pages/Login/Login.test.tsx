@@ -17,6 +17,7 @@
  * under the License.
  */
 import { render, screen } from 'spec/helpers/testing-library';
+import { AuthType } from 'src/constants/auth';
 import getBootstrapData from 'src/utils/getBootstrapData';
 import Login from './index';
 
@@ -62,6 +63,27 @@ test('should render form instruction text', () => {
   expect(
     screen.getByText('Enter your login and password below:'),
   ).toBeInTheDocument();
+});
+
+test('should render remote user message when AUTH_TYPE is AUTH_REMOTE_USER', () => {
+  mockGetBootstrapData.mockReturnValue({
+    common: {
+      conf: {
+        AUTH_TYPE: AuthType.AuthRemoteUser,
+        AUTH_PROVIDERS: [],
+        AUTH_USER_REGISTRATION: false,
+      },
+    },
+  });
+  render(<Login />, { useRedux: true });
+  expect(
+    screen.getByText(
+      'Authentication is provided by your web server. Contact your administrator if you are not signed in automatically.',
+    ),
+  ).toBeInTheDocument();
+  expect(screen.getByTestId('remote-user-retry-button')).toBeInTheDocument();
+  expect(screen.queryByTestId('username-input')).not.toBeInTheDocument();
+  expect(screen.queryByTestId('password-input')).not.toBeInTheDocument();
 });
 
 test('should render SAML provider buttons', () => {

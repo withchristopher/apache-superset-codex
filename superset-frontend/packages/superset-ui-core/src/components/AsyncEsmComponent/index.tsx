@@ -47,7 +47,7 @@ function DefaultPlaceholder({
  * first (if provided) and re-render once import is complete.
  */
 export function AsyncEsmComponent<
-  P = PlaceholderProps,
+  P extends object = PlaceholderProps,
   M = ComponentType<P> | { default: ComponentType<P> },
 >(
   /**
@@ -84,15 +84,14 @@ export function AsyncEsmComponent<
     return promise;
   }
 
-  type AsyncComponent = React.ForwardRefExoticComponent<
+  type AsyncComponentType = React.ForwardRefExoticComponent<
     React.PropsWithoutRef<FullProps> & React.RefAttributes<unknown>
   > & {
     preload?: typeof waitForPromise;
   };
 
-  // @ts-expect-error -- generic forwardRef has PropsWithoutRef incompatibility with FullProps
-  const AsyncComponent: AsyncComponent = forwardRef(function AsyncComponent(
-    props: FullProps,
+  const AsyncComponent = forwardRef<unknown, FullProps>(function AsyncComponent(
+    props,
     ref,
   ) {
     const [loaded, setLoaded] = useState(component !== undefined);
@@ -116,11 +115,11 @@ export function AsyncEsmComponent<
       // @ts-expect-error: Suppress TypeScript error for ref assignment
       <Component ref={Component === component ? ref : null} {...props} />
     ) : null;
-  });
+  }) as AsyncComponentType;
   // preload the async component before rendering
   AsyncComponent.preload = waitForPromise;
 
-  return AsyncComponent as AsyncComponent & {
+  return AsyncComponent as AsyncComponentType & {
     preload: typeof waitForPromise;
   };
 }
