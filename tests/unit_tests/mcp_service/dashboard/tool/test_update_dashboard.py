@@ -646,6 +646,19 @@ def test_request_title_is_sanitized_for_xss() -> None:
     assert "Sales" in req.dashboard_title
 
 
+def test_request_slug_is_normalized() -> None:
+    """Slug is cleaned to match the REST DashboardPutSchema contract."""
+    from superset.mcp_service.dashboard.schemas import UpdateDashboardRequest
+
+    req = UpdateDashboardRequest(dashboard_id=1, slug="  My Slug!? ")
+    assert req.slug == "My-Slug"
+
+    # Empty string is preserved (clears the slug) rather than normalized away.
+    assert UpdateDashboardRequest(dashboard_id=1, slug="").slug == ""
+    # None means "leave unchanged".
+    assert UpdateDashboardRequest(dashboard_id=1).slug is None
+
+
 def test_request_invalid_filter_bar_orientation_rejected() -> None:
     """filter_bar_orientation only accepts VERTICAL or HORIZONTAL."""
     from pydantic import ValidationError

@@ -66,6 +66,7 @@ Example usage:
 from __future__ import annotations
 
 import logging
+import re
 from datetime import datetime
 from typing import Annotated, Any, cast, Dict, List, Literal, TYPE_CHECKING
 
@@ -713,7 +714,7 @@ class UpdateDashboardRequest(BaseModel):
 
     All fields except ``dashboard_id`` are optional — only the fields that
     are provided are changed. ``None`` means "leave unchanged"; to clear a
-    text field (e.g. ``certified_by``) pass an empty string.
+    text field (e.g. ``css``) pass an empty string.
     """
 
     model_config = ConfigDict(populate_by_name=True)
@@ -778,6 +779,20 @@ class UpdateDashboardRequest(BaseModel):
         return sanitize_user_input(
             v, "Dashboard title", max_length=500, allow_empty=True
         )
+
+    @field_validator("slug")
+    @classmethod
+    def normalize_slug(cls, v: str | None) -> str | None:
+        """Normalize the slug to match the REST DashboardPutSchema contract.
+
+        Mirrors ``BaseDashboardSchema.post_load``: strip, replace spaces with
+        hyphens, and drop characters outside ``[\\w-]`` so the tool cannot
+        persist slugs the REST update path would have cleaned.
+        """
+        if not v:
+            return v
+        v = v.strip().replace(" ", "-")
+        return re.sub(r"[^\w\-]+", "", v)
 
 
 class UpdateDashboardResponse(BaseModel):
