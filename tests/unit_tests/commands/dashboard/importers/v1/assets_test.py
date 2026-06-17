@@ -171,7 +171,9 @@ def test_import_dashboard_do_not_overwrite_charts_and_datasets(
         "%Y-%m-%d %H:%M:%S"
     )
     initial_chart_changed_on = imported_chart.changed_on.strftime("%Y-%m-%d %H:%M:%S")
-    initial_dataset_changed_on = imported_dataset.changed_on.strftime("%Y-%m-%d %H:%M:%S")
+    initial_dataset_changed_on = imported_dataset.changed_on.strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
 
     # ensuring the changed_on field will be different
     time.sleep(1)
@@ -192,7 +194,7 @@ def test_import_dashboard_do_not_overwrite_charts_and_datasets(
     final_chart_changed_on = imported_chart.changed_on.strftime("%Y-%m-%d %H:%M:%S")
     final_dataset_changed_on = imported_dataset.changed_on.strftime("%Y-%m-%d %H:%M:%S")
 
-    # asserting the changed_on field was updated on dashboard but not on charts and datasets
+    # changed_on should update on the dashboard but not on charts and datasets
     assert initial_dashboard_changed_on != final_dashboard_changed_on
     assert initial_chart_changed_on == final_chart_changed_on
     assert initial_dataset_changed_on == final_dataset_changed_on
