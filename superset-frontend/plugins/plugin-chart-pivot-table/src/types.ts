@@ -50,6 +50,15 @@ export enum MetricsLayoutEnum {
   COLUMNS = 'COLUMNS',
 }
 
+/**
+ * One rollup level for non-additive totals: a prefix of the row dimensions and
+ * a prefix of the column dimensions. See `plugin/utilities.ts`.
+ */
+export interface Groupby {
+  rows: QueryFormColumn[];
+  columns: QueryFormColumn[];
+}
+
 interface PivotTableCustomizeProps {
   groupbyRows: QueryFormColumn[];
   groupbyColumns: QueryFormColumn[];

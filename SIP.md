@@ -231,6 +231,30 @@ that query (the total's contribution to itself is 100%). Pivot subtotals
 (Bucket A, rows 1/3) remain for phase 2 and are the cases that need the
 multi-query / GROUPING SETS rollup.
 
+**POC progress (Pivot table, phase 2 — in progress).** The pivot computes
+totals via pandas `pivot_table(margins=True)`, which re-aggregates
+already-aggregated cells, so every non-additive subtotal/total is wrong. Phase 2
+adopts the rollup-query approach prototyped in #34592:
+`plugin/utilities.ts::buildGroupbyCombinations` enumerates each rollup level (a
+prefix of row dims × a prefix of column dims; grand total = `{rows:[],
+columns:[]}`), and `buildQuery` issues one query per level so the database
+computes each total at its own granularity. Adopted so far (with tests):
+`buildGroupbyCombinations` + the `Groupby` type.
+
+Two refinements over #34592, both to address the performance concern that
+stalled it:
+1. **Additivity gate** — emit the rollup queries only when totals/subtotals are
+   enabled *and* a non-additive metric is present; additive-only pivots keep the
+   single-query + pandas-margins path unchanged (margins are correct for sums).
+2. **GROUPING SETS** (phase 3) collapses the N rollup queries into one scan
+   where the engine supports it; the per-level queries become the fallback.
+
+Coupling note: `buildGroupbyCombinations` orders the grand-total level first and
+full-detail last, so `buildQuery` and `transformProps` must change together —
+`transformProps` reads the full-detail level for cells and places each other
+level's result into its subtotal/total slot. That assembly is the remaining
+phase-2 work.
+
 | # | Source issue | Chart | Metric / aggregate | Expected total behavior |
 |---|---|---|---|---|
 | 1 | #25747 / #32260 / #38674 | Pivot | ratio `SUM(a)/SUM(b)` | grand total & subtotals = `SUM(a)/SUM(b)` at that level, not Σ(ratios) |
