@@ -29,11 +29,12 @@ Findings these tests pin down:
   no GROUP BY* (``columns=[]``). The database evaluates the metric expression
   over all rows, so a ratio / distinct count is right even though summing the
   per-group cells would be wrong. These are asserted as regression guards.
-* **Bucket B (post-processing % columns)** is broken: the totals query is built
-  with ``post_processing=[]`` (see plugin-chart-table ``buildQuery.ts``), so a
-  contribution / percent column never appears in the summary row (#37627,
-  #34350). Marked ``xfail(strict=True)`` until the POC carries post-processing
-  into the totals computation.
+* **Bucket B (post-processing % columns)** was broken in the *frontend*:
+  ``plugin-chart-table/buildQuery.ts`` built the totals query with
+  ``post_processing=[]``, so a contribution / percent column never appeared in
+  the summary row (#37627, #34350). The fix retains post-processing on that
+  query; the guard below pins the backend capability the fix relies on (a
+  no-GROUP-BY summary query computes the percent column = 100%).
 """
 
 from __future__ import annotations
@@ -154,22 +155,23 @@ class TestNonAdditiveTotalsTable(SupersetTestCase):
         # across many states), so the naive sum is strictly larger.
         assert grand_total < summed
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="POC not implemented: the table 'Show summary' totals query is "
-        "built with post_processing=[], so percent/contribution columns are "
-        "absent from the summary row (#37627, #34350).",
-    )
-    def test_percent_column_present_in_summary_row(self):
+    def test_backend_computes_percent_column_for_summary_query(self):
         """
-        Bucket B: a contribution/percent column must appear in the totals
-        (summary) row. Today the totals query strips post_processing, so the
-        column is missing -> the summary shows zeros/blank.
+        Bucket B backend-capability guard.
+
+        The #37627 bug is in the frontend (``plugin-chart-table/buildQuery.ts``
+        built the totals query with ``post_processing=[]``). The backend itself
+        can compute the contribution/percent column on a no-GROUP-BY summary
+        query: the total's contribution to itself is 100%. This guard pins that
+        capability so the frontend fix (retaining post_processing on the totals
+        query) produces a correct summary % rather than an empty one.
         """
         self.login("admin")
 
-        payload = _base_payload({"label": "sum__num"}, ["gender"])
-        payload["queries"][0]["post_processing"] = [
+        # Mirror the *fixed* frontend totals query: no GROUP BY, but with the
+        # percent-metric contribution op retained.
+        totals_payload = _base_payload({"label": "sum__num"}, [])
+        totals_payload["queries"][0]["post_processing"] = [
             {
                 "operation": "contribution",
                 "options": {
@@ -179,11 +181,8 @@ class TestNonAdditiveTotalsTable(SupersetTestCase):
                 },
             }
         ]
-        # The summary row mirrors how the frontend builds the totals query:
-        # same metrics, no columns, and (the bug) post_processing dropped.
-        totals_payload = _base_payload({"label": "sum__num"}, [])
         totals_df = _result_df(totals_payload)
 
-        assert "sum__num_pct" in totals_df.columns, (
-            "percent column must be recomputed for the summary row"
-        )
+        assert "sum__num_pct" in totals_df.columns
+        # Single total row -> its contribution to itself is 100%.
+        assert totals_df["sum__num_pct"].iloc[0] == pytest.approx(1.0)

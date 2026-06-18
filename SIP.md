@@ -219,6 +219,18 @@ The POC is developed test-first: each known reported case is encoded as a
 failing test, and the implementation drives them green. The matrix below is the
 acceptance set (to be expanded as cases surface).
 
+**POC progress (Table chart, phase 1).** CI on this branch confirmed the key
+finding: the Table chart grand total is produced by a separate no-GROUP-BY
+query, so **Bucket A is already correct for the Table chart** (the ratio
+grand-total test passes; it differs from the sum of per-group ratios). The only
+Table-chart defect was **Bucket B**, and it was purely in the frontend:
+`plugin-chart-table/buildQuery.ts` built the `show_totals` query with
+`post_processing=[]`, dropping the `contribution` op behind percent metrics so
+the summary cell came back empty (#37627). The POC retains post-processing on
+that query (the total's contribution to itself is 100%). Pivot subtotals
+(Bucket A, rows 1/3) remain for phase 2 and are the cases that need the
+multi-query / GROUPING SETS rollup.
+
 | # | Source issue | Chart | Metric / aggregate | Expected total behavior |
 |---|---|---|---|---|
 | 1 | #25747 / #32260 / #38674 | Pivot | ratio `SUM(a)/SUM(b)` | grand total & subtotals = `SUM(a)/SUM(b)` at that level, not Σ(ratios) |

@@ -325,7 +325,11 @@ const buildQuery: BuildQuery<TableChartFormData> = (
         columns: [],
         row_limit: 0,
         row_offset: 0,
-        post_processing: [],
+        // Retain post-processing (e.g. the `contribution` op behind percent
+        // metrics) so percentage columns are recomputed for the summary row
+        // instead of coming back empty. With no GROUP BY the contribution of
+        // the total to itself is 100%. See #37627 / #25747.
+        post_processing: queryObject.post_processing,
         order_desc: undefined,
         orderby: undefined,
       });
