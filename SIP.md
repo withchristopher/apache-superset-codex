@@ -231,7 +231,28 @@ that query (the total's contribution to itself is 100%). Pivot subtotals
 (Bucket A, rows 1/3) remain for phase 2 and are the cases that need the
 multi-query / GROUPING SETS rollup.
 
-**POC progress (Pivot table, phase 2 — in progress).** The pivot computes
+**POC progress (Pivot table, phase 2 — engineering complete, pending in-app
+verification).** The full multi-query rewrite is implemented and all 60 pivot
+unit tests pass: `buildQuery` emits one query per rollup level; `transformProps`
+zips each result with its level into `QueryData[]` and selects the
+longest-`colnames` result as the detail "mainQuery"; `PivotTableChart` tags each
+record with the level that produced it; `react-pivottable`'s `PivotData` no
+longer aggregates — a `cellValue` passthrough stores the DB-computed value and
+`processRecord` drops it into the single matching slot
+(`allTotal`/`rowTotals`/`colTotals`/`tree`) by key length; the `aggregateFunction`
+control is removed and totals are labelled "Total". Remaining: in-app visual
+verification (the `verify` flow) before this is merge-ready.
+
+Sequencing note: the POC runs the multi-query path for **all** metrics
+(correct for additive metrics too — DB sums equal client sums), trading extra
+queries for correctness-first simplicity. The **additivity gate** (keep the
+single-query + pandas-margins path when every metric is additive) and the
+**GROUPING SETS** single-query collapse are both deferred to phase 3 as
+performance optimizations, not correctness needs.
+
+Original (superseded) notes for reference:
+
+**POC progress (Pivot table, phase 2 — superseded by the above).** The pivot computes
 totals via pandas `pivot_table(margins=True)`, which re-aggregates
 already-aggregated cells, so every non-additive subtotal/total is wrong. Phase 2
 adopts the rollup-query approach prototyped in #34592:
