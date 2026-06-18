@@ -255,6 +255,26 @@ full-detail last, so `buildQuery` and `transformProps` must change together —
 level's result into its subtotal/total slot. That assembly is the remaining
 phase-2 work.
 
+**Remaining phase-2 work (the rendering-layer change).** Adopting the rest of
+#34592, in dependency order:
+1. `types.ts`: add a `QueryData` type (`{ data: DataRecord[]; groupby: Groupby }`).
+2. `buildQuery.ts`: emit one query object per rollup combination — gated on the
+   **additivity check** (additive-only pivots keep the single-query path).
+3. `transformProps.ts`: assemble `QueryData[]` (zip each query result with its
+   combination), and select the longest-`colnames` result as the detail
+   "mainQuery" for cell columns / coltypes / color formatters.
+4. `react-pivottable/utilities.js` (**the hard part, ~400 lines**): the
+   `PivotData` aggregator must read each rollup level's pre-computed rows for
+   its subtotals/grand total instead of re-aggregating cells client-side.
+5. `react-pivottable/TableRenderers.jsx`: render those pre-computed totals.
+
+Items 4–5 are the rewrite that stalled #34592 and require app-level visual
+verification (the `verify` flow), not just unit tests, before they can be
+trusted. Recommended to land them only after the #29297 design call confirms the
+multi-query-per-level approach (vs. waiting for the GROUPING SETS path), to
+avoid a second rewrite. The `buildGroupbyCombinations` foundation and the
+Table-chart fix are independent of that decision and already in place.
+
 | # | Source issue | Chart | Metric / aggregate | Expected total behavior |
 |---|---|---|---|---|
 | 1 | #25747 / #32260 / #38674 | Pivot | ratio `SUM(a)/SUM(b)` | grand total & subtotals = `SUM(a)/SUM(b)` at that level, not Σ(ratios) |
