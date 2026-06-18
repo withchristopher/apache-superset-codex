@@ -62,11 +62,14 @@ RATIO_METRIC = {
     "label": "ca_share",
 }
 
+# COUNT_DISTINCT over a low-cardinality column (gender) that recurs across the
+# groupby (state). The per-group distinct counts therefore overlap heavily, so
+# summing them double-counts -- which is exactly what the grand total must avoid.
 DISTINCT_METRIC = {
     "expressionType": "SIMPLE",
-    "column": {"column_name": "name"},
+    "column": {"column_name": "gender"},
     "aggregate": "COUNT_DISTINCT",
-    "label": "distinct_names",
+    "label": "distinct_genders",
 }
 
 
@@ -80,7 +83,9 @@ def _result_df(payload: dict[str, Any]):
     return result.df
 
 
-def _base_payload(metric: dict[str, Any], columns: list[str]):
+def _base_payload(
+    metric: dict[str, Any], columns: list[str], clear_filters: bool = False
+):
     payload = get_query_context("birth_names")
     query = payload["queries"][0]
     query["metrics"] = [metric]
@@ -90,6 +95,10 @@ def _base_payload(metric: dict[str, Any], columns: list[str]):
     query["post_processing"] = []
     query["is_timeseries"] = False
     query["row_limit"] = None
+    if clear_filters:
+        # Drop the default gender='boy' filter so both genders are present and
+        # genuinely recur across states.
+        query["filters"] = []
     return payload
 
 
@@ -123,19 +132,26 @@ class TestNonAdditiveTotalsTable(SupersetTestCase):
     def test_distinct_count_grand_total_is_db_computed(self):
         """
         Bucket A regression guard: COUNT_DISTINCT grand total is computed over
-        all rows, so it is <= the sum of per-group distinct counts (no
-        double-counting of names that appear in multiple groups).
+        all rows, so it equals the true distinct count and is strictly less than
+        the sum of per-group distinct counts when members recur across groups
+        (gender recurs across every state, so summing double-counts).
         """
         self.login("admin")
 
-        per_group = _result_df(_base_payload(DISTINCT_METRIC, ["state"]))
-        summed = per_group["distinct_names"].sum()
+        per_group = _result_df(
+            _base_payload(DISTINCT_METRIC, ["state"], clear_filters=True)
+        )
+        summed = per_group["distinct_genders"].sum()
 
-        grand_total_df = _result_df(_base_payload(DISTINCT_METRIC, []))
-        grand_total = grand_total_df["distinct_names"].iloc[0]
+        grand_total_df = _result_df(
+            _base_payload(DISTINCT_METRIC, [], clear_filters=True)
+        )
+        grand_total = grand_total_df["distinct_genders"].iloc[0]
 
-        assert grand_total <= summed
-        # names recur across states, so the true distinct total is strictly less
+        # Grand total is the true number of distinct genders (boy + girl) ...
+        assert grand_total == 2
+        # ... and summing per-state distinct counts double-counts (2 per state
+        # across many states), so the naive sum is strictly larger.
         assert grand_total < summed
 
     @pytest.mark.xfail(
