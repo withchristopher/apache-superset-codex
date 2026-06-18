@@ -234,10 +234,15 @@ acceptance set (to be expanded as cases surface).
 - [PR #34592](https://github.com/apache/superset/pull/34592)
   "fix(pivot-table): Correct totals for non-additive metrics" — implements the
   multi-query (one query per groupby combination) approach for the pivot table.
-  We adopt its core idea as the **fallback** path and as a reference for the
-  buildQuery/transformProps changes; the primary path is single-query GROUPING
-  SETS, and we extend coverage to the Table chart. Salvage candidates:
-  `buildGroupbyCombinations` logic and its tests.
+  Note it is **entirely frontend**: `buildQuery.ts` emits one query object per
+  groupby combination (via a new `plugin/utilities.ts::buildGroupbyCombinations`)
+  and the existing multi-query machinery runs them as separate queries; there is
+  no backend change. This maps precisely onto our **fallback** path. We adopt
+  `buildGroupbyCombinations` (and its `utilities.test.ts`) as salvage, use the
+  buildQuery/transformProps changes as reference, and add the single-query
+  GROUPING SETS primary path plus Table-chart coverage on top.
+  No other open PR implements a fix (#38213 is the SIP-179 config feature;
+  #30903 is tangential).
 
 ## Rejected Alternatives
 
