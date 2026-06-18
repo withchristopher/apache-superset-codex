@@ -30,7 +30,6 @@ const formData = {
   tableRenderer: 'Table With Subtotal',
   colOrder: 'key_a_to_z',
   rowOrder: 'key_a_to_z',
-  aggregateFunction: 'Sum',
   transposePivot: true,
   combineMetric: true,
   rowSubtotalPosition: true,
@@ -74,7 +73,6 @@ test('should transform chart props for viz', () => {
     tableRenderer: 'Table With Subtotal',
     colOrder: 'key_a_to_z',
     rowOrder: 'key_a_to_z',
-    aggregateFunction: 'Sum',
     transposePivot: true,
     combineMetric: true,
     rowSubtotalPosition: true,
@@ -82,7 +80,15 @@ test('should transform chart props for viz', () => {
     colTotals: true,
     rowTotals: true,
     valueFormat: 'SMART_NUMBER',
-    data: [{ name: 'Hulk', sum__num: 1, __timestamp: 599616000000 }],
+    // Each query result is now zipped with the rollup level it belongs to.
+    // With combineMetric + COLUMNS layout (and transpose), the first level is
+    // {rows: [], columns: ['row1', 'row2']}.
+    data: [
+      {
+        data: [{ name: 'Hulk', sum__num: 1, __timestamp: 599616000000 }],
+        groupby: { rows: [], columns: ['row1', 'row2'] },
+      },
+    ],
     setDataMask,
     selectedFilters: {},
     verboseMap: {},

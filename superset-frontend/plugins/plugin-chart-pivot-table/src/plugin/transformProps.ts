@@ -28,7 +28,8 @@ import {
 } from '@superset-ui/core';
 import { GenericDataType } from '@apache-superset/core/common';
 import { getColorFormatters } from '@superset-ui/chart-controls';
-import { DateFormatter } from '../types';
+import { DateFormatter, PivotTableQueryFormData, QueryData } from '../types';
+import buildGroupbyCombinations from './utilities';
 
 const { DATABASE_DATETIME } = TimeFormats;
 
@@ -88,12 +89,24 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     emitCrossFilters,
     theme,
   } = chartProps;
-  const {
-    data,
-    colnames,
-    coltypes,
-    detected_currency: detectedCurrency,
-  } = queriesData[0];
+  // Each query corresponds to one rollup level; zip results back to their
+  // groupby combination (same order as buildQuery). The full-granularity query
+  // has the most colnames -- use it for column/type metadata and formatters.
+  const groupbyCombinations = buildGroupbyCombinations(
+    formData as PivotTableQueryFormData,
+  );
+  const queryLength = Math.min(queriesData.length, groupbyCombinations.length);
+  const data: QueryData[] = [];
+  for (let i = 0; i < queryLength; i += 1) {
+    data.push({
+      data: queriesData[i].data,
+      groupby: groupbyCombinations[i],
+    });
+  }
+  const mainQuery = queriesData.reduce((main, query) =>
+    query.colnames.length > main.colnames.length ? query : main,
+  );
+  const { colnames, coltypes, detected_currency: detectedCurrency } = mainQuery;
   const {
     groupbyRows,
     groupbyColumns,
@@ -101,7 +114,6 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     tableRenderer,
     colOrder,
     rowOrder,
-    aggregateFunction,
     transposePivot,
     combineMetric,
     rowSubtotalPosition,
@@ -136,7 +148,7 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
           if (granularity) {
             // time column use formats based on granularity
             formatter = getTimeFormatterForGranularity(granularity);
-          } else if (isNumeric(temporalColname, data)) {
+          } else if (isNumeric(temporalColname, mainQuery.data)) {
             formatter = getTimeFormatter(DATABASE_DATETIME);
           } else {
             // if no column-specific format, print cell as is
@@ -154,7 +166,7 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     );
   const metricColorFormatters = getColorFormatters(
     conditionalFormatting,
-    data,
+    mainQuery.data,
     theme,
   );
 
@@ -170,7 +182,6 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     tableRenderer,
     colOrder,
     rowOrder,
-    aggregateFunction,
     transposePivot,
     combineMetric,
     rowSubtotalPosition,

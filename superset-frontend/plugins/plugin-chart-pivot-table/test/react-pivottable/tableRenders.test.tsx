@@ -55,6 +55,53 @@ const SAMPLE_DATA = [
   { color: 'red', shape: 'square', value: 40 },
 ];
 
+/**
+ * Pre-aggregated, per-level data matching the multi-query contract: every record
+ * is tagged with the rollup level (rows/columns) that produced it, and the
+ * database has already computed each value. PivotData places these verbatim.
+ * Here `value` is a count, so leaf cells are 1, row/col totals are 2, grand
+ * total is 4.
+ */
+const TAGGED_COUNT_DATA = [
+  // leaf cells (full detail)
+  {
+    color: 'blue',
+    shape: 'circle',
+    value: 1,
+    rows: ['color'],
+    columns: ['shape'],
+  },
+  {
+    color: 'blue',
+    shape: 'square',
+    value: 1,
+    rows: ['color'],
+    columns: ['shape'],
+  },
+  {
+    color: 'red',
+    shape: 'circle',
+    value: 1,
+    rows: ['color'],
+    columns: ['shape'],
+  },
+  {
+    color: 'red',
+    shape: 'square',
+    value: 1,
+    rows: ['color'],
+    columns: ['shape'],
+  },
+  // row totals (per color, across shapes)
+  { color: 'blue', value: 2, rows: ['color'], columns: [] },
+  { color: 'red', value: 2, rows: ['color'], columns: [] },
+  // col totals (per shape, across colors)
+  { shape: 'circle', value: 2, rows: [], columns: ['shape'] },
+  { shape: 'square', value: 2, rows: [], columns: ['shape'] },
+  // grand total
+  { value: 4, rows: [], columns: [] },
+];
+
 function renderWithTheme(ui: ReactElement) {
   return render(<ThemeProvider theme={supersetTheme}>{ui}</ThemeProvider>);
 }
@@ -103,35 +150,41 @@ test('TableRenderer renders row headers from pivot data', () => {
 });
 
 test('TableRenderer renders aggregated cell values', () => {
-  const props = buildDefaultProps();
+  const props = buildDefaultProps({
+    data: TAGGED_COUNT_DATA,
+    vals: ['value'],
+  });
   renderWithTheme(<TableRenderer {...props} />);
 
-  // With "Count" aggregator, each cell (row x col intersection) should
-  // contain "1" because each combination appears exactly once.
+  // Each leaf cell (row x col intersection) holds the DB-computed value "1".
   const cells = screen.getAllByRole('gridcell');
   const cellTexts = cells.map(cell => cell.textContent);
 
-  // There should be cell values of "1" for each of the four intersections
-  // (blue+circle, blue+square, red+circle, red+square).
-  const onesCount = cellTexts.filter(text => text === '1').length;
+  // There should be a "1" leaf cell for each of the four intersections
+  // (blue+circle, blue+square, red+circle, red+square). The default formatter
+  // renders with two decimals in this test (production applies the metric's
+  // own format).
+  const onesCount = cellTexts.filter(text => text === '1.00').length;
   expect(onesCount).toBeGreaterThanOrEqual(4);
 });
 
 test('TableRenderer renders row totals when rowTotals is enabled', () => {
   const props = buildDefaultProps({
+    data: TAGGED_COUNT_DATA,
+    vals: ['value'],
     tableOptions: { rowTotals: true, colTotals: true },
   });
   renderWithTheme(<TableRenderer {...props} />);
 
-  // Row totals column should show "2" for each color (blue has 2 records,
-  // red has 2 records).
+  // Row totals column should show the DB-computed "2" for each color (blue has
+  // 2 records, red has 2 records).
   const totalCells = screen
     .getAllByRole('gridcell')
     .filter(cell => cell.classList.contains('pvtTotal'));
   expect(totalCells.length).toBeGreaterThan(0);
 
   const totalValues = totalCells.map(cell => cell.textContent);
-  expect(totalValues).toContain('2');
+  expect(totalValues).toContain('2.00');
 });
 
 test('TableRenderer renders col totals row when colTotals is enabled', () => {
@@ -149,11 +202,13 @@ test('TableRenderer renders col totals row when colTotals is enabled', () => {
 
 test('TableRenderer renders grand total when both totals are enabled', () => {
   const props = buildDefaultProps({
+    data: TAGGED_COUNT_DATA,
+    vals: ['value'],
     tableOptions: { rowTotals: true, colTotals: true },
   });
   renderWithTheme(<TableRenderer {...props} />);
 
-  // The grand total cell should show "4" (total record count).
+  // The grand total cell shows the DB-computed "4" (total record count).
   const grandTotalCells = screen
     .getAllByRole('gridcell')
     .filter(cell => cell.classList.contains('pvtGrandTotal'));
