@@ -26,7 +26,7 @@ import {
   TimeGranularity,
 } from '@superset-ui/core';
 import { Groupby, PivotTableQueryFormData } from '../types';
-import buildGroupbyCombinations from './utilities';
+import buildGroupbyCombinations, { allMetricsAdditive } from './utilities';
 
 // Build the query `columns` for a single rollup level (one prefix of row dims
 // crossed with one prefix of column dims), applying temporal BASE_AXIS handling.
@@ -65,13 +65,22 @@ export default function buildQuery(formData: PivotTableQueryFormData) {
   const time_grain_sqla =
     extra_form_data?.time_grain_sqla || formData.time_grain_sqla;
 
-  // Emit one query per rollup level so the database computes each
-  // subtotal/grand total at its own granularity, rather than re-aggregating
-  // already-aggregated cells client-side (which is wrong for non-additive
-  // metrics). See SIP.md. The combination order is fixed by
-  // buildGroupbyCombinations and relied upon by transformProps to zip each
-  // result back to the level that produced it.
-  const groupbyCombinations: Groupby[] = buildGroupbyCombinations(formData);
+  // Additive fast-path: when every metric is additive (SUM/COUNT/MIN/MAX), the
+  // subtotals/grand totals can be derived by reducing the leaf rows on the
+  // client, so a single full-detail query suffices and transformProps
+  // synthesizes the rollup levels. Non-additive metrics need the database to
+  // compute each rollup level, so we emit one query per level (the combination
+  // order is fixed by buildGroupbyCombinations and relied upon by
+  // transformProps to map each result back to its level). See SIP.md.
+  const additive = allMetricsAdditive(ensureIsArray(formData.metrics));
+  const groupbyCombinations: Groupby[] = additive
+    ? [
+        {
+          rows: ensureIsArray<QueryFormColumn>(formData.groupbyRows),
+          columns: ensureIsArray<QueryFormColumn>(formData.groupbyColumns),
+        },
+      ]
+    : buildGroupbyCombinations(formData);
   const queriesColumns: QueryFormColumn[][] = groupbyCombinations.map(groupby =>
     getQueryColumns(groupby, formData, time_grain_sqla),
   );

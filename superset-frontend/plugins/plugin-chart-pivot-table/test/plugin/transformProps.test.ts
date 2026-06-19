@@ -341,3 +341,58 @@ test('should map conditional formatting rules to metricColorFormatters with corr
     result.metricColorFormatters[1].getColorFromValue(column2Formatting),
   ).toEqual('#5ac189FF');
 });
+
+test('additive metrics: synthesizes rollup levels from a single leaf query', () => {
+  const additiveFormData = {
+    ...formData,
+    combineMetric: false,
+    transposePivot: false,
+    metricsLayout: MetricsLayoutEnum.ROWS,
+    groupbyRows: ['region'],
+    groupbyColumns: [],
+    colTotals: true,
+    rowTotals: true,
+    metrics: [
+      {
+        expressionType: 'SIMPLE',
+        aggregate: 'SUM',
+        column: { column_name: 'v' },
+        label: 'v',
+      },
+    ],
+  };
+  const additiveChartProps = new ChartProps<QueryFormData>({
+    formData: additiveFormData as unknown as QueryFormData,
+    width: 800,
+    height: 600,
+    queriesData: [
+      {
+        data: [
+          { region: 'US', v: 10 },
+          { region: 'EU', v: 5 },
+        ],
+        colnames: ['region', 'v'],
+        coltypes: [1, 0],
+      },
+    ],
+    hooks: { setDataMask },
+    filterState: { selectedFilters: {} },
+    datasource: { verboseMap: {}, columnFormats: {} },
+    theme: supersetTheme,
+  });
+
+  const result = transformProps(additiveChartProps);
+  // One query produced multiple synthesized rollup levels.
+  expect(result.data.length).toBeGreaterThan(1);
+  // Grand-total level: region collapsed -> v = 10 + 5 = 15.
+  const grand = (result.data as any[]).find(
+    d => d.groupby.rows.length === 0 && d.groupby.columns.length === 0,
+  );
+  expect(grand.data[0].v).toBe(15);
+  // Leaf level keeps per-region values.
+  const leaf = (result.data as any[]).find(d => d.groupby.rows.length === 1);
+  expect(leaf.data).toEqual([
+    { region: 'US', v: 10 },
+    { region: 'EU', v: 5 },
+  ]);
+});

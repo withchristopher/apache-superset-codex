@@ -19,7 +19,10 @@
 import {
   ChartProps,
   DataRecord,
+  ensureIsArray,
   extractTimegrain,
+  getColumnLabel,
+  getMetricLabel,
   getTimeFormatter,
   getTimeFormatterForGranularity,
   QueryFormData,
@@ -29,7 +32,12 @@ import {
 import { GenericDataType } from '@apache-superset/core/common';
 import { getColorFormatters } from '@superset-ui/chart-controls';
 import { DateFormatter, PivotTableQueryFormData, QueryData } from '../types';
-import buildGroupbyCombinations from './utilities';
+import buildGroupbyCombinations, {
+  additiveReducerFor,
+  allMetricsAdditive,
+  RollupReducer,
+  synthesizeAdditiveLevels,
+} from './utilities';
 
 const { DATABASE_DATETIME } = TimeFormats;
 
@@ -89,20 +97,49 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     emitCrossFilters,
     theme,
   } = chartProps;
-  // Each query corresponds to one rollup level; zip results back to their
-  // groupby combination (same order as buildQuery). The full-granularity query
-  // has the most colnames -- use it for column/type metadata and formatters.
   const groupbyCombinations = buildGroupbyCombinations(
     formData as PivotTableQueryFormData,
   );
-  const queryLength = Math.min(queriesData.length, groupbyCombinations.length);
-  const data: QueryData[] = [];
-  for (let i = 0; i < queryLength; i += 1) {
-    data.push({
-      data: queriesData[i].data,
-      groupby: groupbyCombinations[i],
+  const metricsArr = ensureIsArray(formData.metrics);
+  let data: QueryData[];
+  if (allMetricsAdditive(metricsArr)) {
+    // Additive fast-path: a single full-detail query was issued; synthesize
+    // each rollup level by reducing the leaf rows on the client (see SIP.md).
+    const leafRows = queriesData[0].data;
+    const metricReducers: Record<string, RollupReducer> = {};
+    metricsArr.forEach(metric => {
+      metricReducers[getMetricLabel(metric)] = additiveReducerFor(metric);
     });
+    const labelLevels = groupbyCombinations.map(combination => ({
+      rows: combination.rows.map(getColumnLabel),
+      columns: combination.columns.map(getColumnLabel),
+    }));
+    const synthesized = synthesizeAdditiveLevels(
+      leafRows,
+      labelLevels,
+      metricReducers,
+    );
+    data = groupbyCombinations.map((combination, i) => ({
+      data: synthesized[i] as DataRecord[],
+      groupby: combination,
+    }));
+  } else {
+    // Non-additive: each query is one rollup level; zip results back to their
+    // combination (same order as buildQuery).
+    const queryLength = Math.min(
+      queriesData.length,
+      groupbyCombinations.length,
+    );
+    data = [];
+    for (let i = 0; i < queryLength; i += 1) {
+      data.push({
+        data: queriesData[i].data,
+        groupby: groupbyCombinations[i],
+      });
+    }
   }
+  // The full-granularity query has the most colnames -- use it for column/type
+  // metadata and formatters.
   const mainQuery = queriesData.reduce((main, query) =>
     query.colnames.length > main.colnames.length ? query : main,
   );

@@ -21,6 +21,8 @@ import { TimeGranularity } from '@superset-ui/core';
 import buildGroupbyCombinations, {
   isAdditiveMetric,
   allMetricsAdditive,
+  additiveReducerFor,
+  synthesizeAdditiveLevels,
 } from '../../src/plugin/utilities';
 import { PivotTableQueryFormData, MetricsLayoutEnum } from '../../src/types';
 
@@ -358,4 +360,59 @@ test('pruning: empty column dims keep the [] (leaf) level regardless of rowTotal
     { rows: [], columns: [] },
     { rows: ['row1', 'row2'], columns: [] },
   ]);
+});
+
+test('additiveReducerFor maps aggregates to reducers', () => {
+  const mk = (aggregate: string) =>
+    ({ expressionType: 'SIMPLE', aggregate, label: aggregate }) as any;
+  expect(additiveReducerFor(mk('SUM'))).toBe('sum');
+  expect(additiveReducerFor(mk('COUNT'))).toBe('sum');
+  expect(additiveReducerFor(mk('MIN'))).toBe('min');
+  expect(additiveReducerFor(mk('MAX'))).toBe('max');
+  expect(additiveReducerFor('saved_metric' as any)).toBe('sum');
+});
+
+const LEAF = [
+  { region: 'US', topic: 'a', value: 10 },
+  { region: 'US', topic: 'b', value: 20 },
+  { region: 'EU', topic: 'a', value: 5 },
+];
+
+test('synthesizeAdditiveLevels: sum reducer across rollup levels', () => {
+  const [grand, perRegion, leaf] = synthesizeAdditiveLevels(
+    LEAF,
+    [
+      { rows: [], columns: [] },
+      { rows: ['region'], columns: [] },
+      { rows: ['region', 'topic'], columns: [] },
+    ],
+    { value: 'sum' },
+  );
+  expect(grand).toEqual([{ value: 35 }]);
+  expect(perRegion).toEqual([
+    { region: 'US', value: 30 },
+    { region: 'EU', value: 5 },
+  ]);
+  // leaf level reduces single-row groups -> identity
+  expect(leaf).toEqual([
+    { region: 'US', topic: 'a', value: 10 },
+    { region: 'US', topic: 'b', value: 20 },
+    { region: 'EU', topic: 'a', value: 5 },
+  ]);
+});
+
+test('synthesizeAdditiveLevels: min/max reducers and null handling', () => {
+  const rows = [...LEAF, { region: 'EU', topic: 'b', value: null }];
+  const [grandMax] = synthesizeAdditiveLevels(
+    rows,
+    [{ rows: [], columns: [] }],
+    { value: 'max' },
+  );
+  expect(grandMax).toEqual([{ value: 20 }]);
+  const [grandMin] = synthesizeAdditiveLevels(
+    rows,
+    [{ rows: [], columns: [] }],
+    { value: 'min' },
+  );
+  expect(grandMin).toEqual([{ value: 5 }]);
 });

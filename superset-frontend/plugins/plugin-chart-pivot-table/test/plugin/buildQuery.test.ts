@@ -55,6 +55,23 @@ const formData: PivotTableQueryFormData = {
   currencyFormat: { symbol: 'USD', symbolPosition: 'prefix' },
 };
 
+test('additive metrics use the fast-path: a single full-detail query', () => {
+  const { queries } = buildQuery({
+    ...formData,
+    metrics: [
+      {
+        expressionType: 'SIMPLE',
+        aggregate: 'SUM',
+        column: { column_name: 'num' },
+        label: 'sum_num',
+      },
+    ] as any,
+  });
+  expect(queries).toHaveLength(1);
+  // The single leaf query carries all dimensions (2 rows + 2 cols).
+  expect(queries[0].columns).toHaveLength(4);
+});
+
 test('should emit one query per rollup level, grand total first', () => {
   // 2 row dims x 2 col dims -> (2+1) x (2+1) = 9 rollup levels.
   const queryContext = buildQuery(formData);
