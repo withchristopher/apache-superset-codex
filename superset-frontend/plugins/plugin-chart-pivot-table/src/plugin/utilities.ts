@@ -17,12 +17,50 @@
  * under the License.
  */
 
-import { QueryFormColumn } from '@superset-ui/core';
+import {
+  AdhocMetric,
+  QueryFormColumn,
+  QueryFormMetric,
+} from '@superset-ui/core';
 import {
   Groupby,
   MetricsLayoutEnum,
   PivotTableQueryFormData,
 } from '../types';
+
+// Aggregates whose group total can be derived from per-group results
+// (decomposable): summing sub-sums, counting sub-counts, min-of-mins,
+// max-of-maxes. Everything else (AVG, COUNT_DISTINCT, percentiles, ratios,
+// SQL/post-processing metrics) is non-additive and needs DB re-computation at
+// each rollup level. See SIP.md.
+const ADDITIVE_AGGREGATES = new Set(['SUM', 'COUNT', 'MIN', 'MAX']);
+
+/**
+ * Whether a metric's total can be derived additively from per-group results.
+ * Conservative: only SIMPLE metrics with a known additive aggregate qualify;
+ * saved-metric references (strings) and SQL/adhoc metrics are treated as
+ * non-additive because their aggregate cannot be determined from form data.
+ */
+export function isAdditiveMetric(metric: QueryFormMetric): boolean {
+  if (typeof metric === 'string') {
+    return false;
+  }
+  const adhoc = metric as AdhocMetric;
+  return (
+    adhoc.expressionType === 'SIMPLE' &&
+    !!adhoc.aggregate &&
+    ADDITIVE_AGGREGATES.has(adhoc.aggregate)
+  );
+}
+
+/**
+ * True when every metric is additive, so totals/subtotals can use the cheap
+ * single-query + client-side summation path instead of one query per rollup
+ * level. An empty metric list is not considered additive (nothing to optimize).
+ */
+export function allMetricsAdditive(metrics: QueryFormMetric[]): boolean {
+  return metrics.length > 0 && metrics.every(isAdditiveMetric);
+}
 
 /**
  * Enumerate the groupby combinations needed to compute correct subtotals and

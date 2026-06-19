@@ -18,7 +18,10 @@
  */
 
 import { TimeGranularity } from '@superset-ui/core';
-import buildGroupbyCombinations from '../../src/plugin/utilities';
+import buildGroupbyCombinations, {
+  isAdditiveMetric,
+  allMetricsAdditive,
+} from '../../src/plugin/utilities';
 import { PivotTableQueryFormData, MetricsLayoutEnum } from '../../src/types';
 
 const baseFormData = {
@@ -230,4 +233,68 @@ test('should work with large number of dimensions', () => {
     rows: ['r1', 'r2', 'r3', 'r4'],
     columns: ['c1', 'c2', 'c3'],
   });
+});
+
+test('isAdditiveMetric: SIMPLE metrics with additive aggregates are additive', () => {
+  expect(
+    isAdditiveMetric({
+      expressionType: 'SIMPLE',
+      aggregate: 'SUM',
+      column: { column_name: 'num' },
+      label: 'sum_num',
+    } as any),
+  ).toBe(true);
+  expect(
+    isAdditiveMetric({
+      expressionType: 'SIMPLE',
+      aggregate: 'COUNT',
+      column: { column_name: 'num' },
+      label: 'count_num',
+    } as any),
+  ).toBe(true);
+});
+
+test('isAdditiveMetric: non-additive aggregates, SQL, and saved metrics are not additive', () => {
+  expect(
+    isAdditiveMetric({
+      expressionType: 'SIMPLE',
+      aggregate: 'AVG',
+      column: { column_name: 'num' },
+      label: 'avg_num',
+    } as any),
+  ).toBe(false);
+  expect(
+    isAdditiveMetric({
+      expressionType: 'SIMPLE',
+      aggregate: 'COUNT_DISTINCT',
+      column: { column_name: 'name' },
+      label: 'distinct_names',
+    } as any),
+  ).toBe(false);
+  expect(
+    isAdditiveMetric({
+      expressionType: 'SQL',
+      sqlExpression: 'SUM(a) / SUM(b)',
+      label: 'ratio',
+    } as any),
+  ).toBe(false);
+  // saved-metric reference: aggregate unknown from form data -> non-additive
+  expect(isAdditiveMetric('count' as any)).toBe(false);
+});
+
+test('allMetricsAdditive: all additive vs any non-additive vs empty', () => {
+  const sum = {
+    expressionType: 'SIMPLE',
+    aggregate: 'SUM',
+    column: { column_name: 'a' },
+    label: 'a',
+  } as any;
+  const ratio = {
+    expressionType: 'SQL',
+    sqlExpression: 'SUM(a)/SUM(b)',
+    label: 'r',
+  } as any;
+  expect(allMetricsAdditive([sum, sum])).toBe(true);
+  expect(allMetricsAdditive([sum, ratio])).toBe(false);
+  expect(allMetricsAdditive([])).toBe(false);
 });

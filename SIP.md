@@ -271,6 +271,28 @@ single-query + pandas-margins path when every metric is additive) and the
 **GROUPING SETS** single-query collapse are both deferred to phase 3 as
 performance optimizations, not correctness needs.
 
+**POC progress (phase 3 — performance, in progress).** Foundations landed (each
+pure, tested, and inert until wired, so zero risk to the verified phase-2
+rendering):
+- **Additivity detection** — `isAdditiveMetric` / `allMetricsAdditive` in
+  `plugin/utilities.ts`: SIMPLE metrics aggregating `SUM`/`COUNT`/`MIN`/`MAX` are
+  additive; SQL/adhoc and saved-metric references are conservatively
+  non-additive (aggregate unknown from form data). This is the gate for the
+  single-query additive fast-path.
+- **`supports_grouping_sets` engine capability** — on `BaseEngineSpec` (default
+  `False`), opted into by Postgres, BigQuery, Snowflake, and Presto/Trino. This
+  gates the GROUPING SETS single-query collapse; engines without it keep the
+  per-level multi-query fallback.
+- **Combination pruning** — `buildGroupbyCombinations` only emits the rollup
+  levels for totals/subtotals the user actually enabled, cutting query count
+  with no second code path. *(in progress)*
+
+Remaining phase-3 wiring (design): the additive fast-path (single query +
+client-side summation of leaves to synthesise the rollup levels, keeping one
+placement-based `PivotData` path) and the GROUPING SETS collapse (emit one
+`GROUPING SETS` query when `supports_grouping_sets`, split the result back into
+per-level `QueryData[]` via `GROUPING()` markers).
+
 Original (superseded) notes for reference:
 
 **POC progress (Pivot table, phase 2 — superseded by the above).** The pivot computes
