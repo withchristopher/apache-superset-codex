@@ -2153,6 +2153,10 @@ msgid "Are you sure you want to delete the selected layers?"
 msgstr "آیا از حذف لایه‌های انتخاب‌شده مطمئن هستید؟"
 
 #, fuzzy
+msgid "Are you sure you want to delete the selected queries?"
+msgstr "آیا از حذف کوئری‌های انتخاب‌شده مطمئن هستید؟"
+
+#, fuzzy
 msgid "Are you sure you want to delete the selected roles?"
 msgstr "آیا مطمئن هستید که می‌خواهید قوانین انتخاب شده را حذف کنید؟"
 
@@ -3873,6 +3877,10 @@ msgid "Connection failed, please check your connection settings."
 msgstr "اتصال ناموفق بود، لطفاً تنظیمات اتصال خود را بررسی کنید."
 
 #, fuzzy
+msgid "Connection looks good!"
+msgstr "اتصال"
+
+#, fuzzy
 msgid "Contains"
 msgstr "پیوسته"
 
@@ -3949,6 +3957,10 @@ msgstr "کپی کوئری پارتیشن به کلیپ بورد"
 
 msgid "Copy permalink to clipboard"
 msgstr "لینک دائمی را به کلیپ بورد کپی کنید"
+
+#, fuzzy
+msgid "Copy query URL"
+msgstr "کپی کردن نشانی درخواست"
 
 msgid "Copy query link to your clipboard"
 msgstr "لینک کوئری را به کلیپ بورد خود کپی کنید"
@@ -5043,6 +5055,10 @@ msgid "Delete item"
 msgstr "قالب را حذف کنید"
 
 #, fuzzy
+msgid "Delete query"
+msgstr "حذف کوئری؟"
+
+#, fuzzy
 msgid "Delete role"
 msgstr "فایل را انتخاب کنید"
 
@@ -5727,6 +5743,10 @@ msgstr "ایمیل گزارشات"
 msgid "ERROR"
 msgstr "خطا"
 
+#, fuzzy, python-format
+msgid "ERROR: %s"
+msgstr "خطا: %(msg)s"
+
 msgid "Edge length"
 msgstr "طول لبه"
 
@@ -5820,6 +5840,10 @@ msgstr "ویرایش قانون"
 
 msgid "Edit properties"
 msgstr "ویرایش ویژگی‌ها"
+
+#, fuzzy
+msgid "Edit query"
+msgstr "ویرایش کوئری"
 
 #, fuzzy
 msgid "Edit report"
@@ -6439,6 +6463,10 @@ msgstr "دانلود تصویر ناموفق بود، لطفاً صفحه را �
 #, fuzzy, python-format
 msgid "Export failed: %s"
 msgstr "گزارش شکست خورد"
+
+#, fuzzy
+msgid "Export query"
+msgstr "کوئری خالی؟"
 
 msgid "Export screenshot (jpeg)"
 msgstr ""
@@ -8314,6 +8342,10 @@ msgstr "ستون خطوط"
 
 msgid "Lines encoding"
 msgstr "رمزگذاری خطوط"
+
+#, fuzzy
+msgid "Link Copied!"
+msgstr "SQL کپی شد!"
 
 #, fuzzy
 msgid "List"
@@ -14526,6 +14558,10 @@ msgid "There was an error fetching the filtered charts and dashboards:"
 msgstr "یک خطا در دریافت وضعیت مورد علاقه وجود داشت: %s"
 
 #, fuzzy
+msgid "There was an error generating the permalink."
+msgstr "خطا در بارگذاری طرح‌ها وجود داشت"
+
+#, fuzzy
 msgid "There was an error loading groups."
 msgstr "خطایی در بارگذاری جدول‌ها وجود داشت"
 
@@ -14627,6 +14663,10 @@ msgstr "سر deleting داشبوردهای انتخاب شده مشکل وجود
 msgid "There was an issue deleting the selected layers: %s"
 msgstr "مشکلی در حذف لایه‌های انتخاب شده وجود داشت: %s"
 
+#, fuzzy, python-format
+msgid "There was an issue deleting the selected queries: %s"
+msgstr "مشکلی در حذف الگوهای انتخاب شده وجود داشت: %s"
+
 #, python-format
 msgid "There was an issue deleting the selected templates: %s"
 msgstr "مشکلی در حذف الگوهای انتخاب شده وجود داشت: %s"
@@ -14662,6 +14702,10 @@ msgstr "برای حذف نمودارهای انتخاب شده مشکلی پیش
 #, fuzzy
 msgid "There was an issue exporting the selected dashboards"
 msgstr "سر deleting داشبوردهای انتخاب شده مشکل وجود داشت:"
+
+#, fuzzy
+msgid "There was an issue exporting the selected queries"
+msgstr "مشکلی در حذف الگوهای انتخاب شده وجود داشت: %s"
 
 #, fuzzy
 msgid "There was an issue exporting the selected themes"
@@ -14997,6 +15041,9 @@ msgstr ""
 "این شیء JSON موقعیت ویدجت‌ها را در داشبورد توصیف می‌کند. این شیء به‌طور "
 "پویا هنگام تنظیم اندازه و موقعیت ویدجت‌ها با استفاده از drag & drop در "
 "نمای داشبورد生成 می‌شود."
+
+msgid "This link cannot be followed because its address is unsafe."
+msgstr ""
 
 msgid ""
 "This link will take you to an external website. We cannot guarantee the "
@@ -15784,6 +15831,9 @@ msgid "Unpin from the result panel"
 msgstr ""
 
 msgid "Unpin from top"
+msgstr ""
+
+msgid "Unsafe link blocked"
 msgstr ""
 
 #, python-format
@@ -18066,6 +18116,10 @@ msgstr "نیاز به مجوز دارد"
 msgid "quarter"
 msgstr "سه‌ماهه"
 
+#, fuzzy
+msgid "queries"
+msgstr "کوئری‌ها"
+
 msgid "query"
 msgstr "کوئری"
 
@@ -18283,6 +18337,26 @@ msgstr ""
 
 msgid "zoom area"
 msgstr "منطقه‌ی زوم"
+
+#, python-brace-format
+msgid ""
+"{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;"
+"\n"
+"\n"
+"/** The classic emailregex.com regex for RFC 5322-compliant emails */\n"
+"export const rfc5322Email =\n"
+"  "
+"/^(([^<>()[]\\.,;:s@\"]+(.[^<>()[]\\.,;:s@\"]+)*)|(\".+\"))@(([[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}])|(([a-zA-Z-0-9]+.)+[a-zA-Z]{2,}))$/;"
+"\n"
+"\n"
+"/** A loose regex that allows Unicode characters, enforces length limits,"
+" and that's about it. */\n"
+"export const unicodeEmail = /^[^s@\"]{1,64}@[^s@]{1,255}$/u;\n"
+"export const idnEmail = unicodeEmail;\n"
+"\n"
+"export const browserEmail: RegExp =\n"
+"  /^[a-zA-Z0-9.!#$%&'*+/=?^_"
+msgstr ""
 
 msgid "© Layer attribution"
 msgstr ""

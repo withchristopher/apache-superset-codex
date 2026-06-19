@@ -79,7 +79,7 @@ import {
 } from 'src/database/actions';
 import Mousetrap from 'mousetrap';
 import { clearDatasetCache } from 'src/utils/cachedSupersetGet';
-import { makeUrl } from 'src/utils/pathUtils';
+import { makeUrl, openInNewTab } from 'src/utils/navigationUtils';
 import {
   OwnerSelectLabel,
   OWNER_TEXT_LABEL_PROP,
@@ -1158,7 +1158,10 @@ class DatasourceEditor extends PureComponent<
   }
 
   openOnSqlLab() {
-    window.open(this.getSQLLabUrl(), '_blank', 'noopener,noreferrer');
+    // `getSQLLabUrl()` already runs the path through `makeUrl`; `openInNewTab`
+    // re-applies `ensureAppRoot`, which is idempotent on already-prefixed
+    // paths (see navigationUtils.appRoot.test.tsx).
+    openInNewTab(this.getSQLLabUrl());
   }
 
   tableChangeAndSyncMetadata() {

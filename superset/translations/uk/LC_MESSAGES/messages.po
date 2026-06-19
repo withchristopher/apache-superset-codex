@@ -2163,6 +2163,9 @@ msgstr "Певні, що бажаєте вилучити вибрані груп
 msgid "Are you sure you want to delete the selected layers?"
 msgstr "Певні, що бажаєте вилучити вибрані шари?"
 
+msgid "Are you sure you want to delete the selected queries?"
+msgstr ""
+
 msgid "Are you sure you want to delete the selected roles?"
 msgstr "Певні, що бажаєте вилучити вибрані ролі?"
 
@@ -3826,6 +3829,9 @@ msgstr "Не вдалося підʼєднатися. Перевірте нал�
 msgid "Connection failed, please check your connection settings."
 msgstr "Не вдалося підʼєднатися. Перевірте параметри зʼєднання."
 
+msgid "Connection looks good!"
+msgstr ""
+
 msgid "Contains"
 msgstr "Містить"
 
@@ -3901,6 +3907,9 @@ msgstr "Скопіювати частину запиту в буфер"
 
 msgid "Copy permalink to clipboard"
 msgstr "Скопіювати постійне посилання у буфер"
+
+msgid "Copy query URL"
+msgstr ""
 
 msgid "Copy query link to your clipboard"
 msgstr "Скопіювати посилання на запит у буфер"
@@ -4962,6 +4971,9 @@ msgstr "Вилучити групу"
 msgid "Delete item"
 msgstr "Вилучити елемент"
 
+msgid "Delete query"
+msgstr ""
+
 msgid "Delete role"
 msgstr "Вилучити роль"
 
@@ -5644,6 +5656,10 @@ msgstr "EMAIL_REPORTS_CTA"
 msgid "ERROR"
 msgstr "Помилка"
 
+#, python-format
+msgid "ERROR: %s"
+msgstr ""
+
 msgid "Edge length"
 msgstr "Довжина ребра"
 
@@ -5732,6 +5748,9 @@ msgstr "Редагувати групу"
 
 msgid "Edit properties"
 msgstr "Редагувати властивості"
+
+msgid "Edit query"
+msgstr ""
 
 msgid "Edit report"
 msgstr "Редагувати доповідь"
@@ -6309,6 +6328,9 @@ msgstr "Помилка експортування - спробуйте ще ра
 #, python-format
 msgid "Export failed: %s"
 msgstr "Помилка експортування: %s"
+
+msgid "Export query"
+msgstr ""
 
 msgid "Export screenshot (jpeg)"
 msgstr "Експортувати знімок (jpeg)"
@@ -8115,6 +8137,9 @@ msgstr "Стовпець з лінією"
 
 msgid "Lines encoding"
 msgstr "Кодування ліній"
+
+msgid "Link Copied!"
+msgstr ""
 
 msgid "List"
 msgstr "Перелік"
@@ -14182,6 +14207,9 @@ msgstr "Трапилась помилка одержання статусу: %s"
 msgid "There was an error fetching the filtered charts and dashboards:"
 msgstr "Трапилась помилка одержання відсіяних діаграм і звітів:"
 
+msgid "There was an error generating the permalink."
+msgstr ""
+
 #, fuzzy
 msgid "There was an error loading groups."
 msgstr "Трапилась помилка завантаження користувачів."
@@ -14279,6 +14307,10 @@ msgid "There was an issue deleting the selected layers: %s"
 msgstr "Трапилась проблема вилучення вибраних шарів: %s"
 
 #, python-format
+msgid "There was an issue deleting the selected queries: %s"
+msgstr ""
+
+#, python-format
 msgid "There was an issue deleting the selected templates: %s"
 msgstr "Трапилась проблема вилучення вибраних шаблонів: %s"
 
@@ -14311,6 +14343,9 @@ msgstr "Трапилась проблема експортування вибр�
 
 msgid "There was an issue exporting the selected dashboards"
 msgstr "Трапилась проблема експортування вибраних звітів"
+
+msgid "There was an issue exporting the selected queries"
+msgstr ""
 
 msgid "There was an issue exporting the selected themes"
 msgstr "Трапилась проблема експортування вибраних тем"
@@ -14630,6 +14665,9 @@ msgstr ""
 "Цей об’єкт JSON описує розміщення елементів на звіті. Він переінакшується"
 " динамічно під час зміни розміру та розміщення елементів за допомогою "
 "перетягування (drag & drop) у режимі огляду звіту"
+
+msgid "This link cannot be followed because its address is unsafe."
+msgstr ""
 
 msgid ""
 "This link will take you to an external website. We cannot guarantee the "
@@ -15414,6 +15452,9 @@ msgid "Unpin from the result panel"
 msgstr "Прикріпити до панелі результатів"
 
 msgid "Unpin from top"
+msgstr ""
+
+msgid "Unsafe link blocked"
 msgstr ""
 
 #, python-format
@@ -17659,6 +17700,9 @@ msgstr "Не розпізнало користувача"
 msgid "quarter"
 msgstr "квартал"
 
+msgid "queries"
+msgstr ""
+
 msgid "query"
 msgstr "запит"
 
@@ -17869,6 +17913,26 @@ msgstr "your-project-1234-a1"
 
 msgid "zoom area"
 msgstr "ділянка масштабування"
+
+#, python-brace-format
+msgid ""
+"{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;"
+"\n"
+"\n"
+"/** The classic emailregex.com regex for RFC 5322-compliant emails */\n"
+"export const rfc5322Email =\n"
+"  "
+"/^(([^<>()[]\\.,;:s@\"]+(.[^<>()[]\\.,;:s@\"]+)*)|(\".+\"))@(([[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}])|(([a-zA-Z-0-9]+.)+[a-zA-Z]{2,}))$/;"
+"\n"
+"\n"
+"/** A loose regex that allows Unicode characters, enforces length limits,"
+" and that's about it. */\n"
+"export const unicodeEmail = /^[^s@\"]{1,64}@[^s@]{1,255}$/u;\n"
+"export const idnEmail = unicodeEmail;\n"
+"\n"
+"export const browserEmail: RegExp =\n"
+"  /^[a-zA-Z0-9.!#$%&'*+/=?^_"
+msgstr ""
 
 msgid "© Layer attribution"
 msgstr "© Атрибут шару"

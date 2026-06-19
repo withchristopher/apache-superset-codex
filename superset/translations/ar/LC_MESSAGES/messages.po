@@ -2189,6 +2189,9 @@ msgstr "هل أنت متأكد من أنك تريد حذف القواعد الم
 msgid "Are you sure you want to delete the selected layers?"
 msgstr "هل أنت متأكد من أنك تريد حذف الطبقات المحددة؟"
 
+msgid "Are you sure you want to delete the selected queries?"
+msgstr ""
+
 #, fuzzy
 msgid "Are you sure you want to delete the selected roles?"
 msgstr "هل أنت متأكد من أنك تريد حذف القواعد المحددة؟"
@@ -3918,6 +3921,9 @@ msgstr "فشل الاتصال ، يرجى التحقق من إعدادات ال�
 msgid "Connection failed, please check your connection settings."
 msgstr "فشل الاتصال ، يرجى التحقق من إعدادات الاتصال الخاصة بك"
 
+msgid "Connection looks good!"
+msgstr ""
+
 #, fuzzy
 msgid "Contains"
 msgstr "مستمر"
@@ -3997,6 +4003,9 @@ msgstr "نسخ استعلام القسم إلى الحافظة"
 
 msgid "Copy permalink to clipboard"
 msgstr "نسخ الرابط الثابت إلى الحافظة"
+
+msgid "Copy query URL"
+msgstr ""
 
 msgid "Copy query link to your clipboard"
 msgstr "نسخ رابط الاستعلام إلى الحافظة"
@@ -5101,6 +5110,9 @@ msgstr "حذف"
 msgid "Delete item"
 msgstr "حذف القالب"
 
+msgid "Delete query"
+msgstr ""
+
 #, fuzzy
 msgid "Delete role"
 msgstr "حذف"
@@ -5839,6 +5851,10 @@ msgstr "تقارير_البريد الإلكتروني_CTA"
 msgid "ERROR"
 msgstr "خطأ"
 
+#, python-format
+msgid "ERROR: %s"
+msgstr ""
+
 msgid "Edge length"
 msgstr "طول الحافة"
 
@@ -5932,6 +5948,9 @@ msgstr "تحرير القاعدة"
 
 msgid "Edit properties"
 msgstr "تحرير الخصائص"
+
+msgid "Edit query"
+msgstr ""
 
 #, fuzzy
 msgid "Edit report"
@@ -6550,6 +6569,9 @@ msgstr "فشل تنزيل الصورة، يرجى التحديث والمحاو�
 #, fuzzy, python-format
 msgid "Export failed: %s"
 msgstr "أخفق التقرير"
+
+msgid "Export query"
+msgstr ""
 
 msgid "Export screenshot (jpeg)"
 msgstr ""
@@ -8436,6 +8458,9 @@ msgstr "عمود الخطوط"
 
 msgid "Lines encoding"
 msgstr "ترميز الخطوط"
+
+msgid "Link Copied!"
+msgstr ""
 
 #, fuzzy
 msgid "List"
@@ -14635,6 +14660,9 @@ msgstr "حدث خطأ أثناء جلب الحالة المفضلة: %s"
 msgid "There was an error fetching the filtered charts and dashboards:"
 msgstr "حدث خطأ أثناء جلب نشاطك الأخير:"
 
+msgid "There was an error generating the permalink."
+msgstr ""
+
 #, fuzzy
 msgid "There was an error loading groups."
 msgstr "حدث خطأ أثناء تحميل الجداول"
@@ -14739,6 +14767,10 @@ msgid "There was an issue deleting the selected layers: %s"
 msgstr "حدثت مشكلة أثناء حذف الطبقات المحددة: %s"
 
 #, python-format
+msgid "There was an issue deleting the selected queries: %s"
+msgstr ""
+
+#, python-format
 msgid "There was an issue deleting the selected templates: %s"
 msgstr "حدثت مشكلة أثناء حذف القوالب المحددة: %s"
 
@@ -14773,6 +14805,9 @@ msgstr "حدثت مشكلة أثناء حذف المخططات المحددة: %
 #, fuzzy
 msgid "There was an issue exporting the selected dashboards"
 msgstr "حدثت مشكلة أثناء حذف لوحات المعلومات المحددة: "
+
+msgid "There was an issue exporting the selected queries"
+msgstr ""
 
 #, fuzzy
 msgid "There was an issue exporting the selected themes"
@@ -15095,6 +15130,9 @@ msgstr ""
 "يصف كائن json هذا موضع الأدوات في لوحة المعلومات. يتم إنشاؤه ديناميكيًا "
 "عند ضبط حجم الأدوات والمواضع باستخدام السحب والإسقاط في عرض لوحة "
 "المعلومات"
+
+msgid "This link cannot be followed because its address is unsafe."
+msgstr ""
 
 msgid ""
 "This link will take you to an external website. We cannot guarantee the "
@@ -15879,6 +15917,9 @@ msgid "Unpin from the result panel"
 msgstr ""
 
 msgid "Unpin from top"
+msgstr ""
+
+msgid "Unsafe link blocked"
 msgstr ""
 
 #, python-format
@@ -18141,6 +18182,9 @@ msgstr ""
 msgid "quarter"
 msgstr "الربع"
 
+msgid "queries"
+msgstr ""
+
 msgid "query"
 msgstr "استعلام"
 
@@ -18358,6 +18402,26 @@ msgid "your-project-1234-a1"
 msgstr ""
 
 msgid "zoom area"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;"
+"\n"
+"\n"
+"/** The classic emailregex.com regex for RFC 5322-compliant emails */\n"
+"export const rfc5322Email =\n"
+"  "
+"/^(([^<>()[]\\.,;:s@\"]+(.[^<>()[]\\.,;:s@\"]+)*)|(\".+\"))@(([[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}])|(([a-zA-Z-0-9]+.)+[a-zA-Z]{2,}))$/;"
+"\n"
+"\n"
+"/** A loose regex that allows Unicode characters, enforces length limits,"
+" and that's about it. */\n"
+"export const unicodeEmail = /^[^s@\"]{1,64}@[^s@]{1,255}$/u;\n"
+"export const idnEmail = unicodeEmail;\n"
+"\n"
+"export const browserEmail: RegExp =\n"
+"  /^[a-zA-Z0-9.!#$%&'*+/=?^_"
 msgstr ""
 
 msgid "© Layer attribution"

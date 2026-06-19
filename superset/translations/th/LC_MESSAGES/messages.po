@@ -3621,6 +3621,11 @@ msgstr "คุณแน่ใจหรือไม่ว่าต้องกา
 
 # Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ca, cs, es,
 # fr, ja, lv, mi, ru, sk, uk]
+msgid "Are you sure you want to delete the selected queries?"
+msgstr ""
+
+# Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ca, cs, es,
+# fr, ja, lv, mi, ru, sk, uk]
 #, fuzzy
 msgid "Are you sure you want to delete the selected roles?"
 msgstr "คุณแน่ใจหรือไม่ว่าต้องการลบบทบาทที่เลือกไว้?"
@@ -6663,6 +6668,12 @@ msgstr "การเชื่อมต่อล้มเหลว โปรด�
 msgid "Connection failed, please check your connection settings."
 msgstr "การเชื่อมต่อล้มเหลว โปรดตรวจสอบการตั้งค่าการเชื่อมต่อของคุณ"
 
+# Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ar, ca, cs,
+# de, es, fa, fr, it, ja, lv, mi, nl, pl, pt, pt_BR, ru, sk, sl, tr, uk, zh,
+# zh_TW]
+msgid "Connection looks good!"
+msgstr ""
+
 # Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: fr, ja, lv,
 # ru, uk]
 #, fuzzy
@@ -6806,6 +6817,11 @@ msgstr "คัดลอกคำสั่งพาร์ทิชันไปย
 #, fuzzy
 msgid "Copy permalink to clipboard"
 msgstr "คัดลอกลิงก์ถาวรไปยังคลิปบอร์ด"
+
+# Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: fr, ja, lv,
+# ru, uk]
+msgid "Copy query URL"
+msgstr ""
 
 # Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ar, ca, cs,
 # de, es, fa, fr, it, ja, ko, lv, mi, nl, pl, pt, pt_BR, ru, sk, sl, tr, uk,
@@ -8772,6 +8788,12 @@ msgstr "ลบกลุ่ม"
 msgid "Delete item"
 msgstr "ลบรายการ"
 
+# Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ar, ca, cs,
+# de, es, fa, fr, it, ja, ko, lv, mi, nl, pl, pt, pt_BR, ru, sk, sl, tr, uk,
+# zh, zh_TW]
+msgid "Delete query"
+msgstr ""
+
 # Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ca, cs, es,
 # fr, ja, lv, mi, ru, sk, uk]
 #, fuzzy
@@ -9880,6 +9902,12 @@ msgstr "EMAIL_REPORTS_CTA"
 msgid "ERROR"
 msgstr "ข้อผิดพลาด"
 
+# Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ja, lv, ru,
+# uk]
+#, python-format
+msgid "ERROR: %s"
+msgstr ""
+
 # Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ar, ca, cs,
 # de, es, fa, fr, ja, lv, mi, nl, pl, pt_BR, ru, sk, sl, uk, zh, zh_TW]
 #, fuzzy
@@ -10063,6 +10091,11 @@ msgstr "แก้ไขกลุ่ม"
 #, fuzzy
 msgid "Edit properties"
 msgstr "แก้ไขคุณสมบัติ"
+
+# Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ca, cs, es,
+# ja, lv, mi, ru, sk, uk]
+msgid "Edit query"
+msgstr ""
 
 # Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: fr, ja, lv,
 # ru, uk]
@@ -11144,6 +11177,12 @@ msgstr "การส่งออกล้มเหลว - กรุณาลอ
 #, fuzzy, python-format
 msgid "Export failed: %s"
 msgstr "การส่งออกล้มเหลว: %s"
+
+# Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ar, ca, cs,
+# de, es, fa, fr, it, ja, lv, mi, nl, pl, pt, pt_BR, ru, sk, sl, uk, zh,
+# zh_TW]
+msgid "Export query"
+msgstr ""
 
 # Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: cs, ja, lv,
 # ru, sk, uk]
@@ -14493,6 +14532,11 @@ msgstr "คอลัมน์เส้น"
 #, fuzzy
 msgid "Lines encoding"
 msgstr "การเข้ารหัสเส้น"
+
+# Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: fr, ja, lv,
+# ru, uk]
+msgid "Link Copied!"
+msgstr ""
 
 # Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ja, lv, ru,
 # uk]
@@ -25367,6 +25411,11 @@ msgstr "เกิดข้อผิดพลาดในการดึงข้
 msgid "There was an error fetching the filtered charts and dashboards:"
 msgstr "เกิดข้อผิดพลาดในการดึงข้อมูลแผนภูมิและแดชบอร์ดที่กรองแล้ว:"
 
+# Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ar, ca, cs,
+# de, es, fa, fr, ja, lv, mi, nl, pl, pt_BR, ru, sk, sl, tr, uk, zh, zh_TW]
+msgid "There was an error generating the permalink."
+msgstr ""
+
 # Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ja, lv, ru,
 # uk]
 #, fuzzy
@@ -25529,6 +25578,12 @@ msgstr "เกิดปัญหาในการลบแดชบอร์ด
 msgid "There was an issue deleting the selected layers: %s"
 msgstr "เกิดปัญหาในการลบเลเยอร์ที่เลือก: %s"
 
+# Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ja, lv, ru,
+# uk]
+#, python-format
+msgid "There was an issue deleting the selected queries: %s"
+msgstr ""
+
 # Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ar, ca, cs,
 # de, es, fa, fr, ja, lv, mi, nl, pl, pt_BR, ru, sk, sl, uk, zh, zh_TW]
 #, fuzzy, python-format
@@ -25582,6 +25637,11 @@ msgstr "เกิดปัญหาในการส่งออกแผนภ
 #, fuzzy
 msgid "There was an issue exporting the selected dashboards"
 msgstr "เกิดปัญหาในการส่งออกแดชบอร์ดที่เลือก"
+
+# Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ja, lv, ru,
+# uk]
+msgid "There was an issue exporting the selected queries"
+msgstr ""
 
 # Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ja, lv, ru,
 # uk]
@@ -26083,6 +26143,9 @@ msgid ""
 msgstr ""
 "ออบเจ็กต์ JSON นี้อธิบายตำแหน่งของวิดเจ็ตในแดชบอร์ด "
 "โดยจะถูกสร้างขึ้นแบบไดนามิกเมื่อปรับขนาดและตำแหน่งของวิดเจ็ตโดยใช้การลากและวางในมุมมองแดชบอร์ด"
+
+msgid "This link cannot be followed because its address is unsafe."
+msgstr ""
 
 msgid ""
 "This link will take you to an external website. We cannot guarantee the "
@@ -27453,6 +27516,9 @@ msgid "Unpin from the result panel"
 msgstr "ปักหมุดที่แผงผลลัพธ์"
 
 msgid "Unpin from top"
+msgstr ""
+
+msgid "Unsafe link blocked"
 msgstr ""
 
 # Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ar, ca, cs,
@@ -31399,6 +31465,11 @@ msgid "quarter"
 msgstr "ไตรมาส"
 
 # Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ar, ca, cs,
+# de, es, fa, fr, ja, lv, mi, nl, pt_BR, ru, sk, sl, uk]
+msgid "queries"
+msgstr ""
+
+# Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ar, ca, cs,
 # de, es, fa, fr, it, ja, ko, lv, mi, nl, pl, pt, pt_BR, ru, sk, sl, uk, zh,
 # zh_TW]
 #, fuzzy
@@ -31805,6 +31876,26 @@ msgstr "your-project-1234-a1"
 #, fuzzy
 msgid "zoom area"
 msgstr "พื้นที่ซูม"
+
+#, python-brace-format
+msgid ""
+"{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;"
+"\n"
+"\n"
+"/** The classic emailregex.com regex for RFC 5322-compliant emails */\n"
+"export const rfc5322Email =\n"
+"  "
+"/^(([^<>()[]\\.,;:s@\"]+(.[^<>()[]\\.,;:s@\"]+)*)|(\".+\"))@(([[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}])|(([a-zA-Z-0-9]+.)+[a-zA-Z]{2,}))$/;"
+"\n"
+"\n"
+"/** A loose regex that allows Unicode characters, enforces length limits,"
+" and that's about it. */\n"
+"export const unicodeEmail = /^[^s@\"]{1,64}@[^s@]{1,255}$/u;\n"
+"export const idnEmail = unicodeEmail;\n"
+"\n"
+"export const browserEmail: RegExp =\n"
+"  /^[a-zA-Z0-9.!#$%&'*+/=?^_"
+msgstr ""
 
 # Machine-translated via backfill_po.py (claude-sonnet-4-6) [refs: ca, cs, es,
 # fr, ja, lv, mi, ru, sk, uk]

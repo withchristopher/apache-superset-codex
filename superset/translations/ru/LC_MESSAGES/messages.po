@@ -2161,6 +2161,9 @@ msgstr "Вы уверены, что хотите удалить выбранны
 msgid "Are you sure you want to delete the selected layers?"
 msgstr "Вы уверены, что хотите удалить выбранные слои?"
 
+msgid "Are you sure you want to delete the selected queries?"
+msgstr ""
+
 msgid "Are you sure you want to delete the selected roles?"
 msgstr "Вы уверены, что хотите удалить выбранные роли?"
 
@@ -3843,6 +3846,9 @@ msgstr "Сбой подключения. Проверьте его настро�
 msgid "Connection failed, please check your connection settings."
 msgstr "Сбой подключения. Проверьте настройки соединения."
 
+msgid "Connection looks good!"
+msgstr ""
+
 msgid "Contains"
 msgstr "Содержит"
 
@@ -3918,6 +3924,9 @@ msgstr "Скопировать часть запроса в буфер обме�
 
 msgid "Copy permalink to clipboard"
 msgstr "Скопировать ссылку в буфер обмена"
+
+msgid "Copy query URL"
+msgstr ""
 
 msgid "Copy query link to your clipboard"
 msgstr "Скопировать ссылку на запрос в буфер обмена"
@@ -4980,6 +4989,9 @@ msgstr "Удалить группу"
 msgid "Delete item"
 msgstr "Удалить элемент"
 
+msgid "Delete query"
+msgstr ""
+
 msgid "Delete role"
 msgstr "Удалить роль"
 
@@ -5651,6 +5663,10 @@ msgstr ""
 msgid "ERROR"
 msgstr "ОШИБКА"
 
+#, python-format
+msgid "ERROR: %s"
+msgstr ""
+
 msgid "Edge length"
 msgstr "Длина ребер"
 
@@ -5739,6 +5755,9 @@ msgstr "Редактировать группу"
 
 msgid "Edit properties"
 msgstr "Редактировать свойства"
+
+msgid "Edit query"
+msgstr ""
 
 msgid "Edit report"
 msgstr "Редактировать отчет"
@@ -6316,6 +6335,9 @@ msgstr "Экспорт не выполнен. Попробуйте еще раз
 #, python-format
 msgid "Export failed: %s"
 msgstr "Экспорт не выполнен: %s"
+
+msgid "Export query"
+msgstr ""
 
 msgid "Export screenshot (jpeg)"
 msgstr "Экспорт снимка экрана (jpeg)"
@@ -8124,6 +8146,9 @@ msgstr "Столбец с линиями"
 
 msgid "Lines encoding"
 msgstr "Кодирование линий"
+
+msgid "Link Copied!"
+msgstr ""
 
 msgid "List"
 msgstr "Список"
@@ -14205,6 +14230,9 @@ msgstr "Произошла ошибка при получении статуса
 msgid "There was an error fetching the filtered charts and dashboards:"
 msgstr "Произошла ошибка при получении отфильтрованных диаграмм и дашбордов:"
 
+msgid "There was an error generating the permalink."
+msgstr ""
+
 #, fuzzy
 msgid "There was an error loading groups."
 msgstr "Произошла ошибка при загрузке пользователей."
@@ -14304,6 +14332,10 @@ msgid "There was an issue deleting the selected layers: %s"
 msgstr "Произошла ошибка при удалении выбранных слоев: %s"
 
 #, python-format
+msgid "There was an issue deleting the selected queries: %s"
+msgstr ""
+
+#, python-format
 msgid "There was an issue deleting the selected templates: %s"
 msgstr "Произошла ошибка при удалении выбранных шаблонов: %s"
 
@@ -14336,6 +14368,9 @@ msgstr "Возникла проблема при экспорте выбранн
 
 msgid "There was an issue exporting the selected dashboards"
 msgstr "Возникла проблема при экспорте выбранных дашбордов"
+
+msgid "There was an issue exporting the selected queries"
+msgstr ""
 
 msgid "There was an issue exporting the selected themes"
 msgstr "Возникла проблема при экспорте выбранных тем"
@@ -14655,6 +14690,9 @@ msgid ""
 msgstr ""
 "Этот JSON-объект описывает расположение виджетов на дашборде. Он "
 "генерируется динамически при их изменении и перемещении."
+
+msgid "This link cannot be followed because its address is unsafe."
+msgstr ""
 
 msgid ""
 "This link will take you to an external website. We cannot guarantee the "
@@ -15442,6 +15480,9 @@ msgid "Unpin from the result panel"
 msgstr "Закрепить на панели результатов"
 
 msgid "Unpin from top"
+msgstr ""
+
+msgid "Unsafe link blocked"
 msgstr ""
 
 #, python-format
@@ -17695,6 +17736,9 @@ msgstr "Требуется авторизация"
 msgid "quarter"
 msgstr "квартал"
 
+msgid "queries"
+msgstr ""
+
 msgid "query"
 msgstr "запрос"
 
@@ -17913,6 +17957,26 @@ msgstr ""
 
 msgid "zoom area"
 msgstr "область масштабирования"
+
+#, python-brace-format
+msgid ""
+"{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;"
+"\n"
+"\n"
+"/** The classic emailregex.com regex for RFC 5322-compliant emails */\n"
+"export const rfc5322Email =\n"
+"  "
+"/^(([^<>()[]\\.,;:s@\"]+(.[^<>()[]\\.,;:s@\"]+)*)|(\".+\"))@(([[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}])|(([a-zA-Z-0-9]+.)+[a-zA-Z]{2,}))$/;"
+"\n"
+"\n"
+"/** A loose regex that allows Unicode characters, enforces length limits,"
+" and that's about it. */\n"
+"export const unicodeEmail = /^[^s@\"]{1,64}@[^s@]{1,255}$/u;\n"
+"export const idnEmail = unicodeEmail;\n"
+"\n"
+"export const browserEmail: RegExp =\n"
+"  /^[a-zA-Z0-9.!#$%&'*+/=?^_"
+msgstr ""
 
 msgid "© Layer attribution"
 msgstr "© Настройки слоя"

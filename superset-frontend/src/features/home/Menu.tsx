@@ -20,7 +20,7 @@ import { useState, useEffect } from 'react';
 import { styled, css, useTheme } from '@apache-superset/core/theme';
 import { t } from '@apache-superset/core/translation';
 import { ensureStaticPrefix } from 'src/utils/assetUrl';
-import { ensureAppRoot } from 'src/utils/pathUtils';
+import { ensureAppRoot, stripAppRoot } from 'src/utils/navigationUtils';
 import { getUrlParam, isUrlExternal } from 'src/utils/urlUtils';
 import { MainNav, MenuItem } from '@superset-ui/core/components/Menu';
 import { Tooltip, Grid, Row, Col, Image } from '@superset-ui/core/components';
@@ -244,10 +244,18 @@ export function Menu({
     isFrontendRoute,
   }: MenuObjectProps): MenuItem => {
     if (url && isFrontendRoute) {
+      // `<Router basename={applicationRoot()}>` re-prepends the app root to
+      // `to`, so handing it the already-rooted `url` from bootstrap_data
+      // would render a doubled `/superset/superset/...` anchor. Strip the
+      // root first; mirrors the brand-link treatment below.
       return {
         key: label,
         label: (
-          <NavLink role="button" to={url} activeClassName="is-active">
+          <NavLink
+            role="button"
+            to={stripAppRoot(url)}
+            activeClassName="is-active"
+          >
             {label}
           </NavLink>
         ),
@@ -270,7 +278,11 @@ export function Menu({
         childItems.push({
           key: `${child.label}`,
           label: child.isFrontendRoute ? (
-            <NavLink to={child.url || ''} exact activeClassName="is-active">
+            <NavLink
+              to={stripAppRoot(child.url || '')}
+              exact
+              activeClassName="is-active"
+            >
               {child.label}
             </NavLink>
           ) : (
@@ -309,7 +321,18 @@ export function Menu({
               {brandImage}
             </Typography.Link>
           ) : (
-            <StyledBrandLink to={brandHref}>{brandImage}</StyledBrandLink>
+            // StyledBrandLink wraps GenericLink -> react-router <Link>, and
+            // `<Router basename={applicationRoot()}>` re-prepends the app root
+            // to `to`. Strip the root so the rendered anchor is single-prefixed
+            // rather than a doubled `/superset/superset/...`. Strip `brandHref`
+            // (the ensureAppRoot'd value) rather than the raw
+            // `theme.brandLogoHref` so an unset href (partial theme override)
+            // stays null-safe — `ensureAppRoot(undefined)` yields the app root,
+            // which `stripAppRoot` then reduces to `/`. Mirrors the brand.path
+            // branch's single-prefix treatment.
+            <StyledBrandLink to={stripAppRoot(brandHref)}>
+              {brandImage}
+            </StyledBrandLink>
           )}
         </StyledBrandWrapper>
       );
@@ -317,8 +340,12 @@ export function Menu({
       // ---------------------------------------------------------------------------------
       // TODO: deprecate this once Theme is fully rolled out
       // Kept as is for backwards compatibility with the old theme system / superset_config.py
+      //
+      // `<Router basename={applicationRoot()}>` re-prepends the app root to the
+      // `to` prop, so handing it an already-rooted `brand.path` would render a
+      // doubled `/superset/superset/...` href. Strip the root first.
       link = (
-        <GenericLink className="navbar-brand" to={brand.path}>
+        <GenericLink className="navbar-brand" to={stripAppRoot(brand.path)}>
           <StyledImage
             preview={false}
             src={ensureStaticPrefix(brand.icon)}
