@@ -252,14 +252,17 @@ headlessly (Playwright, `bypassCSP`).
   old pivot showed. Confirmed against the live backend.
 - Render: the body cells and the **bottom "Total" row are correct (11%)** -- the
   headline non-additive dimension-total fix works end to end.
-- **Gap found:** with the metric on the column axis, the right-hand "Total"
-  column and the grand-total corner render **`null`**. That is the
-  *metric-collapse* total axis (`rowTotals`/`allTotal`): no rollup level feeds it
-  because `METRIC_KEY` is always injected into the column axis, so no record has
-  an empty colKey. This is the remaining phase-2 polish item: feed the
-  metric-collapsed totals (for a single metric they equal the metric column;
-  for multiple metrics it is a cross-metric sum). The dimension totals -- the
-  actual subject of #25747/#32260/#36165/#38674 -- are correct.
+- **Gap found and fixed:** with the metric on the column axis, the right-hand
+  "Total" column and the grand-total corner initially rendered **`null`** -- the
+  *metric-collapse* total axis (`rowTotals`/`allTotal`), which no rollup level
+  feeds because `METRIC_KEY` is always present on one axis (no record has an
+  empty colKey). Fix: tag records with `__metricKey` and, when an axis holds
+  only the metric, mirror the value into the opposite total axis and `allTotal`.
+  Re-verified in-app: the Total column and corner now show **11%** (correct),
+  not null. Guarded by a deterministic `TableRenderer` test. All four total
+  regions (cells, bottom Total row, right Total column, corner) are now correct
+  for the non-additive ratio metric -- the full subject of
+  #25747/#32260/#36165/#38674.
 
 Sequencing note: the POC runs the multi-query path for **all** metrics
 (correct for additive metrics too — DB sums equal client sums), trading extra
