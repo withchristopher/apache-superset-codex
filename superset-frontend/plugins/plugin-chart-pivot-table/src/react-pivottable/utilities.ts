@@ -1212,6 +1212,28 @@ class PivotData {
       this.tree[flatRowKey][flatColKey].isSubtotal =
         isRowSubtotal || isColSubtotal;
     }
+
+    // Metric-collapse totals. The metric is a pseudo-dimension always present on
+    // one axis, so no rollup level produces an empty key on that axis -- which
+    // would leave the opposite "Total" axis and the grand-total corner empty.
+    // When a record's axis holds only the metric (no real dims there), its value
+    // is also the collapsed total for that axis, so mirror it into rowTotals /
+    // colTotals / allTotal. (For a single metric this equals the metric column;
+    // for multiple metrics it is the last metric -- a cross-metric total is not
+    // well defined and is left as future work.)
+    const metricKey = record.__metricKey as unknown as string | undefined;
+    if (metricKey) {
+      const realColCount = levelColumns.filter(c => c !== metricKey).length;
+      const realRowCount = levelRows.filter(r => r !== metricKey).length;
+      if (levelColumns.includes(metricKey) && realColCount === 0) {
+        if (rowKey.length === 0) this.allTotal.push(record);
+        else this.rowTotals[flatRowKey]?.push(record);
+      }
+      if (levelRows.includes(metricKey) && realRowCount === 0) {
+        if (colKey.length === 0) this.allTotal.push(record);
+        else this.colTotals[flatColKey]?.push(record);
+      }
+    }
   }
 
   getAggregator(rowKey: string[], colKey: string[]): Aggregator {

@@ -216,6 +216,69 @@ test('TableRenderer renders grand total when both totals are enabled', () => {
   expect(grandTotalCells[0]).toHaveTextContent('4');
 });
 
+/**
+ * Metric-collapse totals: when the metric pseudo-dimension is the only thing on
+ * an axis (here columns), the opposite "Total" axis and the grand-total corner
+ * must still show values rather than null, because no rollup level produces an
+ * empty key on the metric axis. Records carry `__metricKey` so PivotData can
+ * mirror the value into rowTotals / allTotal. (Regression guard for the gap that
+ * in-app verification surfaced: a null right-hand "Total" column.)
+ */
+const TAGGED_METRIC_ON_COLUMNS = [
+  // leaf cells: rows = [color], columns = [Metric] (metric on the column axis)
+  {
+    color: 'blue',
+    Metric: 'm1',
+    value: 10,
+    rows: ['color'],
+    columns: ['Metric'],
+    __metricKey: 'Metric',
+  },
+  {
+    color: 'red',
+    Metric: 'm1',
+    value: 20,
+    rows: ['color'],
+    columns: ['Metric'],
+    __metricKey: 'Metric',
+  },
+  // grand total level: rows = [], columns = [Metric]
+  {
+    Metric: 'm1',
+    value: 30,
+    rows: [],
+    columns: ['Metric'],
+    __metricKey: 'Metric',
+  },
+];
+
+test('TableRenderer fills metric-collapse totals (no null Total column/corner)', () => {
+  const props = buildDefaultProps({
+    data: TAGGED_METRIC_ON_COLUMNS,
+    rows: ['color'],
+    cols: ['Metric'],
+    vals: ['value'],
+    tableOptions: { rowTotals: true, colTotals: true },
+  });
+  renderWithTheme(<TableRenderer {...props} />);
+
+  // Right-hand "Total" column (rowTotals) shows the per-row collapsed values...
+  const rowTotalTexts = screen
+    .getAllByRole('gridcell')
+    .filter(cell => cell.classList.contains('pvtTotal'))
+    .map(cell => cell.textContent);
+  expect(rowTotalTexts).toContain('10.00');
+  expect(rowTotalTexts).toContain('20.00');
+  expect(rowTotalTexts).not.toContain('null');
+
+  // ...and the grand-total corner shows the collapsed grand total (not null).
+  const grandTotalCells = screen
+    .getAllByRole('gridcell')
+    .filter(cell => cell.classList.contains('pvtGrandTotal'));
+  expect(grandTotalCells.length).toBe(1);
+  expect(grandTotalCells[0]).toHaveTextContent('30.00');
+});
+
 test('TableRenderer handles empty data gracefully', () => {
   const props = buildDefaultProps({ data: [] });
   renderWithTheme(<TableRenderer {...props} />);
