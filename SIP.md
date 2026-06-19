@@ -292,11 +292,41 @@ rendering):
   query. Unit-tested; all-totals-on is unchanged so phase-2 behavior is
   preserved.
 
-Remaining phase-3 wiring (design): the additive fast-path (single query +
-client-side summation of leaves to synthesise the rollup levels, keeping one
-placement-based `PivotData` path) and the GROUPING SETS collapse (emit one
-`GROUPING SETS` query when `supports_grouping_sets`, split the result back into
-per-level `QueryData[]` via `GROUPING()` markers).
+- **Additive fast-path (landed).** When `allMetricsAdditive`, `buildQuery`
+  emits a single full-detail leaf query and `transformProps` synthesises every
+  rollup level by grouping+reducing the leaf rows
+  (`synthesizeAdditiveLevels`: sum for SUM/COUNT, min/max for MIN/MAX). This
+  restores the historical single-query behaviour for additive pivots while the
+  DB-computed multi-query path stays for non-additive metrics; `PivotData` keeps
+  one placement-based path (synthesised levels are shaped identically to queried
+  ones). Unit-tested (buildQuery emits 1 query; transformProps synthesises the
+  grand/leaf levels).
+
+**GROUPING SETS collapse (phase 3b — primitives landed, integration pending).**
+For the non-additive multi-query path, when the datasource engine reports
+`supports_grouping_sets`, the N per-level queries can be collapsed into one
+`GROUPING SETS` query so the database computes every level in a single scan.
+
+Landed (tested, engine-agnostic SQL primitives in
+`superset/common/grouping_sets.py`):
+- `grouping_sets_clause(groups)` → `GROUP BY GROUPING SETS ((a, b), (a), ())`
+  from the rollup column groups (compiled and asserted on the Postgres dialect).
+- `grouping_id_column(col, label)` → `GROUPING(col) AS label`, the per-column
+  marker (`0` = grouped at this row's level, `1` = rolled up) used to attribute
+  each returned row to its rollup level.
+
+Remaining integration (the core query-path change, flagged for the #29297 design
+review before building):
+1. Carry the rollup groups into the query context — either a new query-object
+   `grouping_sets` field (frontend emits one query) or backend detection of the
+   N-query rollup pattern.
+2. In the SQLA query builder (`models/helpers.py get_sqla_query`), when the
+   engine `supports_grouping_sets`, emit the `GROUPING SETS` group-by plus the
+   `GROUPING()` marker columns instead of a plain `GROUP BY`.
+3. Split the single result back into per-level `QueryData[]` using the markers,
+   feeding the existing placement-based `PivotData` unchanged.
+4. Fall back to the per-level multi-query path on engines without the
+   capability. No correctness change — purely fewer scans.
 
 Original (superseded) notes for reference:
 
