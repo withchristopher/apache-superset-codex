@@ -28,6 +28,18 @@ import { DataColumnMeta } from '../types';
 import DateWithFormatter from './DateWithFormatter';
 
 /**
+ * Returns true if the given D3 format string represents a percentage format.
+ * Percentage values are stored as decimals (e.g. 0.05 = 5%), so
+ * Math.abs(value) < 1 is always true for them. Without this guard the
+ * small-number formatter would intercept every value in a percentage column
+ * and render it without the intended percentage formatting.
+ * See https://github.com/apache/superset/issues/36189
+ */
+function isPercentageFormat(formatString?: string): boolean {
+  return typeof formatString === 'string' && formatString.trim().endsWith('%');
+}
+
+/**
  * Format text for cell value.
  */
 function formatValue(
@@ -40,17 +52,14 @@ function formatValue(
   if (value === undefined) {
     return [false, ''];
   }
-  // render null as `N/A`
+  // render null as N/A
   if (
     value === null ||
-    // null values in temporal columns are wrapped in a Date object, so make sure we
-    // handle them here too
     (value instanceof DateWithFormatter && value.input === null)
   ) {
     return [false, 'N/A'];
   }
   if (formatter) {
-    // If formatter is a CurrencyFormatter, pass row context for AUTO mode
     if (formatter instanceof CurrencyFormatter) {
       return [false, formatter(value as number, rowData, currencyColumn)];
     }
@@ -78,10 +87,19 @@ export function formatColumnValue(
             currency: config.currencyFormat,
           })
         : getNumberFormatter(config.d3SmallNumberFormat);
+
+  // Do not apply the small-number formatter when the column uses a percentage
+  // format. Percentage values are stored as decimals (0-1), so the threshold
+  // Math.abs(value) < 1 would fire for every value and bypass the intended
+  // percentage formatter. See https://github.com/apache/superset/issues/36189
+  const useSmallNumberFormatter =
+    isNumber &&
+    typeof value === 'number' &&
+    Math.abs(value) < 1 &&
+    !isPercentageFormat(config.d3NumberFormat);
+
   return formatValue(
-    isNumber && typeof value === 'number' && Math.abs(value) < 1
-      ? smallNumberFormatter
-      : formatter,
+    useSmallNumberFormatter ? smallNumberFormatter : formatter,
     value,
     rowData,
     currencyCodeColumn,
