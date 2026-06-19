@@ -69,6 +69,17 @@ export function allMetricsAdditive(metrics: QueryFormMetric[]): boolean {
  * dimensions. The empty `{rows: [], columns: []}` combination is the grand
  * total. Every level is then queried independently so the database computes the
  * metric at that granularity (see SIP.md), rather than re-aggregating cells.
+ *
+ * Only the levels actually displayed are emitted (a query-count optimization):
+ * a level whose prefix is shorter than the full dimension list is a
+ * total/subtotal that is queried only when the corresponding toggle is on. The
+ * mapping mirrors TableRenderers exactly (display orientation, post-transpose):
+ *   - rows fully collapsed (`[]`)        -> bottom "Total" row    -> colTotals
+ *   - columns fully collapsed (`[]`)     -> right "Total" column  -> rowTotals
+ *   - intermediate row prefix            -> row subtotal          -> rowSubTotals
+ *   - intermediate column prefix         -> column subtotal       -> colSubTotals
+ * A full-length prefix (the leaf level) is always emitted; when a dimension
+ * list is empty, `[]` *is* the full level and is therefore always kept.
  */
 export default function buildGroupbyCombinations(
   formData: PivotTableQueryFormData,
@@ -78,15 +89,33 @@ export default function buildGroupbyCombinations(
 
   [rows, columns] = formData.transposePivot ? [columns, rows] : [rows, columns];
 
-  const rowsCombinations = [[] as QueryFormColumn[], ...rows.map((_, i) => rows.slice(0, i + 1))];
+  const rowsCombinations = [
+    [] as QueryFormColumn[],
+    ...rows.map((_, i) => rows.slice(0, i + 1)),
+  ];
   const colsCombinations = [
     [] as QueryFormColumn[],
     ...columns.map((_, i) => columns.slice(0, i + 1)),
   ];
 
-  let groupbyCombinations: Groupby[] = rowsCombinations.flatMap(row =>
-    colsCombinations.map(col => ({ rows: row, columns: col })),
-  );
+  const rowPrefixNeeded = (prefix: QueryFormColumn[]): boolean => {
+    if (prefix.length === rows.length) return true; // leaf / full level
+    if (prefix.length === 0) return !!formData.colTotals; // bottom Total row
+    return !!formData.rowSubTotals; // row subtotal
+  };
+  const colPrefixNeeded = (prefix: QueryFormColumn[]): boolean => {
+    if (prefix.length === columns.length) return true; // leaf / full level
+    if (prefix.length === 0) return !!formData.rowTotals; // right Total column
+    return !!formData.colSubTotals; // column subtotal
+  };
+
+  let groupbyCombinations: Groupby[] = rowsCombinations
+    .filter(rowPrefixNeeded)
+    .flatMap(row =>
+      colsCombinations
+        .filter(colPrefixNeeded)
+        .map(col => ({ rows: row, columns: col })),
+    );
 
   if (formData.combineMetric) {
     if (formData.metricsLayout === MetricsLayoutEnum.ROWS) {

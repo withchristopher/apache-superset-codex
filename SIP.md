@@ -284,8 +284,13 @@ rendering):
   gates the GROUPING SETS single-query collapse; engines without it keep the
   per-level multi-query fallback.
 - **Combination pruning** — `buildGroupbyCombinations` only emits the rollup
-  levels for totals/subtotals the user actually enabled, cutting query count
-  with no second code path. *(in progress)*
+  levels for totals/subtotals the user actually enabled (mapping mirrors
+  TableRenderers: `colTotals`→bottom row, `rowTotals`→right column,
+  `rowSubTotals`/`colSubTotals`→intermediate prefixes; a full/empty-dimension
+  prefix is always the leaf and is kept). Cuts query count with no second code
+  path, e.g. all totals off collapses `(R+1)×(C+1)` queries to a single leaf
+  query. Unit-tested; all-totals-on is unchanged so phase-2 behavior is
+  preserved.
 
 Remaining phase-3 wiring (design): the additive fast-path (single query +
 client-side summation of leaves to synthesise the rollup levels, keeping one

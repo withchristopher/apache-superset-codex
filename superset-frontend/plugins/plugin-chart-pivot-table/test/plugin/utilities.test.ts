@@ -298,3 +298,64 @@ test('allMetricsAdditive: all additive vs any non-additive vs empty', () => {
   expect(allMetricsAdditive([sum, ratio])).toBe(false);
   expect(allMetricsAdditive([])).toBe(false);
 });
+
+test('pruning: with all totals/subtotals off, only the leaf level is queried', () => {
+  const combinations = buildGroupbyCombinations({
+    ...baseFormData,
+    colTotals: false,
+    rowTotals: false,
+    colSubTotals: false,
+    rowSubTotals: false,
+  });
+  expect(combinations).toEqual([
+    { rows: ['row1', 'row2'], columns: ['col1', 'col2'] },
+  ]);
+});
+
+test('pruning: totals on, subtotals off -> only full + fully-collapsed prefixes', () => {
+  const combinations = buildGroupbyCombinations({
+    ...baseFormData,
+    colTotals: true,
+    rowTotals: true,
+    colSubTotals: false,
+    rowSubTotals: false,
+  });
+  // 2 row prefixes ([], full) x 2 col prefixes ([], full) = 4
+  expect(combinations).toEqual([
+    { rows: [], columns: [] },
+    { rows: [], columns: ['col1', 'col2'] },
+    { rows: ['row1', 'row2'], columns: [] },
+    { rows: ['row1', 'row2'], columns: ['col1', 'col2'] },
+  ]);
+});
+
+test('pruning: row subtotals on, everything else off', () => {
+  const combinations = buildGroupbyCombinations({
+    ...baseFormData,
+    colTotals: false,
+    rowTotals: false,
+    colSubTotals: false,
+    rowSubTotals: true,
+  });
+  // row prefixes: intermediate [row1] + full [row1,row2]; col prefixes: full only
+  expect(combinations).toEqual([
+    { rows: ['row1'], columns: ['col1', 'col2'] },
+    { rows: ['row1', 'row2'], columns: ['col1', 'col2'] },
+  ]);
+});
+
+test('pruning: empty column dims keep the [] (leaf) level regardless of rowTotals', () => {
+  const combinations = buildGroupbyCombinations({
+    ...baseFormData,
+    groupbyColumns: [],
+    colTotals: true, // bottom total row
+    rowTotals: false,
+    colSubTotals: false,
+    rowSubTotals: false,
+  });
+  // columns is empty so [] is the leaf level (always kept); rows: [] (colTotals) + full
+  expect(combinations).toEqual([
+    { rows: [], columns: [] },
+    { rows: ['row1', 'row2'], columns: [] },
+  ]);
+});
