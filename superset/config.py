@@ -416,6 +416,9 @@ APP_ICON = "/static/assets/images/superset-logo-horiz.png"
 # or you can specify a full URL e.g. 'https://foo.bar'
 LOGO_TARGET_PATH = None
 
+# When True, hide the navbar logo.
+HIDE_NAVBAR_LOGO = False
+
 # Specify tooltip that should appear when hovering over the App Icon/Logo
 LOGO_TOOLTIP = ""
 
