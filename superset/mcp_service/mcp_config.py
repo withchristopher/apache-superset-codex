@@ -214,6 +214,7 @@ MCP_CACHE_CONFIG: Dict[str, Any] = {
         "generate_dashboard",
         "generate_chart",
         "update_chart",
+        "update_dashboard",
     ],
 }
 
