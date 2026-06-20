@@ -48,6 +48,7 @@ export const PermissionsField = ({
   <FormItem name="rolePermissions" label={t('Permissions')}>
     <AsyncSelect
       mode="multiple"
+      autoClearSearchValue
       name="rolePermissions"
       placeholder={t('Select permissions')}
       options={(filterValue, page, pageSize) =>
@@ -65,6 +66,7 @@ export const UsersField = ({ addDangerToast, loading }: UsersFieldProps) => (
     <AsyncSelect
       name="roleUsers"
       mode="multiple"
+      autoClearSearchValue
       placeholder={t('Select users')}
       options={(filterValue, page, pageSize) =>
         fetchUserOptions(filterValue, page, pageSize, addDangerToast)
@@ -82,6 +84,7 @@ export const GroupsField = ({
   <FormItem name="roleGroups" label={t('Groups')}>
     <AsyncSelect
       mode="multiple"
+      autoClearSearchValue
       name="roleGroups"
       placeholder={t('Select groups')}
       options={(filterValue, page, pageSize) =>
