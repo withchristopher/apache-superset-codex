@@ -19,7 +19,10 @@
 import {
   ChartProps,
   DataRecord,
+  ensureIsArray,
   extractTimegrain,
+  getColumnLabel,
+  getMetricLabel,
   getTimeFormatter,
   getTimeFormatterForGranularity,
   QueryFormData,
@@ -28,7 +31,13 @@ import {
 } from '@superset-ui/core';
 import { GenericDataType } from '@apache-superset/core/common';
 import { getColorFormatters } from '@superset-ui/chart-controls';
-import { DateFormatter } from '../types';
+import { DateFormatter, PivotTableQueryFormData, QueryData } from '../types';
+import buildGroupbyCombinations, {
+  additiveReducerFor,
+  allMetricsAdditive,
+  RollupReducer,
+  synthesizeAdditiveLevels,
+} from './utilities';
 
 const { DATABASE_DATETIME } = TimeFormats;
 
@@ -88,12 +97,53 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     emitCrossFilters,
     theme,
   } = chartProps;
-  const {
-    data,
-    colnames,
-    coltypes,
-    detected_currency: detectedCurrency,
-  } = queriesData[0];
+  const groupbyCombinations = buildGroupbyCombinations(
+    formData as PivotTableQueryFormData,
+  );
+  const metricsArr = ensureIsArray(formData.metrics);
+  let data: QueryData[];
+  if (allMetricsAdditive(metricsArr)) {
+    // Additive fast-path: a single full-detail query was issued; synthesize
+    // each rollup level by reducing the leaf rows on the client (see SIP.md).
+    const leafRows = queriesData[0].data;
+    const metricReducers: Record<string, RollupReducer> = {};
+    metricsArr.forEach(metric => {
+      metricReducers[getMetricLabel(metric)] = additiveReducerFor(metric);
+    });
+    const labelLevels = groupbyCombinations.map(combination => ({
+      rows: combination.rows.map(getColumnLabel),
+      columns: combination.columns.map(getColumnLabel),
+    }));
+    const synthesized = synthesizeAdditiveLevels(
+      leafRows,
+      labelLevels,
+      metricReducers,
+    );
+    data = groupbyCombinations.map((combination, i) => ({
+      data: synthesized[i] as DataRecord[],
+      groupby: combination,
+    }));
+  } else {
+    // Non-additive: each query is one rollup level; zip results back to their
+    // combination (same order as buildQuery).
+    const queryLength = Math.min(
+      queriesData.length,
+      groupbyCombinations.length,
+    );
+    data = [];
+    for (let i = 0; i < queryLength; i += 1) {
+      data.push({
+        data: queriesData[i].data,
+        groupby: groupbyCombinations[i],
+      });
+    }
+  }
+  // The full-granularity query has the most colnames -- use it for column/type
+  // metadata and formatters.
+  const mainQuery = queriesData.reduce((main, query) =>
+    query.colnames.length > main.colnames.length ? query : main,
+  );
+  const { colnames, coltypes, detected_currency: detectedCurrency } = mainQuery;
   const {
     groupbyRows,
     groupbyColumns,
@@ -101,7 +151,6 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     tableRenderer,
     colOrder,
     rowOrder,
-    aggregateFunction,
     transposePivot,
     combineMetric,
     rowSubtotalPosition,
@@ -136,7 +185,7 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
           if (granularity) {
             // time column use formats based on granularity
             formatter = getTimeFormatterForGranularity(granularity);
-          } else if (isNumeric(temporalColname, data)) {
+          } else if (isNumeric(temporalColname, mainQuery.data)) {
             formatter = getTimeFormatter(DATABASE_DATETIME);
           } else {
             // if no column-specific format, print cell as is
@@ -154,7 +203,7 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     );
   const metricColorFormatters = getColorFormatters(
     conditionalFormatting,
-    data,
+    mainQuery.data,
     theme,
   );
 
@@ -170,7 +219,6 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     tableRenderer,
     colOrder,
     rowOrder,
-    aggregateFunction,
     transposePivot,
     combineMetric,
     rowSubtotalPosition,

@@ -1,0 +1,419 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+# [SIP] Correct totals and subtotals for non-additive metrics in Table and Pivot Table charts
+
+> **Status:** DRAFT / prototype development zone. This document and the
+> accompanying failing tests + POC live together on a draft PR so the proposal
+> and the implementation can be rounded out in lockstep. The SIP will be
+> numbered by a committer upon acceptance. See
+> [SIP-0](https://github.com/apache/superset/issues/5602) for the process.
+
+## Motivation
+
+Superset computes the totals and subtotals shown in Table and Pivot Table
+charts by **re-aggregating values that have already been aggregated** (or by
+running a total query that ignores the metric's post-processing). This is
+correct only for *additive* metrics (`SUM`, `COUNT`, `MIN`, `MAX`). For any
+**non-additive** metric, the result is mathematically wrong:
+
+- A ratio metric `SUM(actual) / SUM(target)` shows a total equal to the sum of
+  the per-row ratios instead of `SUM(all actual) / SUM(all target)`.
+- A `COUNT(DISTINCT user)` shows a total equal to the sum of the per-group
+  distinct counts (double-counting anything that appears in more than one
+  group) instead of the true distinct count over all rows.
+- `AVG`, `MEDIAN`, `PERCENTILE`, `STDDEV` and friends are summed, which is
+  meaningless.
+- Superset's own "Percentage metrics" / contribution columns are summed in the
+  Table chart summary row, producing totals that are not even on a percentage
+  scale.
+
+This is one of the longest-standing and most-reported correctness gaps in the
+charting layer. It blocks migrations from Tableau / Power BI / Qlik / Excel,
+all of which get this right, and it spans **both** the Pivot Table and the
+regular Table chart, which today use two completely different (and separately
+broken) total mechanisms.
+
+### Consolidated issues this SIP resolves
+
+Tracking / bug reports (consolidated under
+[#25747](https://github.com/apache/superset/issues/25747) as the canonical
+issue):
+
+- [#25747](https://github.com/apache/superset/issues/25747) — Pivot table
+  totals wrong for non-additive (ratio) metrics *(canonical / umbrella)*
+- [#32260](https://github.com/apache/superset/issues/32260) — completion
+  percentage subtotal/sum wrong in pivot table
+- [#38674](https://github.com/apache/superset/issues/38674) — pivot Grand Total
+  sums percentages instead of recomputing the ratio metric
+- [#36165](https://github.com/apache/superset/issues/36165) — Table summary
+  value wrong for `COUNT_DISTINCT`
+- [#37627](https://github.com/apache/superset/issues/37627) — Table percentage
+  metrics column shows zeros with "Show summary" enabled *(still repros on
+  6.0.0)*
+- [#34350](https://github.com/apache/superset/issues/34350),
+  [#34425](https://github.com/apache/superset/issues/34425),
+  [#34426](https://github.com/apache/superset/issues/34426) — Table percentage
+  totals wrong / page-scoped
+
+Design discussion: [#29297](https://github.com/apache/superset/discussions/29297)
+("Totals in Table Charts" — the original root-cause analysis).
+
+Out of scope (tracked separately, NOT addressed here): the v6
+`DISTINCT_AVG` / `DISTINCT_SUM` SQL-generation regression
+([#39223](https://github.com/apache/superset/issues/39223)), the per-metric
+aggregation *configuration* feature ([SIP-179
+/ #34245](https://github.com/apache/superset/issues/34245),
+[#38036](https://github.com/apache/superset/discussions/38036)), the
+Subtotal→Subvalue labeling change
+([#35089](https://github.com/apache/superset/issues/35089)), and the AntV S2
+pivot rewrite ([SIP-205 / #38586](https://github.com/apache/superset/issues/38586)).
+
+## The core principle
+
+> **Totals and subtotals must be computed by the database at the grouping
+> granularity they are displayed for. They must never be derived on the client
+> (or in post-processing) by re-aggregating already-aggregated cells.**
+
+The key insight that keeps this tractable:
+
+> **A metric defined as a SQL aggregate expression is correct at *any* grouping
+> level if the same expression is evaluated grouped at that level.**
+
+`SUM(actual)/SUM(target)` grouped by nothing is the correct grand-total ratio;
+`COUNT(DISTINCT user)` grouped by `region` is the correct per-region distinct
+count. We do **not** need to parse the metric, infer a weighted-sum heuristic,
+or build a formula mini-language. We only need to stop summing cells and ask the
+database for the total/subtotal rows.
+
+### How the reported cases partition
+
+- **Bucket A — SQL-aggregate metrics** (the large majority: ratios, `AVG`,
+  `COUNT_DISTINCT`, percentiles…). Fully solved by computing each
+  total/subtotal level in the database. No per-metric special-casing.
+- **Bucket B — post-processing metrics** (Superset "Percentage metrics" /
+  contribution columns, window/cumulative ops). These are not SQL aggregates;
+  their totals need bespoke logic (recompute from the re-aggregated base, or
+  display as `100%` / blank, never a raw sum). This is a small, bounded set.
+
+## Proposed Change
+
+A single, shared, **server-side** total/subtotal mechanism used by both the
+Table and Pivot Table charts, replacing the client-side pivot aggregation and
+the naive `df.sum()` table summary.
+
+### 1. Detect additivity (fast path)
+
+Introduce a first-class notion of metric additivity, reusing/extending the
+existing `ADDITIVE_METRIC_TYPES` set (`superset/connectors/sqla/models.py`) and
+the aggregate list in `METRIC_MAP_TYPE` (`superset/utils/core.py`):
+
+- Additive aggregates: `SUM`, `COUNT`, `MIN`, `MAX` (and additive composites
+  thereof).
+- Everything else (`AVG`, `COUNT_DISTINCT`, `MEDIAN`, `PERCENTILE`, `STDDEV`,
+  ratio/composite SQL, post-processing metrics) is non-additive.
+
+If **every** metric in a request is additive, the current cheap aggregation
+path is already correct — keep it. We only pay for DB rollups when a
+non-additive metric is present. This neutralizes most of the performance
+objection.
+
+### 2. Compute non-additive totals/subtotals via GROUPING SETS (single query)
+
+When non-additive metrics are present, the query layer emits the required
+rollup levels using native SQL `GROUPING SETS` (equivalently `ROLLUP` for the
+pivot subtotal hierarchy), with `GROUPING()` markers so each returned row can be
+attributed to its level. One scan computes the detail cells, every subtotal
+level, and the grand total together.
+
+For a pivot with row dims `R = [r1, r2]` and column dims `C = [c1]`, the grouping
+sets are the rollup hierarchy: `{r1,r2,c1}` (cells), `{r1,c1}`, `{c1}`,
+`{r1,r2}`, `{r1}`, `{}` (grand total).
+
+### 3. Multi-query fallback where GROUPING SETS is unsupported
+
+Add a `supports_grouping_sets` capability to the DB engine spec (following the
+existing `supports_*` / `allows_*` idiom in `superset/db_engine_specs/base.py`,
+defaulting to `False`, overridden `True` for Postgres, BigQuery, Snowflake,
+Trino/Presto, MySQL 8+, etc.). Where unsupported (e.g. SQLite, older MySQL),
+fall back to issuing one query per grouping level behind the same interface, so
+chart code is agnostic. This is the approach prototyped in
+[PR #34592](https://github.com/apache/superset/pull/34592) for the pivot table;
+we generalize it as the fallback rather than the primary path.
+
+### 4. Post-processing metrics (Bucket B)
+
+Percentage/contribution column totals are recomputed from the re-aggregated
+base metric (or shown as `100%` / blank), never summed. The Table chart summary
+path (`superset/common/query_context_processor.py`) stops doing a blind
+`df[col].sum()` over every numeric column.
+
+### 5. Unify Table and Pivot Table
+
+Both charts route through the same total/subtotal computation so that
+[#37627](https://github.com/apache/superset/issues/37627) (table) and
+[#25747](https://github.com/apache/superset/issues/25747) (pivot) cannot drift
+apart again.
+
+### 6. Product decision: what does a total *mean* under a row limit / pagination?
+
+Proposed default: totals reflect the **full filtered dataset at the grouping
+level** (matching Tableau / Power BI / Excel and the expectation in
+[#34425](https://github.com/apache/superset/issues/34425)), with an honest
+label/tooltip clarifying it is computed over all matching rows, not the
+displayed page. A "displayed rows only" mode can be offered later as a
+non-default; it should not block this SIP. *(Open for discussion in #29297.)*
+
+## New or Changed Public Interfaces
+
+- **DB engine spec:** new `supports_grouping_sets: bool` capability flag
+  (default `False`) on `BaseEngineSpec`, overridden per dialect.
+- **Query layer** (`superset/models/helpers.py`, `query_object`,
+  `query_context_processor`): ability to request and emit grouping-set rollups
+  and to attribute returned rows to a grouping level.
+- **Metric metadata:** a derived `is_additive` notion exposed at query-build
+  time (no required user-facing field; inferred from the aggregate).
+- **Pivot Table plugin** (`plugin-chart-pivot-table`): consumes server-computed
+  subtotals/totals; the client-side `aggregateFunction` control is removed (its
+  semantics are subsumed). React-pivottable no longer computes margins.
+- **Table plugin** (`plugin-chart-table`): summary row sourced from the shared
+  mechanism; behavior of the `show_totals` totals query changes for
+  non-additive / percentage columns.
+- No new REST endpoints.
+
+## New dependencies
+
+None anticipated. `GROUPING SETS` / `ROLLUP` are standard SQL emitted through
+the existing SQLAlchemy/engine-spec layer; no new npm or PyPI packages.
+
+## Migration Plan and Compatibility
+
+- No database (metadata) migration required.
+- Behavioral change: totals/subtotals for non-additive metrics will change from
+  (wrong) sums to correct values. This is a correctness fix but is technically a
+  visible change in displayed numbers; it will be called out in `UPDATING.md`.
+- Additive-only charts are unaffected (fast path).
+- Engines without `GROUPING SETS` transparently use the multi-query fallback;
+  the only difference is query count/cost, not results.
+- Consider a feature flag for the rollout if we want an opt-in period.
+
+## Validation / TDD test matrix
+
+The POC is developed test-first: each known reported case is encoded as a
+failing test, and the implementation drives them green. The matrix below is the
+acceptance set (to be expanded as cases surface).
+
+**POC progress (Table chart, phase 1).** CI on this branch confirmed the key
+finding: the Table chart grand total is produced by a separate no-GROUP-BY
+query, so **Bucket A is already correct for the Table chart** (the ratio
+grand-total test passes; it differs from the sum of per-group ratios). The only
+Table-chart defect was **Bucket B**, and it was purely in the frontend:
+`plugin-chart-table/buildQuery.ts` built the `show_totals` query with
+`post_processing=[]`, dropping the `contribution` op behind percent metrics so
+the summary cell came back empty (#37627). The POC retains post-processing on
+that query (the total's contribution to itself is 100%). Pivot subtotals
+(Bucket A, rows 1/3) remain for phase 2 and are the cases that need the
+multi-query / GROUPING SETS rollup.
+
+**POC progress (Pivot table, phase 2 — engineering complete, pending in-app
+verification).** The full multi-query rewrite is implemented and all 60 pivot
+unit tests pass: `buildQuery` emits one query per rollup level; `transformProps`
+zips each result with its level into `QueryData[]` and selects the
+longest-`colnames` result as the detail "mainQuery"; `PivotTableChart` tags each
+record with the level that produced it; `react-pivottable`'s `PivotData` no
+longer aggregates — a `cellValue` passthrough stores the DB-computed value and
+`processRecord` drops it into the single matching slot
+(`allTotal`/`rowTotals`/`colTotals`/`tree`) by key length; the `aggregateFunction`
+control is removed and totals are labelled "Total". Remaining: in-app visual
+verification (the `verify` flow) before this is merge-ready.
+
+**In-app verification (2026-06-18).** Brought up the docker dev stack, created a
+pivot on `birth_names` (rows = `state`, metric = `SUM(CASE WHEN state='CA' THEN
+num ELSE 0 END)/SUM(num)`, metric on columns, totals on), and inspected it
+headlessly (Playwright, `bypassCSP`).
+- Data layer (chart-data API): the grand-total rollup query returns **0.1115**
+  (correct `SUM/SUM`), versus the naive sum of per-state ratios **1.0000** the
+  old pivot showed. Confirmed against the live backend.
+- Render: the body cells and the **bottom "Total" row are correct (11%)** -- the
+  headline non-additive dimension-total fix works end to end.
+- **Gap found and fixed:** with the metric on the column axis, the right-hand
+  "Total" column and the grand-total corner initially rendered **`null`** -- the
+  *metric-collapse* total axis (`rowTotals`/`allTotal`), which no rollup level
+  feeds because `METRIC_KEY` is always present on one axis (no record has an
+  empty colKey). Fix: tag records with `__metricKey` and, when an axis holds
+  only the metric, mirror the value into the opposite total axis and `allTotal`.
+  Re-verified in-app: the Total column and corner now show **11%** (correct),
+  not null. Guarded by a deterministic `TableRenderer` test. All four total
+  regions (cells, bottom Total row, right Total column, corner) are now correct
+  for the non-additive ratio metric -- the full subject of
+  #25747/#32260/#36165/#38674.
+
+Sequencing note: the POC runs the multi-query path for **all** metrics
+(correct for additive metrics too — DB sums equal client sums), trading extra
+queries for correctness-first simplicity. The **additivity gate** (keep the
+single-query + pandas-margins path when every metric is additive) and the
+**GROUPING SETS** single-query collapse are both deferred to phase 3 as
+performance optimizations, not correctness needs.
+
+**POC progress (phase 3 — performance, in progress).** Foundations landed (each
+pure, tested, and inert until wired, so zero risk to the verified phase-2
+rendering):
+- **Additivity detection** — `isAdditiveMetric` / `allMetricsAdditive` in
+  `plugin/utilities.ts`: SIMPLE metrics aggregating `SUM`/`COUNT`/`MIN`/`MAX` are
+  additive; SQL/adhoc and saved-metric references are conservatively
+  non-additive (aggregate unknown from form data). This is the gate for the
+  single-query additive fast-path.
+- **`supports_grouping_sets` engine capability** — on `BaseEngineSpec` (default
+  `False`), opted into by Postgres, BigQuery, Snowflake, and Presto/Trino. This
+  gates the GROUPING SETS single-query collapse; engines without it keep the
+  per-level multi-query fallback.
+- **Combination pruning** — `buildGroupbyCombinations` only emits the rollup
+  levels for totals/subtotals the user actually enabled (mapping mirrors
+  TableRenderers: `colTotals`→bottom row, `rowTotals`→right column,
+  `rowSubTotals`/`colSubTotals`→intermediate prefixes; a full/empty-dimension
+  prefix is always the leaf and is kept). Cuts query count with no second code
+  path, e.g. all totals off collapses `(R+1)×(C+1)` queries to a single leaf
+  query. Unit-tested; all-totals-on is unchanged so phase-2 behavior is
+  preserved.
+
+- **Additive fast-path (landed).** When `allMetricsAdditive`, `buildQuery`
+  emits a single full-detail leaf query and `transformProps` synthesises every
+  rollup level by grouping+reducing the leaf rows
+  (`synthesizeAdditiveLevels`: sum for SUM/COUNT, min/max for MIN/MAX). This
+  restores the historical single-query behaviour for additive pivots while the
+  DB-computed multi-query path stays for non-additive metrics; `PivotData` keeps
+  one placement-based path (synthesised levels are shaped identically to queried
+  ones). Unit-tested (buildQuery emits 1 query; transformProps synthesises the
+  grand/leaf levels).
+
+**GROUPING SETS collapse (phase 3b — primitives landed, integration pending).**
+For the non-additive multi-query path, when the datasource engine reports
+`supports_grouping_sets`, the N per-level queries can be collapsed into one
+`GROUPING SETS` query so the database computes every level in a single scan.
+
+Landed (tested, engine-agnostic SQL primitives in
+`superset/common/grouping_sets.py`):
+- `grouping_sets_clause(groups)` → `GROUP BY GROUPING SETS ((a, b), (a), ())`
+  from the rollup column groups (compiled and asserted on the Postgres dialect).
+- `grouping_id_column(col, label)` → `GROUPING(col) AS label`, the per-column
+  marker (`0` = grouped at this row's level, `1` = rolled up) used to attribute
+  each returned row to its rollup level.
+
+Remaining integration (the core query-path change, flagged for the #29297 design
+review before building):
+1. Carry the rollup groups into the query context — either a new query-object
+   `grouping_sets` field (frontend emits one query) or backend detection of the
+   N-query rollup pattern.
+2. In the SQLA query builder (`models/helpers.py get_sqla_query`), when the
+   engine `supports_grouping_sets`, emit the `GROUPING SETS` group-by plus the
+   `GROUPING()` marker columns instead of a plain `GROUP BY`.
+3. Split the single result back into per-level `QueryData[]` using the markers,
+   feeding the existing placement-based `PivotData` unchanged.
+4. Fall back to the per-level multi-query path on engines without the
+   capability. No correctness change — purely fewer scans.
+
+Original (superseded) notes for reference:
+
+**POC progress (Pivot table, phase 2 — superseded by the above).** The pivot computes
+totals via pandas `pivot_table(margins=True)`, which re-aggregates
+already-aggregated cells, so every non-additive subtotal/total is wrong. Phase 2
+adopts the rollup-query approach prototyped in #34592:
+`plugin/utilities.ts::buildGroupbyCombinations` enumerates each rollup level (a
+prefix of row dims × a prefix of column dims; grand total = `{rows:[],
+columns:[]}`), and `buildQuery` issues one query per level so the database
+computes each total at its own granularity. Adopted so far (with tests):
+`buildGroupbyCombinations` + the `Groupby` type.
+
+Two refinements over #34592, both to address the performance concern that
+stalled it:
+1. **Additivity gate** — emit the rollup queries only when totals/subtotals are
+   enabled *and* a non-additive metric is present; additive-only pivots keep the
+   single-query + pandas-margins path unchanged (margins are correct for sums).
+2. **GROUPING SETS** (phase 3) collapses the N rollup queries into one scan
+   where the engine supports it; the per-level queries become the fallback.
+
+Coupling note: `buildGroupbyCombinations` orders the grand-total level first and
+full-detail last, so `buildQuery` and `transformProps` must change together —
+`transformProps` reads the full-detail level for cells and places each other
+level's result into its subtotal/total slot. That assembly is the remaining
+phase-2 work.
+
+**Remaining phase-2 work (the rendering-layer change).** Adopting the rest of
+#34592, in dependency order:
+1. `types.ts`: add a `QueryData` type (`{ data: DataRecord[]; groupby: Groupby }`).
+2. `buildQuery.ts`: emit one query object per rollup combination — gated on the
+   **additivity check** (additive-only pivots keep the single-query path).
+3. `transformProps.ts`: assemble `QueryData[]` (zip each query result with its
+   combination), and select the longest-`colnames` result as the detail
+   "mainQuery" for cell columns / coltypes / color formatters.
+4. `react-pivottable/utilities.js` (**the hard part, ~400 lines**): the
+   `PivotData` aggregator must read each rollup level's pre-computed rows for
+   its subtotals/grand total instead of re-aggregating cells client-side.
+5. `react-pivottable/TableRenderers.jsx`: render those pre-computed totals.
+
+Items 4–5 are the rewrite that stalled #34592 and require app-level visual
+verification (the `verify` flow), not just unit tests, before they can be
+trusted. Recommended to land them only after the #29297 design call confirms the
+multi-query-per-level approach (vs. waiting for the GROUPING SETS path), to
+avoid a second rewrite. The `buildGroupbyCombinations` foundation and the
+Table-chart fix are independent of that decision and already in place.
+
+| # | Source issue | Chart | Metric / aggregate | Expected total behavior |
+|---|---|---|---|---|
+| 1 | #25747 / #32260 / #38674 | Pivot | ratio `SUM(a)/SUM(b)` | grand total & subtotals = `SUM(a)/SUM(b)` at that level, not Σ(ratios) |
+| 2 | #36165 | Table | `COUNT(DISTINCT x)` | summary = distinct count over all rows, not Σ(per-group counts) |
+| 3 | — | Pivot | `AVG(x)` | subtotal/total = `AVG` over the level's rows, not mean-of-means |
+| 4 | #37627 / #34350 | Table | Percentage metric (contribution) | summary recomputed on % scale, not Σ(percentages) / zeros |
+| 5 | #34425 | Table | percentage under pagination/row limit | total over full filtered dataset, label clarifies scope |
+| 6 | regression guard | both | all-additive (`SUM`,`COUNT`) | unchanged from current correct behavior, no extra queries |
+| 7 | capability | both | non-additive on engine w/o GROUPING SETS | multi-query fallback yields identical results |
+
+## Prior art / existing attempts
+
+- [PR #34592](https://github.com/apache/superset/pull/34592)
+  "fix(pivot-table): Correct totals for non-additive metrics" — implements the
+  multi-query (one query per groupby combination) approach for the pivot table.
+  Note it is **entirely frontend**: `buildQuery.ts` emits one query object per
+  groupby combination (via a new `plugin/utilities.ts::buildGroupbyCombinations`)
+  and the existing multi-query machinery runs them as separate queries; there is
+  no backend change. This maps precisely onto our **fallback** path. We adopt
+  `buildGroupbyCombinations` (and its `utilities.test.ts`) as salvage, use the
+  buildQuery/transformProps changes as reference, and add the single-query
+  GROUPING SETS primary path plus Table-chart coverage on top.
+  No other open PR implements a fix (#38213 is the SIP-179 config feature;
+  #30903 is tangential).
+
+## Rejected Alternatives
+
+- **Formula-aware engine / metric mini-language** (proposed in #25747,
+  #29297). Unnecessary for SQL-aggregate metrics — evaluating the same
+  expression at the target grouping is exact — and fragile for arbitrary user
+  SQL. Reserved (in reduced form) only for Bucket B post-processing metrics.
+- **One query per grouping combination as the primary mechanism**
+  (PR #34592). Correct but `O(2^(R+C))` queries/scans; kept only as the
+  fallback where GROUPING SETS is unavailable.
+- **Client-side re-aggregation done "more cleverly"** (weighted sums, etc.).
+  Cannot recover information destroyed by the first aggregation (e.g. distinct
+  counts); fundamentally cannot be correct.
+- **New rendering engine (AntV S2 — SIP-205 / #38586).** Routes around the
+  problem but still needs correct data from the backend; orthogonal to this fix
+  and parked behind the Extensions project.
+- **Cosmetic relabeling only** (rename Total→Summary, Subtotal→Subvalue — the
+  resolution reached in #29297 and #35089). Useful for honesty about scope but
+  does not fix the numbers; complementary, not a substitute.

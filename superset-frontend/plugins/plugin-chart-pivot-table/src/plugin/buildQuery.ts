@@ -23,29 +23,33 @@ import {
   isPhysicalColumn,
   QueryFormColumn,
   QueryFormOrderBy,
+  TimeGranularity,
 } from '@superset-ui/core';
-import { PivotTableQueryFormData } from '../types';
+import { Groupby, PivotTableQueryFormData } from '../types';
+import buildGroupbyCombinations, { allMetricsAdditive } from './utilities';
 
-export default function buildQuery(formData: PivotTableQueryFormData) {
-  const { groupbyColumns = [], groupbyRows = [], extra_form_data } = formData;
-  const time_grain_sqla =
-    extra_form_data?.time_grain_sqla || formData.time_grain_sqla;
-
+// Build the query `columns` for a single rollup level (one prefix of row dims
+// crossed with one prefix of column dims), applying temporal BASE_AXIS handling.
+function getQueryColumns(
+  groupby: Groupby,
+  formData: PivotTableQueryFormData,
+  timeGrainSqla: TimeGranularity | undefined,
+): QueryFormColumn[] {
   // TODO: add deduping of AdhocColumns
-  const columns = Array.from(
+  return Array.from(
     new Set([
-      ...ensureIsArray<QueryFormColumn>(groupbyColumns),
-      ...ensureIsArray<QueryFormColumn>(groupbyRows),
+      ...ensureIsArray<QueryFormColumn>(groupby.rows),
+      ...ensureIsArray<QueryFormColumn>(groupby.columns),
     ]),
   ).map(col => {
     if (
       isPhysicalColumn(col) &&
-      time_grain_sqla &&
+      timeGrainSqla &&
       (formData?.temporal_columns_lookup?.[col] ||
         formData.granularity_sqla === col)
     ) {
       return {
-        timeGrain: time_grain_sqla,
+        timeGrain: timeGrainSqla,
         columnType: 'BASE_AXIS',
         sqlExpression: col,
         label: col,
@@ -54,6 +58,32 @@ export default function buildQuery(formData: PivotTableQueryFormData) {
     }
     return col;
   });
+}
+
+export default function buildQuery(formData: PivotTableQueryFormData) {
+  const { extra_form_data } = formData;
+  const time_grain_sqla =
+    extra_form_data?.time_grain_sqla || formData.time_grain_sqla;
+
+  // Additive fast-path: when every metric is additive (SUM/COUNT/MIN/MAX), the
+  // subtotals/grand totals can be derived by reducing the leaf rows on the
+  // client, so a single full-detail query suffices and transformProps
+  // synthesizes the rollup levels. Non-additive metrics need the database to
+  // compute each rollup level, so we emit one query per level (the combination
+  // order is fixed by buildGroupbyCombinations and relied upon by
+  // transformProps to map each result back to its level). See SIP.md.
+  const additive = allMetricsAdditive(ensureIsArray(formData.metrics));
+  const groupbyCombinations: Groupby[] = additive
+    ? [
+        {
+          rows: ensureIsArray<QueryFormColumn>(formData.groupbyRows),
+          columns: ensureIsArray<QueryFormColumn>(formData.groupbyColumns),
+        },
+      ]
+    : buildGroupbyCombinations(formData);
+  const queriesColumns: QueryFormColumn[][] = groupbyCombinations.map(groupby =>
+    getQueryColumns(groupby, formData, time_grain_sqla),
+  );
 
   return buildQueryContext(formData, baseQueryObject => {
     const { series_limit_metric, metrics, order_desc } = baseQueryObject;
@@ -63,12 +93,10 @@ export default function buildQuery(formData: PivotTableQueryFormData) {
     } else if (Array.isArray(metrics) && metrics[0]) {
       orderBy = [[metrics[0], !order_desc]];
     }
-    return [
-      {
-        ...baseQueryObject,
-        orderby: orderBy,
-        columns,
-      },
-    ];
+    return queriesColumns.map(columns => ({
+      ...baseQueryObject,
+      orderby: orderBy,
+      columns,
+    }));
   });
 }
