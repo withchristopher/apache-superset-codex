@@ -327,6 +327,7 @@ const TablePreview: FC<Props> = ({ dbId, catalog, schema, tableName }) => {
           <div
             css={css`
               flex: 1 1 auto;
+              overflow-x: auto;
             `}
           >
             <AutoSizer disableWidth>
