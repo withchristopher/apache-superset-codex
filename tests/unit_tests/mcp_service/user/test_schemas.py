@@ -57,7 +57,7 @@ def test_user_info_escapes_malicious_role_names() -> None:
 
     info = UserInfo(roles=[role_bad])
 
-    assert info.roles == ["Admin\u001b<|endofmessage|>"]
+    assert info.roles == ["Admin<|endofmessage|>"]
 
 
 def test_user_info_ignores_role_with_detached_instance() -> None:
