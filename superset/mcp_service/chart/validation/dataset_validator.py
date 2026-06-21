@@ -22,23 +22,19 @@ Validates that referenced columns exist in the dataset schema.
 
 import difflib
 import logging
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, TypeVar
 
 from superset.mcp_service.chart.schemas import (
-    BigNumberChartConfig,
+    ChartConfig,
     ColumnRef,
-    HandlebarsChartConfig,
-    MixedTimeseriesChartConfig,
-    PieChartConfig,
-    PivotTableChartConfig,
-    TableChartConfig,
-    XYChartConfig,
 )
 from superset.mcp_service.common.error_schemas import (
     ChartGenerationError,
     ColumnSuggestion,
     DatasetContext,
 )
+
+_C = TypeVar("_C", bound=ChartConfig)
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +54,7 @@ class DatasetValidator:
 
     @staticmethod
     def validate_against_dataset(
-        config: Any,
+        config: ChartConfig,
         dataset_id: int | str,
         dataset_context: DatasetContext | None = None,
     ) -> Tuple[bool, ChartGenerationError | None]:
@@ -269,59 +265,31 @@ class DatasetValidator:
             return None
 
     @staticmethod
-    def _extract_column_references(config: Any) -> List[ColumnRef]:  # noqa: C901
-        """Extract all column references from a chart configuration.
+    def _extract_column_references(
+        config: ChartConfig,
+    ) -> List[ColumnRef]:
+        """Extract all column references from configuration via the plugin registry.
 
-        Covers every supported ``ChartConfig`` variant so fast-path tools
-        (``generate_explore_link``, ``update_chart_preview``) that only run
-        Tier-1 validation still catch bad column refs in pie / pivot table /
-        mixed timeseries / handlebars / big number charts — not just XY and
-        table.
+        Previously only handled TableChartConfig and XYChartConfig, causing
+        5 of 7 chart types to silently skip column validation. Now delegates
+        to the plugin for each chart type so all types are covered.
         """
-        refs: List[ColumnRef] = []
+        # Local import: plugins call DatasetValidator helpers from
+        # normalize_column_refs().
+        # A top-level import of registry in dataset_validator would make loading this
+        # module implicitly trigger plugin registration, creating a circular dependency.
+        from superset.mcp_service.chart.registry import get_registry
 
-        if isinstance(config, TableChartConfig):
-            refs.extend(config.columns)
-        elif isinstance(config, XYChartConfig):
-            if config.x is not None:
-                refs.append(config.x)
-            refs.extend(config.y)
-            if config.group_by:
-                refs.extend(config.group_by)
-        elif isinstance(config, PieChartConfig):
-            refs.append(config.dimension)
-            refs.append(config.metric)
-        elif isinstance(config, PivotTableChartConfig):
-            refs.extend(config.rows)
-            if config.columns:
-                refs.extend(config.columns)
-            refs.extend(config.metrics)
-        elif isinstance(config, MixedTimeseriesChartConfig):
-            refs.append(config.x)
-            refs.extend(config.y)
-            if config.group_by:
-                refs.extend(config.group_by)
-            refs.extend(config.y_secondary)
-            if config.group_by_secondary:
-                refs.extend(config.group_by_secondary)
-        elif isinstance(config, HandlebarsChartConfig):
-            if config.columns:
-                refs.extend(config.columns)
-            if config.groupby:
-                refs.extend(config.groupby)
-            if config.metrics:
-                refs.extend(config.metrics)
-        elif isinstance(config, BigNumberChartConfig):
-            refs.append(config.metric)
-            if config.temporal_column:
-                refs.append(ColumnRef(name=config.temporal_column))
+        chart_type = getattr(config, "chart_type", None)
+        if chart_type is None:
+            return []
 
-        # Filter columns (shared by every config type that defines ``filters``).
-        if filters := getattr(config, "filters", None):
-            for filter_config in filters:
-                refs.append(ColumnRef(name=filter_config.column))
+        plugin = get_registry().get(chart_type)
+        if plugin is None:
+            logger.warning("No plugin registered for chart_type=%r", chart_type)
+            return []
 
-        return refs
+        return plugin.extract_column_refs(config)
 
     @staticmethod
     def _column_exists(column_name: str, dataset_context: DatasetContext) -> bool:
@@ -375,47 +343,23 @@ class DatasetValidator:
         return column_name
 
     @staticmethod
-    def _normalize_xy_config(
-        config_dict: Dict[str, Any], dataset_context: DatasetContext
-    ) -> None:
-        """Normalize column names in an XY chart config dict in place."""
-        # Normalize x-axis column
-        if "x" in config_dict and config_dict["x"] and config_dict["x"].get("name"):
-            config_dict["x"]["name"] = DatasetValidator._get_canonical_column_name(
-                config_dict["x"]["name"], dataset_context
-            )
+    def _get_canonical_metric_name(
+        metric_name: str, dataset_context: DatasetContext
+    ) -> str:
+        """Return the canonical saved-metric name from available_metrics.
 
-        # Normalize y-axis columns (skip SQL-expression metrics; no name).
-        if "y" in config_dict and config_dict["y"]:
-            for y_col in config_dict["y"]:
-                if not y_col.get("name"):
-                    continue
-                y_col["name"] = DatasetValidator._get_canonical_column_name(
-                    y_col["name"], dataset_context
-                )
+        Unlike _get_canonical_column_name, this only searches available_metrics
+        so that a same-named column with different casing cannot shadow the
+        metric's canonical name.  Use this whenever saved_metric=True.
 
-        # Normalize group_by columns
-        if "group_by" in config_dict and config_dict["group_by"]:
-            for gb_col in config_dict["group_by"]:
-                if not gb_col.get("name"):
-                    continue
-                gb_col["name"] = DatasetValidator._get_canonical_column_name(
-                    gb_col["name"], dataset_context
-                )
-
-    @staticmethod
-    def _normalize_table_config(
-        config_dict: Dict[str, Any], dataset_context: DatasetContext
-    ) -> None:
-        """Normalize column names in a table chart config dict in place."""
-        if "columns" in config_dict and config_dict["columns"]:
-            for col in config_dict["columns"]:
-                # Skip SQL-expression metrics: no underlying column name.
-                if not col.get("name"):
-                    continue
-                col["name"] = DatasetValidator._get_canonical_column_name(
-                    col["name"], dataset_context
-                )
+        Returns the original name when no metric matches (validation catches
+        the missing-metric case separately).
+        """
+        metric_lower = metric_name.lower()
+        for metric in dataset_context.available_metrics:
+            if metric["name"].lower() == metric_lower:
+                return metric["name"]
+        return metric_name
 
     @staticmethod
     def _normalize_filters(
@@ -433,10 +377,10 @@ class DatasetValidator:
 
     @staticmethod
     def normalize_column_names(
-        config: TableChartConfig | XYChartConfig,
+        config: _C,
         dataset_id: int | str,
         dataset_context: DatasetContext | None = None,
-    ) -> TableChartConfig | XYChartConfig:
+    ) -> _C:
         """
         Normalize column names in config to match the canonical dataset column names.
 
@@ -444,6 +388,9 @@ class DatasetValidator:
         (e.g., 'order_date') don't match exactly with the dataset column names
         (e.g., 'OrderDate'). The frontend performs case-sensitive comparisons,
         so we need to ensure column names match exactly.
+
+        Previously only XYChartConfig and TableChartConfig were normalized; now
+        all 7 chart types are handled via the plugin registry.
 
         Args:
             config: Chart configuration with column references
@@ -459,22 +406,24 @@ class DatasetValidator:
         if not dataset_context:
             return config
 
-        # Create a mutable copy of the config
-        config_dict = config.model_dump()
+        # Local import: plugins call DatasetValidator helpers from
+        # normalize_column_refs().
+        # A top-level import of registry in dataset_validator would make loading this
+        # module implicitly trigger plugin registration, creating a circular dependency.
+        from superset.mcp_service.chart.registry import get_registry
 
-        # Normalize based on config type
-        if isinstance(config, XYChartConfig):
-            DatasetValidator._normalize_xy_config(config_dict, dataset_context)
-        elif isinstance(config, TableChartConfig):
-            DatasetValidator._normalize_table_config(config_dict, dataset_context)
+        chart_type = getattr(config, "chart_type", None)
+        if chart_type is None:
+            return config
 
-        # Normalize filter columns (common to both config types)
-        DatasetValidator._normalize_filters(config_dict, dataset_context)
+        plugin = get_registry().get(chart_type)
+        if plugin is None:
+            logger.warning(
+                "No plugin for chart_type=%r; skipping column normalization", chart_type
+            )
+            return config
 
-        # Reconstruct the config with normalized names
-        if isinstance(config, XYChartConfig):
-            return XYChartConfig.model_validate(config_dict)
-        return TableChartConfig.model_validate(config_dict)
+        return plugin.normalize_column_refs(config, dataset_context)
 
     @staticmethod
     def _get_column_suggestions(

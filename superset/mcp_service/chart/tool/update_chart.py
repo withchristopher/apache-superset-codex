@@ -471,6 +471,24 @@ async def update_chart(  # noqa: C901
         # config is already a typed ChartConfig | None (validated by Pydantic)
         parsed_config = request.config
 
+        # Normalize column case to match dataset canonical names
+        # (mirrors generate_chart pipeline layer 4)
+        chart_datasource_id = getattr(chart, "datasource_id", None)
+        if parsed_config is not None and chart_datasource_id is not None:
+            from superset.mcp_service.chart.validation.dataset_validator import (
+                DatasetValidator,
+                NORMALIZATION_EXCEPTIONS,
+            )
+
+            try:
+                parsed_config = DatasetValidator.normalize_column_names(
+                    parsed_config, chart_datasource_id
+                )
+            except NORMALIZATION_EXCEPTIONS as e:
+                logger.warning(
+                    "Column normalization failed for chart %s: %s", chart.id, e
+                )
+
         if not request.generate_preview:
             from superset.commands.chart.update import UpdateChartCommand
 
