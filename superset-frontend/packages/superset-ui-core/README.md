@@ -22,21 +22,42 @@ under the License.
 [![Version](https://img.shields.io/npm/v/@superset-ui/core.svg?style=flat)](https://www.npmjs.com/package/@superset-ui/core)
 [![Libraries.io](https://img.shields.io/librariesio/release/npm/%40superset-ui%2Fcore?style=flat)](https://libraries.io/npm/@superset-ui%2Fcore)
 
-Description
+The core package for Apache Superset's frontend. It provides shared utilities,
+types, and abstractions used across all Superset chart plugins and UI components.
+
+Key modules include:
+
+- **query** — Utilities for building and sending queries to the Superset backend
+- **number-format** — Number formatting helpers powered by d3-format
+- **time-format** — Time/date formatting helpers powered by d3-time-format
+- **connection** — HTTP client for communicating with the Superset REST API
+- **translation** — i18n utilities (`t()`, `tn()`) for internationalizing strings
+- **chart** — Base classes and types for building chart plugins
 
 #### Example usage
 
 ```js
-import { xxx } from '@superset-ui/core';
+import { getNumberFormatter, t, makeApi } from '@superset-ui/core';
+
+// Format a number
+const formatter = getNumberFormatter('.2f');
+console.log(formatter(1234.5)); // "1234.50"
+
+// Translate a string
+console.log(t('Hello %s', 'world'));
+
+// Call a Superset API endpoint
+const fetchDashboards = makeApi({ method: 'GET', endpoint: '/api/v1/dashboard' });
 ```
-
-#### API
-
-`fn(args)`
-
-- TBD
 
 ### Development
 
-`@data-ui/build-config` is used to manage the build configuration for this package including babel
-builds, jest testing, eslint, and prettier.
+`@data-ui/build-config` is used to manage the build configuration for this package
+including babel builds, jest testing, eslint, and prettier.
+
+Run tests:
+
+```bash
+cd superset-frontend
+npx jest packages/superset-ui-core
+```
