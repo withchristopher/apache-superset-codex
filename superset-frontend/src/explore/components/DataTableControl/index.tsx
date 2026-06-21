@@ -16,7 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { useMemo, useState, useEffect, useRef, RefObject } from 'react';
+import {
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+  RefObject,
+  useCallback,
+} from 'react';
 import { t } from '@apache-superset/core/translation';
 import { getTimeFormatter, safeHtmlSpan, TimeFormats } from '@superset-ui/core';
 import { css, styled, useTheme } from '@apache-superset/core/theme';
@@ -112,7 +119,7 @@ export const FilterInput = ({
     if (inputRef.current && shouldFocus) {
       inputRef.current.focus();
     }
-  }, []);
+  }, [shouldFocus]);
 
   const theme = useTheme();
   const debouncedChangeHandler = debounce(
@@ -180,25 +187,28 @@ const FormatPickerLabel = styled.span`
 
 const DataTableTemporalHeaderCell = ({
   columnName,
+  columnLabel,
   onTimeColumnChange,
   datasourceId,
   isOriginalTimeColumn,
-  displayLabel,
 }: {
   columnName: string;
+  columnLabel?: string;
   onTimeColumnChange: (
     columnName: string,
     columnType: FormatPickerValue,
   ) => void;
   datasourceId?: string;
   isOriginalTimeColumn: boolean;
-  displayLabel?: string;
 }) => {
   const theme = useTheme();
 
-  const onChange = (e: any) => {
-    onTimeColumnChange(columnName, e.target.value);
-  };
+  const onChange = useCallback(
+    (e: any) => {
+      onTimeColumnChange(columnName, e.target.value);
+    },
+    [columnName, onTimeColumnChange],
+  );
 
   const overlayContent = useMemo(
     () =>
@@ -218,7 +228,7 @@ const DataTableTemporalHeaderCell = ({
           />
         </FormatPickerContainer>
       ) : null,
-    [datasourceId, isOriginalTimeColumn],
+    [datasourceId, isOriginalTimeColumn, onChange],
   );
 
   return datasourceId ? (
@@ -236,11 +246,36 @@ const DataTableTemporalHeaderCell = ({
           onClick={(e: React.MouseEvent<HTMLElement>) => e.stopPropagation()}
         />
       </Popover>
-      {displayLabel ?? columnName}
+      {columnLabel ?? columnName}
     </span>
   ) : (
-    <span>{displayLabel ?? columnName}</span>
+    <span>{columnLabel ?? columnName}</span>
   );
+};
+
+const DataTableHeaderCell = ({
+  columnName,
+  columnLabel,
+}: {
+  columnName: string;
+  columnLabel?: string;
+}) => {
+  // Use label if provided, otherwise use column name
+  // as header
+  const displayText = columnLabel || columnName;
+  if (columnLabel && columnLabel !== columnName) {
+    return (
+      <Popover
+        content={`${t('Column name')}: ${columnName}`}
+        placement="bottomLeft"
+        arrow={{ pointAtCenter: true }}
+      >
+        <span>{displayText}</span>
+      </Popover>
+    );
+  }
+
+  return <span>{displayText}</span>;
 };
 
 export const useFilteredTableData = (
@@ -273,42 +308,42 @@ const timeFormatter = getTimeFormatter(TimeFormats.DATABASE_DATETIME);
 
 export const useTableColumns = (
   colnames?: string[],
+  collabels?: string[],
   coltypes?: GenericDataType[],
   data?: Record<string, any>[],
   datasourceId?: string,
   isVisible?: boolean,
   moreConfigs?: { [key: string]: Partial<Column> },
   allowHTML?: boolean,
-  columnDisplayNames?: Record<string, string>,
 ) => {
   const [originalFormattedTimeColumns, setOriginalFormattedTimeColumns] =
     useState<string[]>(getTimeColumns(datasourceId));
 
-  const onTimeColumnChange = (
-    columnName: string,
-    columnType: FormatPickerValue,
-  ) => {
-    if (!datasourceId) {
-      return;
-    }
-    if (
-      columnType === FormatPickerValue.Original &&
-      !originalFormattedTimeColumns.includes(columnName)
-    ) {
-      const cols = getTimeColumns(datasourceId);
-      cols.push(columnName);
-      setTimeColumns(datasourceId, cols);
-      setOriginalFormattedTimeColumns(cols);
-    } else if (
-      columnType === FormatPickerValue.Formatted &&
-      originalFormattedTimeColumns.includes(columnName)
-    ) {
-      const cols = getTimeColumns(datasourceId);
-      cols.splice(cols.indexOf(columnName), 1);
-      setTimeColumns(datasourceId, cols);
-      setOriginalFormattedTimeColumns(cols);
-    }
-  };
+  const onTimeColumnChange = useCallback(
+    (columnName: string, columnType: FormatPickerValue) => {
+      if (!datasourceId) {
+        return;
+      }
+      if (
+        columnType === FormatPickerValue.Original &&
+        !originalFormattedTimeColumns.includes(columnName)
+      ) {
+        const cols = getTimeColumns(datasourceId);
+        cols.push(columnName);
+        setTimeColumns(datasourceId, cols);
+        setOriginalFormattedTimeColumns(cols);
+      } else if (
+        columnType === FormatPickerValue.Formatted &&
+        originalFormattedTimeColumns.includes(columnName)
+      ) {
+        const cols = getTimeColumns(datasourceId);
+        cols.splice(cols.indexOf(columnName), 1);
+        setTimeColumns(datasourceId, cols);
+        setOriginalFormattedTimeColumns(cols);
+      }
+    },
+    [datasourceId, originalFormattedTimeColumns],
+  );
 
   useEffect(() => {
     if (isVisible) {
@@ -316,72 +351,83 @@ export const useTableColumns = (
     }
   }, [datasourceId, isVisible]);
 
-  return useMemo(
-    () =>
-      colnames && data?.length
-        ? colnames
-            .filter((column: string) => Object.keys(data[0]).includes(column))
-            .map((key, index) => {
-              const colType = coltypes?.[index];
-              const firstValue = data[0][key];
-              const headerLabel = columnDisplayNames?.[key] ?? key;
-              const originalFormattedTimeColumnIndex =
-                colType === GenericDataType.Temporal
-                  ? originalFormattedTimeColumns.indexOf(key)
-                  : -1;
-              const isOriginalTimeColumn =
-                originalFormattedTimeColumns.includes(key);
-              return {
-                // react-table requires a non-empty id, therefore we introduce a fallback value in case the key is empty
-                id: key || String(index),
-                accessor: (row: Record<string, any>) => row[key],
-                Header:
-                  colType === GenericDataType.Temporal &&
-                  typeof firstValue !== 'string' ? (
-                    <DataTableTemporalHeaderCell
-                      columnName={key}
-                      datasourceId={datasourceId}
-                      onTimeColumnChange={onTimeColumnChange}
-                      isOriginalTimeColumn={isOriginalTimeColumn}
-                      displayLabel={headerLabel}
-                    />
-                  ) : (
-                    headerLabel
-                  ),
-                Cell: ({ value }) => {
-                  if (value === true) {
-                    return Constants.BOOL_TRUE_DISPLAY;
-                  }
-                  if (value === false) {
-                    return Constants.BOOL_FALSE_DISPLAY;
-                  }
-                  if (value === null) {
-                    return <CellNull>{Constants.NULL_DISPLAY}</CellNull>;
-                  }
-                  if (
-                    colType === GenericDataType.Temporal &&
-                    originalFormattedTimeColumnIndex === -1 &&
-                    typeof value === 'number'
-                  ) {
-                    return timeFormatter(value);
-                  }
-                  if (typeof value === 'string' && allowHTML) {
-                    return safeHtmlSpan(value);
-                  }
-                  return String(value);
-                },
-                ...moreConfigs?.[key],
-              } as Column;
-            })
-        : [],
-    [
-      colnames,
-      data,
-      coltypes,
-      datasourceId,
-      moreConfigs,
-      originalFormattedTimeColumns,
-      columnDisplayNames,
-    ],
-  );
+  return useMemo(() => {
+    if (!colnames || !data?.length) return [];
+    const firstRow = data[0];
+    // Only keep columns that exist in data
+    const validKeys = new Set(Object.keys(firstRow));
+    // Precompute original index mapping once as filter (below) may realign index on duplicates
+    const colIndexMap = new Map<string, number>();
+    colnames.forEach((col, i) => {
+      if (!colIndexMap.has(col)) {
+        colIndexMap.set(col, i);
+      }
+    });
+    const timeColumnIndexMap = new Map<string, number>();
+    originalFormattedTimeColumns.forEach((col, i) => {
+      if (!timeColumnIndexMap.has(col)) {
+        timeColumnIndexMap.set(col, i);
+      }
+    });
+    return colnames
+      .filter(key => validKeys.has(key))
+      .map((key, index) => {
+        const originalIndex = colIndexMap.get(key);
+        const colType = coltypes?.[originalIndex!];
+        const colLabel = collabels?.[originalIndex!];
+        const firstValue = firstRow[key];
+        const originalFormattedTimeColumnIndex =
+          colType === GenericDataType.Temporal
+            ? (timeColumnIndexMap.get(key) ?? -1)
+            : -1;
+        const isOriginalTimeColumn = timeColumnIndexMap.has(key);
+        return {
+          // react-table requires a non-empty id, therefore we introduce a fallback value in case the key is empty
+          id: key || String(index),
+          accessor: (row: Record<string, any>) => row[key],
+          Header:
+            colType === GenericDataType.Temporal &&
+            typeof firstValue !== 'string' ? (
+              <DataTableTemporalHeaderCell
+                columnName={key}
+                datasourceId={datasourceId}
+                onTimeColumnChange={onTimeColumnChange}
+                isOriginalTimeColumn={isOriginalTimeColumn}
+                columnLabel={colLabel}
+              />
+            ) : (
+              <DataTableHeaderCell columnName={key} columnLabel={colLabel} />
+            ),
+          Cell: ({ value }: { value: any }) => {
+            if (value === true) return Constants.BOOL_TRUE_DISPLAY;
+            if (value === false) return Constants.BOOL_FALSE_DISPLAY;
+            if (value === null) {
+              return <CellNull>{Constants.NULL_DISPLAY}</CellNull>;
+            }
+            if (
+              colType === GenericDataType.Temporal &&
+              originalFormattedTimeColumnIndex === -1 &&
+              typeof value === 'number'
+            ) {
+              return timeFormatter(value);
+            }
+            if (typeof value === 'string' && allowHTML) {
+              return safeHtmlSpan(value);
+            }
+            return String(value);
+          },
+          ...moreConfigs?.[key],
+        };
+      });
+  }, [
+    colnames,
+    data,
+    coltypes,
+    originalFormattedTimeColumns,
+    collabels,
+    datasourceId,
+    onTimeColumnChange,
+    moreConfigs,
+    allowHTML,
+  ]);
 };
