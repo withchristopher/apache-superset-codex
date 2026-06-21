@@ -54,6 +54,7 @@ import {
   onFiltersRefreshSuccess,
   setDirectPathToChild,
 } from 'src/dashboard/actions/dashboardState';
+import { fetchDatasourceMetadata } from 'src/dashboard/actions/datasources';
 import {
   setHoveredChartCustomization,
   unsetHoveredChartCustomization,
@@ -187,6 +188,28 @@ const FilterValue: FC<FilterValueProps> = ({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const dispatch = useDispatch();
 
+  // When a Date Range parent filter is active, the child filter needs
+  // granularity_sqla to apply the temporal WHERE clause. Read main_dttm_col
+  // from the Redux datasource cache as a fallback.
+  //
+  // The dashboard datasets API (/api/v1/dashboard/:id/datasets) only returns
+  // datasets used by chart slices, so native-filter-only datasets are never
+  // in state.datasources. Dispatch fetchDatasourceMetadata at mount time to
+  // populate the cache explicitly for those datasets.
+  const datasourceMainDttmCol = useSelector<RootState, string | null | undefined>(
+    state =>
+      datasetId != null
+        ? (state.datasources as Record<string, any>)?.[`${datasetId}__table`]
+            ?.main_dttm_col
+        : undefined,
+  );
+
+  useEffect(() => {
+    if (datasetId != null) {
+      dispatch(fetchDatasourceMetadata(`${datasetId}__table`));
+    }
+  }, [datasetId, dispatch]);
+
   const { outlinedFilterId, lastUpdated } = useFilterOutlined();
 
   const handleFilterLoadFinish = useCallback(() => {
@@ -218,7 +241,11 @@ const FilterValue: FC<FilterValueProps> = ({
       groupby,
       adhoc_filters: adhocFilters,
       time_range: timeRange,
-      granularity_sqla: granularitySqla,
+      granularity_sqla:
+        granularitySqla ||
+        (dependencies.time_range
+          ? datasourceMainDttmCol ?? undefined
+          : undefined),
       dashboardId,
     });
     const filterOwnState = filter.dataMask?.ownState || {};
@@ -349,6 +376,7 @@ const FilterValue: FC<FilterValueProps> = ({
     dataMaskSelected,
     setHasDepsFilterValue,
     transitiveParentIds,
+    datasourceMainDttmCol,
   ]);
 
   useEffect(() => {
