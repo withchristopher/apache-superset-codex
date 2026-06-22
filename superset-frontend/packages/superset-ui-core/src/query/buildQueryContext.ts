@@ -59,6 +59,10 @@ export default function buildQueryContext(
   if (isXAxisSet(formData)) {
     queries = queries.map(query => normalizeTimeColumn(formData, query));
   }
+  queries = queries.map(query => ({
+    ...query,
+    url_params: query.url_params ?? formData.url_params ?? {},
+  }));
   // --- query mutator end ---
   return {
     datasource: new DatasourceKey(formData.datasource).toObject(),
