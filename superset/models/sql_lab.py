@@ -76,6 +76,7 @@ from superset.superset_typing import DatasetColumnData, ExplorableData, QueryObj
 from superset.utils import json
 from superset.utils.core import (
     GenericDataType,
+    activate_humanize_locale,
     get_column_name,
     LongText,
     MediumText,
@@ -540,10 +541,12 @@ class SavedQuery(
 
     @property
     def last_run_humanized(self) -> str:
+        activate_humanize_locale()
         return naturaltime(datetime.now() - self.changed_on)
 
     @property
     def _last_run_delta_humanized(self) -> str:
+        activate_humanize_locale()
         return naturaltime(datetime.now() - self.changed_on)
 
     @renders("changed_on")
