@@ -108,9 +108,17 @@ export const FilterInput = ({
   const inputRef: RefObject<any> = useRef(null);
 
   useEffect(() => {
-    // Focus the input element when the component mounts
     if (inputRef.current && shouldFocus) {
-      inputRef.current.focus();
+      // Skip auto-focus if any meaningful element already has focus (e.g. user
+      // is typing in another control when this pane remounts after a data refresh)
+      const activeEl = document.activeElement;
+      const noElementFocused =
+        activeEl === null ||
+        activeEl === document.body ||
+        activeEl === document.documentElement;
+      if (noElementFocused) {
+        inputRef.current.focus();
+      }
     }
   }, []);
 
