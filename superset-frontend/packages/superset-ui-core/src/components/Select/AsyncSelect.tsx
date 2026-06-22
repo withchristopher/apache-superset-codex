@@ -702,7 +702,10 @@ const AsyncSelect = forwardRef(
           filterOption={handleFilterOption}
           filterSort={sortComparatorWithSearch}
           getPopupContainer={
-            getPopupContainer || (triggerNode => triggerNode.parentNode)
+            getPopupContainer ||
+            ((triggerNode: HTMLElement) =>
+              (triggerNode?.closest('.ant-modal-content') as HTMLElement) ||
+              (triggerNode.parentNode as HTMLElement))
           }
           headerPosition={headerPosition}
           labelInValue
