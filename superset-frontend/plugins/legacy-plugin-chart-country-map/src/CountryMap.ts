@@ -22,7 +22,6 @@ import d3 from 'd3';
 import { extent as d3Extent } from 'd3-array';
 import {
   ValueFormatter,
-  getNumberFormatter,
   getSequentialSchemeRegistry,
   CategoricalColorNamespace,
 } from '@superset-ui/core';
@@ -187,9 +186,11 @@ function CountryMap(element: HTMLElement, props: CountryMapProps) {
       region => region.country_id === d.properties.ISO,
     );
 
-    hoverPopup.style('display', 'block').html(
-      `<div><strong>${getNameOfRegion(d)}</strong><br>${result.length > 0 ? formatter(result[0].metric) : ''}</div>`,
-    );
+    hoverPopup
+      .style('display', 'block')
+      .html(
+        `<div><strong>${getNameOfRegion(d)}</strong><br>${result.length > 0 ? formatter(result[0].metric) : ''}</div>`,
+      );
     updatePopupPosition();
   };
 

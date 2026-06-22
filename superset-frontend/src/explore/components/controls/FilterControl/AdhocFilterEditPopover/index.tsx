@@ -294,7 +294,7 @@ export default class AdhocFilterEditPopover extends Component<
           .filter((item: { sliceIndex: number }) => item.sliceIndex !== -1)
           .map(
             ({
-              sliceIndex,
+              sliceIndex: _sliceIndex,
               ...item
             }: {
               sliceIndex: number;
@@ -346,12 +346,12 @@ export default class AdhocFilterEditPopover extends Component<
     const {
       adhocFilter: propsAdhocFilter,
       options,
-      onChange,
-      onClose,
-      onResize,
+      onChange: _onChange,
+      onClose: _onClose,
+      onResize: _onResize,
       datasource,
       partitionColumn,
-      theme,
+      theme: _theme,
       operators,
       requireSave,
       ...popoverProps
