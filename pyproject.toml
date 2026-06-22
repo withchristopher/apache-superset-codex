@@ -201,7 +201,7 @@ tdengine = [
     "taospy>=2.7.21",
     "taos-ws-py>=0.3.8"
 ]
-teradata = ["teradatasql>=16.20.0.23"]
+teradata = ["teradatasql>=20.0.0.61"]
 thumbnails = [] # deprecated, will be removed in 7.0
 vertica = ["sqlalchemy-vertica-python>= 0.5.9, < 0.7"]
 netezza = ["nzalchemy>=11.0.2"]
