@@ -12814,8 +12814,12 @@ msgstr "Подкатегории"
 msgid "Subtitle"
 msgstr "Подзаголовок"
 
-msgid "Subtotal"
-msgstr "Подытог"
+msgid "Subvalue (%(aggfunc)s)"
+msgstr "Подытог (%(aggfunc)s)"
+
+msgid "Subvalue (%(aggregatorName)s)"
+msgstr "Подытог (%(aggregatorName)s)"
+
 
 msgid "Success"
 msgstr "Успешно"

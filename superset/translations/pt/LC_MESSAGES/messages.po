@@ -13277,8 +13277,16 @@ msgstr "Nome da origem de dados"
 msgid "Subtitle"
 msgstr "%s - sem título"
 
-msgid "Subtotal"
+#, fuzzy
+msgid "Subtitle Font Size"
+msgstr "Tamanho da bolha"
+
+msgid "Subvalue (%(aggfunc)s)"
 msgstr ""
+
+msgid "Subvalue (%(aggregatorName)s)"
+msgstr ""
+
 
 msgid "Success"
 msgstr ""

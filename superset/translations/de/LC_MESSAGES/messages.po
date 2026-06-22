@@ -12439,8 +12439,16 @@ msgstr "Abonnenten"
 msgid "Subtitle"
 msgstr "Untertitel"
 
-msgid "Subtotal"
-msgstr "Zwischensumme"
+#, fuzzy
+msgid "Subtitle Font Size"
+msgstr "Blasengröße"
+
+msgid "Subvalue (%(aggfunc)s)"
+msgstr "Zwischensumme (%(aggfunc)s)"
+
+msgid "Subvalue (%(aggregatorName)s)"
+msgstr "Zwischensumme (%(aggregatorName)s)"
+
 
 msgid "Success"
 msgstr "Erfolg"

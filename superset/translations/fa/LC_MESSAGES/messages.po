@@ -13132,8 +13132,16 @@ msgstr "دسته‌بندی"
 msgid "Subtitle"
 msgstr "عنوان برگه"
 
-msgid "Subtotal"
-msgstr "زیرمجموعه"
+#, fuzzy
+msgid "Subtitle Font Size"
+msgstr "اندازه حباب"
+
+msgid "Subvalue (%(aggfunc)s)"
+msgstr "زیرمجموعه (%(aggfunc)s)"
+
+msgid "Subvalue (%(aggregatorName)s)"
+msgstr "زیرمجموعه (%(aggregatorName)s)"
+
 
 msgid "Success"
 msgstr "موفقیت"

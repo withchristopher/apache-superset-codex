@@ -12843,8 +12843,11 @@ msgstr "Apakškategorijas"
 msgid "Subtitle"
 msgstr "Apakšvirsraksts"
 
-msgid "Subtotal"
-msgstr "Starpsumma"
+msgid "Subvalue (%(aggfunc)s)"
+msgstr ""
+
+msgid "Subvalue (%(aggregatorName)s)"
+msgstr ""
 
 msgid "Success"
 msgstr "Veiksmīgi"
