@@ -47,16 +47,19 @@ export const PermissionsField = ({
 }: AsyncOptionsFieldProps) => (
   <FormItem name="rolePermissions" label={t('Permissions')}>
     <AsyncSelect
-      mode="multiple"
-      name="rolePermissions"
-      placeholder={t('Select permissions')}
-      options={(filterValue, page, pageSize) =>
-        fetchPermissionOptions(filterValue, page, pageSize, addDangerToast)
-      }
-      loading={loading}
-      getPopupContainer={trigger => trigger.closest('.ant-modal-content')}
-      data-test="permissions-select"
-    />
+  mode="multiple"
+  name="rolePermissions"
+  placeholder={t('Select permissions')}
+  options={(filterValue, page, pageSize) =>
+    fetchPermissionOptions(filterValue, page, pageSize, addDangerToast)
+  }
+  loading={loading}
+  getPopupContainer={trigger =>
+    trigger.closest('.ant-modal-content') || document.body
+  }
+  dropdownStyle={{ minWidth: 480 }}
+  data-test="permissions-select"
+/>
   </FormItem>
 );
 
