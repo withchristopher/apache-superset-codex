@@ -130,6 +130,23 @@ describe('asyncEvent middleware', () => {
       expect(fetchMock.callHistory.calls(CACHED_DATA_ENDPOINT)).toHaveLength(1);
     });
 
+    test('rejects and unregisters listener when aborted', async () => {
+      const controller = new AbortController();
+      const promise = asyncEvent.waitForAsyncData(asyncPendingEvent, {
+        signal: controller.signal,
+      });
+
+      controller.abort();
+
+      await expect(promise).rejects.toMatchObject({
+        name: 'AbortError',
+        statusText: 'abort',
+      });
+
+      await asyncEvent.processEvents([asyncDoneEvent]);
+      expect(fetchMock.callHistory.calls(CACHED_DATA_ENDPOINT)).toHaveLength(0);
+    });
+
     test('rejects on event error status', async () => {
       fetchMock.clearHistory().removeRoutes();
       fetchMock.get(EVENTS_ENDPOINT, {
@@ -240,6 +257,23 @@ describe('asyncEvent middleware', () => {
 
       expect(fetchMock.callHistory.calls(CACHED_DATA_ENDPOINT)).toHaveLength(1);
       expect(fetchMock.callHistory.calls(EVENTS_ENDPOINT)).toHaveLength(0);
+    });
+
+    test('rejects and unregisters listener when aborted', async () => {
+      const controller = new AbortController();
+      const promise = asyncEvent.waitForAsyncData(asyncPendingEvent, {
+        signal: controller.signal,
+      });
+
+      controller.abort();
+
+      await expect(promise).rejects.toMatchObject({
+        name: 'AbortError',
+        statusText: 'abort',
+      });
+
+      await asyncEvent.processEvents([asyncDoneEvent]);
+      expect(fetchMock.callHistory.calls(CACHED_DATA_ENDPOINT)).toHaveLength(0);
     });
 
     test('rejects on event error status', async () => {

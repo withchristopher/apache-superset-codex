@@ -67,6 +67,60 @@ describe('chart reducers', () => {
     );
   });
 
+  test('ignores stale chartUpdateSucceeded actions for superseded requests', () => {
+    const currentController = new AbortController();
+    const staleController = new AbortController();
+    const chartsWithController = {
+      [chartKey]: {
+        ...testChart,
+        chartStatus: 'loading',
+        queryController: currentController,
+        queriesResponse: null,
+      },
+    };
+
+    const newState = chartReducer(
+      chartsWithController,
+      actions.chartUpdateSucceeded(
+        [{ data: [{ stale: true }] }] as unknown as Parameters<
+          typeof actions.chartUpdateSucceeded
+        >[0],
+        chartKey,
+        staleController,
+      ),
+    );
+
+    expect(newState[chartKey]).toBe(chartsWithController[chartKey]);
+    expect(newState[chartKey].chartStatus).toEqual('loading');
+    expect(newState[chartKey].queriesResponse).toBeNull();
+  });
+
+  test('ignores stale chartUpdateFailed actions for superseded requests', () => {
+    const currentController = new AbortController();
+    const staleController = new AbortController();
+    const chartsWithController = {
+      [chartKey]: {
+        ...testChart,
+        chartStatus: 'loading',
+        queryController: currentController,
+        chartAlert: null,
+      },
+    };
+
+    const newState = chartReducer(
+      chartsWithController,
+      actions.chartUpdateFailed(
+        [{ error: 'stale failure' } as JsonObject],
+        chartKey,
+        staleController,
+      ),
+    );
+
+    expect(newState[chartKey]).toBe(chartsWithController[chartKey]);
+    expect(newState[chartKey].chartStatus).toEqual('loading');
+    expect(newState[chartKey].chartAlert).toBeNull();
+  });
+
   test('should update endtime on timeout', () => {
     const newState = chartReducer(
       charts,
