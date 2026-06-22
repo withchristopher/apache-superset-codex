@@ -98,6 +98,41 @@ describe('buildQueryContext', () => {
       ]),
     );
   });
+  test('should preserve url_params when custom query builders omit them', () => {
+    const queryContext = buildQueryContext(
+      {
+        datasource: '5__table',
+        granularity_sqla: 'ds',
+        viz_type: VizType.Table,
+        url_params: { region: 'emea' },
+      },
+      () => [{ columns: ['dummy_column'] }],
+    );
+    expect(queryContext.queries[0].url_params).toEqual({ region: 'emea' });
+  });
+  test('should keep query-level url_params from custom query builders', () => {
+    const queryContext = buildQueryContext(
+      {
+        datasource: '5__table',
+        granularity_sqla: 'ds',
+        viz_type: VizType.Table,
+        url_params: { region: 'emea' },
+      },
+      () => [{ url_params: { region: 'apac' } }],
+    );
+    expect(queryContext.queries[0].url_params).toEqual({ region: 'apac' });
+  });
+  test('should default missing query url_params to an empty object', () => {
+    const queryContext = buildQueryContext(
+      {
+        datasource: '5__table',
+        granularity_sqla: 'ds',
+        viz_type: VizType.Table,
+      },
+      () => [{}],
+    );
+    expect(queryContext.queries[0].url_params).toEqual({});
+  });
   // todo(Yongjie): move these test case into buildQueryObject.test.ts
   test('should remove undefined value in post_processing', () => {
     const queryContext = buildQueryContext(
