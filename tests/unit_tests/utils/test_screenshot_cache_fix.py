@@ -149,6 +149,25 @@ class TestCacheOnlyOnSuccess:
         assert cached_value["status"] == "Updated"
         assert cached_value["image"] is not None
 
+    def test_cache_error_status_when_screenshot_returns_empty_bytes(
+        self, mocker: MockerFixture, screenshot_obj, mock_user
+    ):
+        """Empty bytes from get_screenshot must set ERROR, not leave COMPUTING."""
+        mocker.patch(BASE_SCREENSHOT_PATH + ".get_from_cache_key", return_value=None)
+        mocker.patch(
+            BASE_SCREENSHOT_PATH + ".get_screenshot",
+            return_value=b"",
+        )
+        BaseScreenshot.cache = MockCache()
+
+        screenshot_obj.compute_and_cache(user=mock_user, force=True)
+
+        cache_key = screenshot_obj.get_cache_key()
+        cached_value = BaseScreenshot.cache.get(cache_key)
+        assert cached_value is not None
+        assert cached_value["status"] == "Error"
+        assert cached_value.get("image") is None
+
     def test_no_intermediate_cache_during_computing(
         self, mocker: MockerFixture, screenshot_obj, mock_user
     ):
@@ -163,9 +182,9 @@ class TestCacheOnlyOnSuccess:
             cache_key = screenshot_obj.get_cache_key()
             cached_value = BaseScreenshot.cache.get(cache_key)
             # Cache should be empty during screenshot generation
-            assert cached_value is None, (
-                "Cache should not be saved during COMPUTING state"
-            )
+            assert (
+                cached_value is None
+            ), "Cache should not be saved during COMPUTING state"
             return b"image_data"
 
         mocker.patch(
