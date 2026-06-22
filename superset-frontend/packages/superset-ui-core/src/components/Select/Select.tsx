@@ -519,7 +519,8 @@ const Select = forwardRef(
               handleSelectAll();
             }}
           >
-            {t('Select all')} {`(${formatNumber('SMART_NUMBER', bulkSelectCounts.selectable)})`}
+            {t('Select all')}{' '}
+            {`(${formatNumber('SMART_NUMBER', bulkSelectCounts.selectable)})`}
           </Button>
           <Button
             type="link"
@@ -536,7 +537,8 @@ const Select = forwardRef(
               handleDeselectAll();
             }}
           >
-            {t('Clear')} {`(${formatNumber('SMART_NUMBER', bulkSelectCounts.deselectable)})`}
+            {t('Clear')}{' '}
+            {`(${formatNumber('SMART_NUMBER', bulkSelectCounts.deselectable)})`}
           </Button>
         </StyledBulkActionsContainer>
       ),
@@ -690,7 +692,14 @@ const Select = forwardRef(
         }
       } else {
         const token = tokenSeparators.find(token => pastedText.includes(token));
-        const array = token ? uniq(pastedText.split(token)) : [pastedText];
+        const array = token
+          ? uniq(
+              pastedText
+                .split(token)
+                .map(s => s.trim())
+                .filter(Boolean),
+            )
+          : [pastedText.trim()].filter(Boolean);
 
         const newOptions: SelectOptionsType = [];
 
