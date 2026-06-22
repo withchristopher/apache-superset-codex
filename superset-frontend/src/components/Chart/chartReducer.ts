@@ -58,6 +58,13 @@ export default function chartReducer(
       };
     },
     [actions.CHART_UPDATE_SUCCEEDED](state) {
+      if (
+        action.queryController &&
+        state.queryController &&
+        action.queryController !== state.queryController
+      ) {
+        return state;
+      }
       return {
         ...state,
         chartStatus: 'success',
@@ -108,6 +115,13 @@ export default function chartReducer(
       };
     },
     [actions.CHART_UPDATE_FAILED](state) {
+      if (
+        action.queryController &&
+        state.queryController &&
+        action.queryController !== state.queryController
+      ) {
+        return state;
+      }
       return {
         ...state,
         chartStatus: 'failed',

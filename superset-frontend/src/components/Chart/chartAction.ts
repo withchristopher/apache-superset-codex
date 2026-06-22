@@ -126,6 +126,7 @@ export interface ChartUpdateSucceededAction {
   type: typeof CHART_UPDATE_SUCCEEDED;
   queriesResponse: QueryData[];
   key: string | number;
+  queryController?: AbortController;
 }
 
 export interface ChartUpdateStoppedAction {
@@ -138,6 +139,7 @@ export interface ChartUpdateFailedAction {
   type: typeof CHART_UPDATE_FAILED;
   queriesResponse: QueryData[] | JsonObject[];
   key: string | number;
+  queryController?: AbortController;
 }
 
 export interface ChartRenderingFailedAction {
@@ -324,8 +326,14 @@ export function chartUpdateStarted(
 export function chartUpdateSucceeded(
   queriesResponse: QueryData[],
   key: string | number,
+  queryController?: AbortController,
 ): ChartUpdateSucceededAction {
-  return { type: CHART_UPDATE_SUCCEEDED, queriesResponse, key };
+  return {
+    type: CHART_UPDATE_SUCCEEDED,
+    queriesResponse,
+    key,
+    queryController,
+  };
 }
 
 export function chartUpdateStopped(
@@ -338,8 +346,14 @@ export function chartUpdateStopped(
 export function chartUpdateFailed(
   queriesResponse: QueryData[] | JsonObject[],
   key: string | number,
+  queryController?: AbortController,
 ): ChartUpdateFailedAction {
-  return { type: CHART_UPDATE_FAILED, queriesResponse, key };
+  return {
+    type: CHART_UPDATE_FAILED,
+    queriesResponse,
+    key,
+    queryController,
+  };
 }
 
 export function chartRenderingFailed(
@@ -699,6 +713,7 @@ export function handleChartDataResponse(
   response: Response,
   json: { result: QueryData[] },
   useLegacyApi?: boolean,
+  signal?: AbortSignal,
 ): Promise<QueryData[]> | QueryData[] {
   if (isFeatureEnabled(FeatureFlag.GlobalAsyncQueries)) {
     // deal with getChartDataRequest transforming the response data
@@ -714,10 +729,12 @@ export function handleChartDataResponse(
         if (useLegacyApi) {
           return waitForAsyncData(
             result[0] as unknown as Parameters<typeof waitForAsyncData>[0],
+            { signal },
           ) as Promise<QueryData[]>;
         }
         return waitForAsyncData(
           result as unknown as Parameters<typeof waitForAsyncData>[0],
+          { signal },
         ) as Promise<QueryData[]>;
       default:
         throw new Error(
@@ -780,7 +797,7 @@ export function exploreJSON(
     const [useLegacyApi] = getQuerySettings(formData);
     const chartDataRequestCaught = chartDataRequest
       .then(({ response, json }) =>
-        handleChartDataResponse(response, json, useLegacyApi),
+        handleChartDataResponse(response, json, useLegacyApi, controller.signal),
       )
       .then(queriesResponse => {
         // Drop stale responses: if a newer query has started for this chart,
@@ -825,7 +842,11 @@ export function exploreJSON(
           }
         });
         return dispatch(
-          chartUpdateSucceeded(queriesResponse as QueryData[], key as number),
+          chartUpdateSucceeded(
+            queriesResponse as QueryData[],
+            key as number,
+            controller,
+          ),
         );
       })
       .catch(
@@ -860,6 +881,7 @@ export function exploreJSON(
               chartUpdateFailed(
                 [response as JsonObject],
                 key as string | number,
+                controller,
               ),
             );
           }
@@ -893,7 +915,11 @@ export function exploreJSON(
               appendErrorLog(parsedResponse.error, parsedResponse.is_cached);
             }
             return dispatch(
-              chartUpdateFailed([parsedResponse], key as string | number),
+              chartUpdateFailed(
+                [parsedResponse],
+                key as string | number,
+                controller,
+              ),
             );
           });
         },

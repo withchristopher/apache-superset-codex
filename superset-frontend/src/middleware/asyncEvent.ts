@@ -41,10 +41,19 @@ type AsyncEvent = {
 
 type CachedDataResponse = {
   status: string;
-  data: any;
+  data: unknown;
 };
-type AppConfig = Record<string, any>;
-type ListenerFn = (asyncEvent: AsyncEvent) => Promise<any>;
+type AppConfig = {
+  GLOBAL_ASYNC_QUERIES_WEBSOCKET_URL?: string;
+  GLOBAL_ASYNC_QUERIES_TRANSPORT?: string;
+  GLOBAL_ASYNC_QUERIES_POLLING_DELAY?: number;
+  [key: string]: unknown;
+};
+type ListenerFn = (asyncEvent: AsyncEvent) => Promise<void>;
+
+type WaitForAsyncDataOptions = {
+  signal?: AbortSignal;
+};
 
 const TRANSPORT_POLLING = 'polling';
 const TRANSPORT_WS = 'ws';
@@ -94,15 +103,41 @@ const fetchCachedData = async (
   return { status, data };
 };
 
-export const waitForAsyncData = async (asyncResponse: AsyncEvent) =>
+const createAbortError = () => {
+  const error = new Error('Async data request aborted') as Error & {
+    statusText?: string;
+  };
+  error.name = 'AbortError';
+  error.statusText = 'abort';
+  return error;
+};
+
+export const waitForAsyncData = async (
+  asyncResponse: AsyncEvent,
+  options: WaitForAsyncDataOptions = {},
+) =>
   new Promise((resolve, reject) => {
     const jobId = asyncResponse.job_id;
+    const { signal } = options;
+
+    const abort = () => {
+      removeListener(jobId);
+      reject(createAbortError());
+    };
+
+    if (signal?.aborted) {
+      abort();
+      return;
+    }
+
     const listener = async (asyncEvent: AsyncEvent) => {
       switch (asyncEvent.status) {
         case JOB_STATUS.DONE: {
           let { data, status } = await fetchCachedData(asyncEvent); // eslint-disable-line prefer-const
           data = ensureIsArray(data);
-          if (status === 'success') {
+          if (signal?.aborted) {
+            reject(createAbortError());
+          } else if (status === 'success') {
             resolve(data);
           } else {
             reject(data);
@@ -111,15 +146,17 @@ export const waitForAsyncData = async (asyncResponse: AsyncEvent) =>
         }
         case JOB_STATUS.ERROR: {
           const err = parseErrorJson(asyncEvent);
-          reject(err);
+          reject(signal?.aborted ? createAbortError() : err);
           break;
         }
         default: {
           logging.warn('received event with status', asyncEvent.status);
         }
       }
+      signal?.removeEventListener('abort', abort);
       removeListener(jobId);
     };
+    signal?.addEventListener('abort', abort, { once: true });
     addListener(jobId, listener);
   });
 
@@ -193,7 +230,7 @@ let wsConnectTimeout: any;
 let ws: WebSocket;
 
 const wsConnect = (): void => {
-  let url = config.GLOBAL_ASYNC_QUERIES_WEBSOCKET_URL;
+  let url = config.GLOBAL_ASYNC_QUERIES_WEBSOCKET_URL || '';
   if (lastReceivedEventId) url += `?last_id=${lastReceivedEventId}`;
   ws = new WebSocket(url);
 
