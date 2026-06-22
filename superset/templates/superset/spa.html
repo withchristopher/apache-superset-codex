@@ -32,6 +32,12 @@
 
     {% block head_meta %}
       <link rel="manifest" href="{{ assets_prefix }}/static/assets/pwa-manifest.json?v=4">
+      {% if title %}<meta property="og:title" content="{{ title }}" />{% endif %}
+      {% if dashboard_description %}
+        <meta property="og:description" content="{{ dashboard_description }}" />
+      {% endif %}
+      <meta property="og:type" content="article" />
+      <meta property="og:url" content="{{ request.url }}" />
     {% endblock %}
 
     <style>
