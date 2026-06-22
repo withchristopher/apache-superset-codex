@@ -129,6 +129,7 @@ Dashboard Management:
 - get_dashboard_info: Get detailed dashboard information by ID
 - get_dashboard_layout: Get parsed tabs and chart positions for a dashboard (companion to get_dashboard_info when its omitted_fields hint flags position_json)
 - generate_dashboard: Create a dashboard from chart IDs (requires write access)
+- update_dashboard: Update an existing dashboard's title/description/slug/published/layout/theme/CSS (requires write access; ownership-checked per-instance)
 - add_chart_to_existing_dashboard: Add a chart to an existing dashboard (requires write access)
 
 Annotation Layers:
@@ -694,6 +695,7 @@ from superset.mcp_service.dashboard.tool import (  # noqa: F401, E402
     get_dashboard_info,
     get_dashboard_layout,
     list_dashboards,
+    update_dashboard,
 )
 from superset.mcp_service.database.tool import (  # noqa: F401, E402
     get_database_info,
@@ -905,8 +907,10 @@ def init_fastmcp_server(
     # re-enters mcp_service during startup; must stay lazy inside the function.
     from superset.mcp_service.flask_singleton import app as flask_app  # noqa: PLC0415
 
-    # Derive branding from Superset's APP_NAME config (defaults to "Superset")
-    app_name = flask_app.config.get("APP_NAME", "Superset")
+    # APP_NAME is defined with a default in superset/config.py, so a
+    # direct key access is the right pattern — config.get with a fallback
+    # would hide a missing-config bug.
+    app_name = flask_app.config["APP_NAME"]
     branding = app_name
     default_name = f"{app_name} MCP Server"
 
