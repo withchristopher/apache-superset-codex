@@ -17,6 +17,7 @@
  * under the License.
  */
 import { styled } from '@apache-superset/core/theme';
+import { maskEmail } from '@superset-ui/core';
 
 const StyledLabelContainer = styled.div`
   overflow: hidden;
@@ -57,6 +58,6 @@ export const OwnerSelectLabel = ({
 }) => (
   <StyledLabelContainer>
     <StyledLabel>{name}</StyledLabel>
-    {email && <StyledLabelDetail>{email}</StyledLabelDetail>}
+    {email && <StyledLabelDetail>{maskEmail(email)}</StyledLabelDetail>}
   </StyledLabelContainer>
 );

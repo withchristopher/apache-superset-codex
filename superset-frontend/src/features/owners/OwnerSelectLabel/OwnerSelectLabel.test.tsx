@@ -19,10 +19,11 @@
 import { render, screen } from 'spec/helpers/testing-library';
 import { OwnerSelectLabel } from '.';
 
-test('renders name and email', () => {
+test('renders name and masked email', () => {
   render(OwnerSelectLabel({ name: 'John Doe', email: 'jdoe@example.com' }));
   expect(screen.getByText('John Doe')).toBeInTheDocument();
-  expect(screen.getByText('jdoe@example.com')).toBeInTheDocument();
+  expect(screen.getByText('j***@example.com')).toBeInTheDocument();
+  expect(screen.queryByText('jdoe@example.com')).not.toBeInTheDocument();
 });
 
 test('renders only name when email is undefined', () => {
