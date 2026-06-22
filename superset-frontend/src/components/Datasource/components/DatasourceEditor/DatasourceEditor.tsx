@@ -89,6 +89,8 @@ import {
 import { DatabaseSelector } from '../../../DatabaseSelector';
 import CollectionTable from '../CollectionTable';
 import Fieldset from '../Fieldset';
+import { useDatasetLineage } from 'src/hooks/apiResources';
+import { LineageView } from 'src/features/lineage';
 import Field from '../Field';
 import { fetchSyncedColumns, updateColumns } from '../../utils';
 import DatasetUsageTab from './components/DatasetUsageTab';
@@ -425,6 +427,16 @@ const StyledTableTabWrapper = styled.div`
   }
 `;
 
+// Functional wrapper for the lineage tab, since hooks can't be used directly in
+// the DatasourceEditor class component.
+function DatasetLineageTab({ datasourceId }: { datasourceId?: number }) {
+  const lineageResource = useDatasetLineage(datasourceId ?? '');
+  if (!datasourceId) {
+    return <Loading />;
+  }
+  return <LineageView lineageResource={lineageResource} entityType="dataset" />;
+}
+
 const DefaultColumnSettingsContainer = styled.div`
   ${({ theme }) => css`
     margin-bottom: ${theme.sizeUnit * 4}px;
@@ -477,6 +489,7 @@ const TABS_KEYS = {
   COLUMNS: 'COLUMNS',
   CALCULATED_COLUMNS: 'CALCULATED_COLUMNS',
   USAGE: 'USAGE',
+  LINEAGE: 'LINEAGE',
   FOLDERS: 'FOLDERS',
   SETTINGS: 'SETTINGS',
   SPATIAL: 'SPATIAL',
@@ -2512,6 +2525,15 @@ class DatasourceEditor extends PureComponent<
                     onFetchCharts={this.fetchUsageData}
                     addDangerToast={this.props.addDangerToast}
                   />
+                </StyledTableTabWrapper>
+              ),
+            },
+            {
+              key: TABS_KEYS.LINEAGE,
+              label: t('Lineage'),
+              children: (
+                <StyledTableTabWrapper>
+                  <DatasetLineageTab datasourceId={datasource.id} />
                 </StyledTableTabWrapper>
               ),
             },
