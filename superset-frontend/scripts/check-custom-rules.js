@@ -650,7 +650,7 @@ function main() {
     /\.stories\./,
     /\/demo\//,
     /\/examples\//,
-    /\/color\/colorSchemes\//,
+    /\/color\/colorSchemes\//, // @superset-ui/core palette scheme definitions legitimately contain colors
     /\/cypress\//,
     /\/cypress-base\//,
     /\/esm\//,
