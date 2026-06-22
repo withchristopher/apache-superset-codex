@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   DTTM_ALIAS,
   BinaryQueryObjectFilterClause,
@@ -27,12 +27,15 @@ import {
   LegendState,
   ensureIsArray,
 } from '@superset-ui/core';
-import type { ViewRootGroup } from 'echarts/types/src/util/types';
+import type {
+  ECElementEvent,
+  ViewRootGroup,
+} from 'echarts/types/src/util/types';
 import type GlobalModel from 'echarts/types/src/model/Global';
 import type ComponentModel from 'echarts/types/src/model/Component';
 import { EchartsHandler, EventHandlers } from '../types';
 import Echart from '../components/Echart';
-import { TimeseriesChartTransformedProps } from './types';
+import { OrientationType, TimeseriesChartTransformedProps } from './types';
 import { formatSeriesName } from '../utils/series';
 import { ExtraControls } from '../components/ExtraControls';
 
@@ -331,6 +334,33 @@ export default function EchartsTimeseries({
     },
   };
 
+  const handleXAxisLabelClick = useCallback(
+    (event: ECElementEvent) => {
+      const { value } = event;
+      if (
+        canCrossFilterByXAxis &&
+        (typeof value === 'string' || typeof value === 'number')
+      ) {
+        handleXAxisChange(value);
+      }
+    },
+    [canCrossFilterByXAxis, handleXAxisChange],
+  );
+
+  const categoryAxis =
+    formData.orientation === OrientationType.Horizontal ? 'yAxis' : 'xAxis';
+
+  const queryEventHandlers = useMemo(
+    () => [
+      {
+        name: 'click',
+        query: `${categoryAxis}.category`,
+        handler: handleXAxisLabelClick,
+      },
+    ],
+    [categoryAxis, handleXAxisLabelClick],
+  );
+
   const zrEventHandlers: EventHandlers = {
     dblclick: params => {
       // clear single click timer
@@ -372,6 +402,7 @@ export default function EchartsTimeseries({
         width={width}
         echartOptions={echartOptions}
         eventHandlers={eventHandlers}
+        queryEventHandlers={queryEventHandlers}
         zrEventHandlers={zrEventHandlers}
         selectedValues={selectedValues}
         vizType={formData.vizType}
