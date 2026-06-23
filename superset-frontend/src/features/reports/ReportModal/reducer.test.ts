@@ -20,10 +20,12 @@ import reportsReducer, { ReportsState } from './reducer';
 import {
   SET_REPORT,
   ADD_REPORT,
+  SUBSCRIBE_REPORT,
   EDIT_REPORT,
   DELETE_REPORT,
   SetReportAction,
   AddReportAction,
+  SubscribeReportAction,
   EditReportAction,
   DeleteReportAction,
 } from './actions';
@@ -147,6 +149,20 @@ test('ADD_REPORT returns unchanged state when key is undefined', () => {
   expect(result).toBe(initial);
 });
 
+test('SUBSCRIBE_REPORT keys chart subscription by chart id', () => {
+  const action: SubscribeReportAction = {
+    type: SUBSCRIBE_REPORT,
+    json: {
+      id: 22,
+      result: { chart: 42, creation_method: 'charts' },
+    },
+  };
+
+  const result = reportsReducer({}, action);
+
+  expect(result.charts?.[42]).toMatchObject({ id: 22, chart: 42 });
+});
+
 test('EDIT_REPORT replaces existing report at same key', () => {
   const initial: ReportsState = {
     dashboards: {
@@ -206,7 +222,7 @@ test('DELETE_REPORT for alerts_reports keys by report id', () => {
 
 test('unknown action type returns state unchanged', () => {
   const initial: ReportsState = { dashboards: { 1: makeReport({ id: 1 }) } };
-  const action = { type: 'UNKNOWN_ACTION' } as any;
+  const action = { type: 'UNKNOWN_ACTION' } as unknown as SetReportAction;
 
   const result = reportsReducer(initial, action);
 
