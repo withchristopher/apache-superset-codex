@@ -30,36 +30,80 @@ import {
   SubscribeReportAction,
   EditReportAction,
   DeleteReportAction,
+  DeletableReport,
 } from './actions';
 import { ReportObject, ReportCreationMethod } from 'src/features/reports/types';
 
-// State structure: { dashboards: { [id]: ReportObject }, charts: { [id]: ReportObject } }
 export interface ReportsState {
   dashboards?: Record<number, ReportObject>;
   charts?: Record<number, ReportObject>;
   alerts_reports?: Record<number, ReportObject>;
 }
 
-type ActionHandlers = {
-  [key: string]: () => ReportsState;
+type ReportStateKeySource = Pick<
+  ReportObject | DeletableReport,
+  'id' | 'dashboard' | 'chart' | 'creation_method'
+>;
+
+const getReportStateKey = (report: ReportStateKeySource): number | undefined => {
+  if (report.creation_method === 'alerts_reports') {
+    return report.id;
+  }
+
+  return report.dashboard ?? report.chart;
+};
+
+const upsertReport = (
+  state: ReportsState,
+  report: ReportObject,
+): ReportsState => {
+  const creationMethod = report.creation_method as ReportCreationMethod;
+  const key = getReportStateKey(report);
+
+  if (key === undefined) {
+    return state;
+  }
+
+  return {
+    ...state,
+    [creationMethod]: {
+      ...state[creationMethod],
+      [key]: report,
+    },
+  };
+};
+
+const removeReport = (
+  state: ReportsState,
+  report: ReportStateKeySource,
+): ReportsState => {
+  const creationMethod = report.creation_method as ReportCreationMethod;
+  const key = getReportStateKey(report);
+
+  if (key === undefined) {
+    return state;
+  }
+
+  const methodState = state[creationMethod];
+  return {
+    ...state,
+    [creationMethod]: methodState ? omit(methodState, key) : undefined,
+  };
 };
 
 export default function reportsReducer(
   state: ReportsState = {},
   action: ReportAction,
 ): ReportsState {
-  const actionHandlers: ActionHandlers = {
-    [SET_REPORT]() {
+  switch (action.type) {
+    case SET_REPORT: {
       const { report, resourceId, creationMethod, filterField } =
         action as SetReportAction;
-      // Map filterField ('dashboard_id' or 'chart_id') to the corresponding
-      // ReportObject property ('dashboard' or 'chart')
       const propertyName =
         filterField === 'dashboard_id' ? 'dashboard' : 'chart';
-      // For now report count should only be one, but we are checking in case
-      // functionality changes.
       const reportObject = report.result?.find(
-        (r: ReportObject) => r[propertyName] === resourceId,
+        (reportResult: ReportObject) =>
+          reportResult[propertyName] === resourceId,
       );
 
       if (reportObject) {
@@ -71,110 +115,37 @@ export default function reportsReducer(
           },
         };
       }
-      if (state?.[creationMethod]?.[resourceId]) {
-        // remove the empty report from state
-        const methodState = state[creationMethod];
-        if (methodState) {
-          return {
-            ...state,
-            [creationMethod]: omit(methodState, resourceId),
-          };
-        }
+
+      const existingMethodState = state[creationMethod];
+      if (existingMethodState?.[resourceId]) {
+        return {
+          ...state,
+          [creationMethod]: omit(existingMethodState, resourceId),
+        };
       }
+
       return { ...state };
-    },
+    }
 
-    [ADD_REPORT]() {
+    case ADD_REPORT: {
       const { result, id } = (action as AddReportAction).json;
-      const report: ReportObject = { ...result, id } as ReportObject;
-      const creationMethod = report.creation_method as ReportCreationMethod;
-      // For alerts_reports, use the report id; otherwise use the dashboard/chart id
-      const key =
-        creationMethod === 'alerts_reports'
-          ? report.id
-          : (report.dashboard ?? report.chart);
+      return upsertReport(state, { ...result, id } as ReportObject);
+    }
 
-      if (key === undefined) {
-        return state;
-      }
-
-      return {
-        ...state,
-        [creationMethod]: {
-          ...state[creationMethod],
-          [key]: report,
-        },
-      };
-    },
-
-    [SUBSCRIBE_REPORT]() {
+    case SUBSCRIBE_REPORT: {
       const { result, id } = (action as SubscribeReportAction).json;
-      const report: ReportObject = { ...result, id } as ReportObject;
-      const creationMethod = report.creation_method as ReportCreationMethod;
-      const key = report.dashboard ?? report.chart;
+      return upsertReport(state, { ...result, id } as ReportObject);
+    }
 
-      if (key === undefined) {
-        return state;
-      }
+    case EDIT_REPORT: {
+      const { result, id } = (action as EditReportAction).json;
+      return upsertReport(state, { ...result, id } as ReportObject);
+    }
 
-      return {
-        ...state,
-        [creationMethod]: {
-          ...state[creationMethod],
-          [key]: report,
-        },
-      };
-    },
+    case DELETE_REPORT:
+      return removeReport(state, (action as DeleteReportAction).report);
 
-    [EDIT_REPORT]() {
-      const actionTyped = action as EditReportAction;
-      const report: ReportObject = {
-        ...actionTyped.json.result,
-        id: actionTyped.json.id,
-      } as ReportObject;
-      const creationMethod = report.creation_method as ReportCreationMethod;
-      // For alerts_reports, use the report id; otherwise use the dashboard/chart id
-      const key =
-        creationMethod === 'alerts_reports'
-          ? report.id
-          : (report.dashboard ?? report.chart);
-
-      if (key === undefined) {
-        return state;
-      }
-
-      return {
-        ...state,
-        [creationMethod]: {
-          ...state[creationMethod],
-          [key]: report,
-        },
-      };
-    },
-
-    [DELETE_REPORT]() {
-      const { report } = action as DeleteReportAction;
-      const creationMethod = report.creation_method as ReportCreationMethod;
-      // For alerts_reports, use the report id; otherwise use the dashboard/chart id
-      const key =
-        creationMethod === 'alerts_reports'
-          ? report.id
-          : (report.dashboard ?? report.chart);
-
-      if (key === undefined) {
-        return state;
-      }
-
-      const methodState = state[creationMethod];
-      return {
-        ...state,
-        [creationMethod]: methodState ? omit(methodState, key) : undefined,
-      };
-    },
-  };
-
-  if (action.type in actionHandlers) {
-    return actionHandlers[action.type]();
+    default:
+      return state;
   }
-  return state;
 }
